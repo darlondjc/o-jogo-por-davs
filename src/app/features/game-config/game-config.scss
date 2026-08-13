@@ -1,6 +1,6 @@
 .page {
   padding: var(--space-6) 0 var(--space-7);
-  max-width: 720px;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -50,6 +50,11 @@ h2 {
 
 .muted {
   color: var(--text-muted);
+}
+
+.hint {
+  font-size: 0.82rem;
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
 }
 
 .team-list {

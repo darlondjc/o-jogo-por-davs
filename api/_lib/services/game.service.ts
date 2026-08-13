@@ -149,8 +149,12 @@ export async function submitQuestionScores(
   gameId: string,
   payload: SubmitQuestionScoresRequest,
 ): Promise<SubmitScoresResult> {
-  const game = await getGameOrThrow(gameId);
-  const teams = await repos().teams.findByGameId(gameId);
+  // Duas leituras independentes — rodar em paralelo em vez de sequencial
+  // economiza um round-trip inteiro ao Firestore.
+  const [game, teams] = await Promise.all([
+    getGameOrThrow(gameId),
+    repos().teams.findByGameId(gameId),
+  ]);
 
   const errors = validateQuestionScores({
     round: payload.round,
@@ -170,8 +174,13 @@ export async function submitQuestionScores(
     total: computeFinalScore(s),
   }));
 
-  const scores = await repos().scores.upsertMany(gameId, payload.round, payload.question, entries);
-  await repos().questions.upsertRegistered(gameId, payload.round, payload.question);
+  // Idem: gravar a pontuação e marcar a pergunta como registrada são
+  // escritas independentes (coleções diferentes) — não precisam esperar
+  // uma pela outra.
+  const [scores] = await Promise.all([
+    repos().scores.upsertMany(gameId, payload.round, payload.question, entries),
+    repos().questions.upsertRegistered(gameId, payload.round, payload.question),
+  ]);
 
   // Só avança o ponteiro do jogo quando a pergunta registrada é a "atual" —
   // uma correção de pergunta anterior não deve mexer no progresso.

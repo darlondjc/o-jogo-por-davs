@@ -1,6 +1,6 @@
 @if (gameState.game()) {
 <div class="page container">
-  <a class="back" [routerLink]="['/jogo', gameId]">← Voltar ao jogo</a>
+  <a class="back" href="#" (click)="onBackClick($event)">← Voltar ao jogo</a>
   <h1>Configuração</h1>
 
   @if (error()) {
@@ -10,19 +10,18 @@
   <section class="card">
     <h2>Dados do jogo</h2>
     <form class="form" [formGroup]="gameForm" (ngSubmit)="saveGame()" novalidate>
-      <label class="field">
-        <span>Nome do jogo *</span>
-        <input
-          type="text"
-          formControlName="name"
-          [class.invalid]="gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())"
-        />
-        @if (gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())) {
-          <span class="field-error">Informe o nome do jogo.</span>
-        }
-      </label>
-
       <div class="field-row">
+        <label class="field">
+          <span>Nome do jogo *</span>
+          <input
+            type="text"
+            formControlName="name"
+            [class.invalid]="gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())"
+          />
+          @if (gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())) {
+            <span class="field-error">Informe o nome do jogo.</span>
+          }
+        </label>
         <label class="field">
           <span>Data *</span>
           <input
@@ -56,16 +55,15 @@
         <textarea formControlName="description" rows="2"></textarea>
       </label>
 
-      <label class="field">
-        <span>Tipo de jogo</span>
-        <select formControlName="gameType">
-          @for (option of gameTypeOptions; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
-      </label>
-
       <div class="field-row">
+        <label class="field">
+          <span>Tipo de jogo</span>
+          <select formControlName="gameType">
+            @for (option of gameTypeOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </label>
         <label class="field">
           <span>Rodadas *</span>
           <input
@@ -110,28 +108,32 @@
 
   <section class="card">
     <h2>Equipes</h2>
+    <p class="muted hint">
+      Cadastrar/editar/remover equipes aqui é instantâneo — só vai pro servidor de uma vez quando
+      você clicar em "Concluir configuração" no final.
+    </p>
 
-    @if (gameState.teams().length) {
+    @if (draftTeams().length) {
       <ul class="team-list">
-        @for (team of gameState.teams(); track team.id; let i = $index) {
+        @for (team of draftTeams(); track team.key; let i = $index) {
           <li class="team-row">
-            <span class="dot" [style.background]="teamColor(team.order)"></span>
+            <span class="dot" [style.background]="teamColorAt(i)"></span>
             <span class="team-name">{{ team.name }}</span>
             <span class="muted">{{ team.playersCount }} jogadores</span>
             <div class="team-actions">
-              <button class="btn btn-ghost" type="button" (click)="moveTeam(team, -1)" [disabled]="i === 0">
+              <button class="btn btn-ghost" type="button" (click)="moveTeamDraft(team.key, -1)" [disabled]="i === 0">
                 ↑
               </button>
               <button
                 class="btn btn-ghost"
                 type="button"
-                (click)="moveTeam(team, 1)"
-                [disabled]="i === gameState.teams().length - 1"
+                (click)="moveTeamDraft(team.key, 1)"
+                [disabled]="i === draftTeams().length - 1"
               >
                 ↓
               </button>
               <button class="btn btn-ghost" type="button" (click)="startEditTeam(team)">Editar</button>
-              <button class="btn btn-ghost btn-danger" type="button" (click)="removeTeam(team.id)">
+              <button class="btn btn-ghost btn-danger" type="button" (click)="removeTeamDraft(team.key)">
                 Remover
               </button>
             </div>
@@ -142,7 +144,7 @@
       <p class="muted">Nenhuma equipe cadastrada ainda.</p>
     }
 
-    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeam()" novalidate>
+    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeamDraft()" novalidate>
       <label class="field">
         <span>Nome da equipe *</span>
         <input
@@ -159,16 +161,18 @@
         <span>Jogadores</span>
         <input type="number" formControlName="playersCount" min="0" />
       </label>
-      <button class="btn btn-primary" type="submit" [disabled]="savingTeam()">
-        {{ editingTeamId() ? 'Salvar equipe' : '+ Adicionar equipe' }}
+      <button class="btn btn-primary" type="submit">
+        {{ editingKey() ? 'Salvar equipe' : '+ Adicionar equipe' }}
       </button>
-      @if (editingTeamId()) {
+      @if (editingKey()) {
         <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
       }
     </form>
   </section>
 
-  <button class="btn btn-primary" type="button" (click)="goToGame()">Concluir configuração</button>
+  <button class="btn btn-primary" type="button" (click)="goToGame()" [disabled]="savingTeams()">
+    {{ savingTeams() ? 'Salvando equipes…' : 'Concluir configuração' }}
+  </button>
 </div>
 } @else {
   <p class="loading">Carregando…</p>

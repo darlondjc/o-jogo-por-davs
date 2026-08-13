@@ -9,20 +9,20 @@
       <h1>Rodada {{ round }} finalizada</h1>
     }
 
-    <section class="card">
+    <section class="card card-round">
       <h2>Placar da rodada</h2>
       <ol class="list">
         @for (row of roundRows(); track row.teamId) {
           <li class="row row-round">
             <span class="dot" [style.background]="row.color"></span>
             <span class="name">{{ row.teamName }}</span>
-            <span class="total">+{{ row.total }}</span>
+            <span class="total" [class.negative]="row.total < 0">{{ row.total }}</span>
           </li>
         }
       </ol>
     </section>
 
-    <section class="card">
+    <section class="card card-ranked">
       <h2>Placar geral</h2>
       <ol class="list">
         @for (row of rankingRows(); track row.teamId) {

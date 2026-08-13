@@ -72,6 +72,13 @@ export class Live {
     }
     if (state?.game.status === 'RODADA_FINALIZADA') {
       await this.router.navigate(['/jogo', this.gameId, 'rodada', state.game.currentRound - 1]);
+      return;
+    }
+    // Jogo já finalizado (ex: recarregou a tela ao vivo depois da última
+    // pergunta) — mesmo destino do fluxo normal em `onSubmit`: o resumo da
+    // última rodada, não o placar público direto (ver comentário lá).
+    if (state?.game.status === 'FINALIZADO') {
+      await this.router.navigate(['/jogo', this.gameId, 'rodada', state.game.currentRound]);
     }
   }
 
@@ -83,10 +90,13 @@ export class Live {
       this.justRegisteredQuestion.set(payload.question);
       setTimeout(() => this.justRegisteredQuestion.set(null), 1800);
 
-      if (result.gameFinished) {
-        await this.router.navigate(['/jogo', this.gameId, 'placar']);
-        return;
-      }
+      // `gameFinished` sempre vem acompanhado de `roundFinished` (é a
+      // última pergunta da última rodada) — então tanto terminar uma
+      // rodada quanto terminar o jogo inteiro levam pro mesmo resumo de
+      // rodada. Lá, "Ver placar final" já aparece no lugar de "Continuar"
+      // quando é a última rodada (ver `RoundSummaryPage.isLastRound`), e
+      // "Voltar ao painel" leva pros dados gerais do jogo — não faz
+      // sentido pular direto pro placar público sem passar por ali.
       if (result.roundFinished) {
         await this.router.navigate(['/jogo', this.gameId, 'rodada', payload.round]);
         return;

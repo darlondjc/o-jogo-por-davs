@@ -56,7 +56,7 @@ export class GameConfig {
 
   readonly teamForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    playersCount: [4, [Validators.required, Validators.min(0)]],
+    playersCount: [10, [Validators.required, Validators.min(0)]],
   });
 
   /** Snapshot do que está gravado no servidor — usado só pra comparar
@@ -178,7 +178,7 @@ export class GameConfig {
   cancelEditTeam(): void {
     this.editingKey.set(null);
     this.teamSubmitted.set(false);
-    this.teamForm.reset({ name: '', playersCount: 4 });
+    this.teamForm.reset({ name: '', playersCount: 10 });
   }
 
   /** Só mexe no rascunho local — nada vai pro servidor aqui (spec

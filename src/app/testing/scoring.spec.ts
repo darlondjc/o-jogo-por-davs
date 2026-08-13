@@ -61,6 +61,17 @@ describe('computeOverallTotals', () => {
     expect(totals.find((t) => t.teamId === 'A')?.total).toBe(30);
     expect(totals.find((t) => t.teamId === 'B')?.total).toBe(5);
   });
+
+  it('inclui equipes sem nenhuma pontuação lançada quando knownTeamIds é informado', () => {
+    // Regressão: jogo recém-criado, nenhuma pontuação ainda — sem isso as
+    // equipes somem do ranking e caem no fallback "último lugar" pra todo
+    // mundo (bug visual: "②" em todas as equipes no placar geral).
+    const totals = computeOverallTotals([], ['A', 'B']);
+    expect(totals).toEqual([
+      { teamId: 'A', total: 0 },
+      { teamId: 'B', total: 0 },
+    ]);
+  });
 });
 
 describe('computeRanking', () => {

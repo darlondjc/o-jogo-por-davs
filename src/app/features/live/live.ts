@@ -28,6 +28,21 @@ export class Live {
   readonly error = signal<string | null>(null);
   readonly justRegisteredQuestion = signal<number | null>(null);
 
+  /** No mobile a sidebar (placar da rodada/geral) vira uma gaveta que desliza
+   * por cima do conteúdo em vez de empilhar embaixo do formulário — sem
+   * isso, o placar ficava enterrado depois de uma lista de equipes longa.
+   * Só importa abaixo de 960px; em telas largas a sidebar já fica sempre
+   * visível e esse estado nunca é lido pelo template. */
+  readonly sideOpen = signal(false);
+
+  toggleSide(): void {
+    this.sideOpen.update((open) => !open);
+  }
+
+  closeSide(): void {
+    this.sideOpen.set(false);
+  }
+
   /** Resposta em andamento pro dialog "corrigir perguntas anteriores" (ver
    * `score-entry.ts`): busca as pontuações da pergunta escolhida e devolve
    * pro componente via `correctionData`. */

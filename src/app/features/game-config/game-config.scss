@@ -1,5 +1,11 @@
 .page {
-  padding: var(--space-6) 0 var(--space-7);
+  /* Longhand de propósito: um shorthand `padding: topo 0 base` aqui zera
+     também o padding horizontal do `.container` global (mesmo elemento,
+     `class="page container"`), grudando o conteúdo nas bordas da tela em
+     qualquer largura menor que o max-width — bug real reportado em
+     mobile. Só topo/base são responsabilidade desta regra. */
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-7);
   max-width: 900px;
   display: flex;
   flex-direction: column;
@@ -74,6 +80,18 @@ h2 {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  /* Os 4 botões de ação (↑ ↓ Editar Remover) não cabem ao lado do nome da
+     equipe em tela estreita — sem quebra de linha isso estourava a largura
+     da viewport (bug real medido em mobile, ~160px de overflow em 360px). */
+  flex-wrap: wrap;
+
+  /* Linha 1: dot + nome + ações (a `order` abaixo reordena visualmente pra
+     "jogadores" vir por último). Linha 2: só "jogadores", com uma folga
+     vertical menor que a horizontal — do jeito que estava, as três linhas
+     ficavam soltas demais uma da outra. */
+  @media (max-width: 480px) {
+    row-gap: var(--space-1);
+  }
 }
 
 .dot {
@@ -92,11 +110,74 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  @media (max-width: 480px) {
+    font-size: 0.88rem;
+    order: 1;
+  }
+}
+
+/* No mobile a contagem de jogadores cai pra linha de baixo, alinhada com o
+   nome (não com o dot) — junto com o nome menor e as ações em ícone, o
+   card fica bem mais compacto (melhorias mobile "cards das equipes
+   cadastradas"). `order: 3` garante que ela vem depois das ações mesmo
+   estando antes delas no DOM (a ordem no DOM continua nome → jogadores →
+   ações, que é a ordem que faz sentido pra quem usa leitor de tela). */
+.team-players {
+  @media (max-width: 480px) {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: calc(12px + var(--space-3));
+    font-size: 0.78rem;
+  }
 }
 
 .team-actions {
   display: flex;
   gap: var(--space-1);
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    order: 2;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
+.reorder-actions {
+  display: flex;
+  gap: var(--space-1);
+
+  /* Reordenar por seta some no mobile — card já fica compacto o bastante
+     com só editar/remover, e arrastar posição não é um gesto essencial
+     numa tela pequena (melhorias mobile "cards das equipes cadastradas"). */
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+
+/* Editar/remover viram só ícone no mobile — o rótulo de texto continua
+   presente no DOM (acessibilidade via aria-label no botão) e some só
+   visualmente. Em telas largas nada muda. SVG (não emoji): herda a cor do
+   botão via `currentColor`, então acompanha o `.btn-ghost`/`.btn-danger`
+   e o hover, em vez de ficar um sticker colorido destoando do tema escuro. */
+.action-icon {
+  flex-shrink: 0;
+}
+
+.action-text {
+  @media (max-width: 480px) {
+    display: none;
+  }
+}
+
+/* No mobile, sem o texto, o padding do `.btn` (pensado pra rótulo) sobrava
+   demais ao redor do ícone — vira um botão quadrado e compacto. */
+@media (max-width: 480px) {
+  .team-actions > .btn {
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+  }
 }
 
 .team-form {

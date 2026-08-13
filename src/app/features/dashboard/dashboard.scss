@@ -2,6 +2,12 @@
   padding: var(--space-6) 0 var(--space-7);
 }
 
+@media (max-width: 400px) {
+  .container {
+    padding: 0 var(--space-4);
+  }
+}
+
 .hero {
   display: flex;
   align-items: flex-end;
@@ -9,6 +15,15 @@
   margin-bottom: var(--space-6);
   gap: var(--space-4);
   flex-wrap: wrap;
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      width: 100%;
+    }
+  }
 }
 
 .hero-title {
@@ -24,6 +39,10 @@ h1 {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   text-shadow: 0 0 20px rgba(255, 204, 51, 0.35);
+
+  @media (max-width: 720px) {
+    font-size: 1.35rem;
+  }
 }
 
 .section-title {
@@ -68,6 +87,10 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .game-card {

@@ -182,6 +182,37 @@ h2 {
       --vb-shadow: #{list.nth($pair, 2)};
     }
   }
+
+  /* Encolhe os 6 botões (0-5) no mobile pra caberem numa linha só — no
+     tamanho padrão eles quebram em duas linhas em telas estreitas (spec
+     "botões de pontuação 0-5 precisam ser menores ou fonte menor, para
+     ficar todos em uma linha"). */
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+    border-radius: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .value-boxes {
+    gap: var(--space-2);
+    flex-wrap: nowrap;
+    /* Ocupa a linha toda sozinho — sem isso ele fica lado a lado com
+       "Todas"/"Limpar"/"Aplicar" na mesma linha do flex-wrap de
+       `.quick-controls`, disputando espaço com o resto dos controles. */
+    flex-basis: 100%;
+  }
+
+  /* "Selecionar todas"/"Limpar seleção"/"Aplicar" precisam caber numa linha
+     só embaixo dos botões 0-5 (spec "os botões... ficam na mesma linha");
+     o texto encolhe pro rótulo curto (ver `.label-short` mais abaixo) e o
+     padding/fonte diminuem pra sobrar espaço. */
+  .quick-controls > .btn {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.7rem;
+  }
 }
 
 .teams {
@@ -392,6 +423,62 @@ h2 {
   padding: var(--space-3) var(--space-4);
 }
 
+/* Rótulo curto dos dois botões principais, só usado no mobile (ver media
+   query abaixo). O texto completo não cabe nos dois lado a lado numa tela
+   estreita. */
+.label-short {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .primary-actions {
+    width: 100%;
+    gap: var(--space-2);
+  }
+
+  /* Os dois botões principais (Registrar / Ninguém acertou) precisam ficar
+     lado a lado numa linha só (spec "os botões do rodapé precisam ficar os
+     dois numa só linha"); o texto encolhe pro rótulo curto e cada botão
+     divide o espaço disponível igualmente. O de corrigir pergunta anterior
+     é secundário e vai pra linha de baixo, sozinho. */
+  .btn-primary.btn-xl,
+  .btn-ghost.btn-outline.btn-xl {
+    flex: 1 1 0;
+    padding: var(--space-3) var(--space-2);
+    font-size: 0.7rem;
+  }
+
+  .correction-trigger {
+    flex-basis: 100%;
+  }
+
+  .label-full {
+    display: none;
+  }
+
+  .label-short {
+    display: inline;
+  }
+
+  /* Texto de confirmação encolhe pro rótulo curto e os dois botões (ver
+     `.btn-xl` ao lado) diminuem o padding — junto com o texto curto, cabe
+     numa linha só em telas estreitas. */
+  .confirm-bar {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    font-size: 0.78rem;
+  }
+
+  .confirm-bar .btn-xl {
+    padding: var(--space-2) var(--space-4);
+  }
+}
+
 /* Dialog "corrigir perguntas anteriores" (spec score-entry) — overlay
    simples, sem dependência de biblioteca de modal. */
 .picker-overlay {
@@ -472,6 +559,40 @@ h2 {
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-3);
+}
+
+/* Dialog de correção adaptado pro mobile: o overlay mantém um respiro
+   mínimo até a borda da tela (senão o dialog gruda nela) enquanto o
+   padding interno do dialog encolhe, pra sobrar mais largura útil pro
+   conteúdo. O botão de confirmar mostra só "Corrigir" (ver `.label-short`
+   acima) porque o texto completo não cabe ao lado de "Cancelar". */
+@media (max-width: 480px) {
+  .picker-overlay {
+    padding: var(--space-4);
+  }
+
+  .picker-dialog {
+    padding: var(--space-3) var(--space-4);
+    max-height: min(75vh, 520px);
+    gap: var(--space-2);
+  }
+
+  .picker-dialog h3 {
+    font-size: 0.85rem;
+  }
+
+  .picker-hint {
+    font-size: 0.72rem;
+  }
+
+  .picker-item {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.78rem;
+  }
+
+  .picker-actions .btn {
+    flex: 1 1 0;
+  }
 }
 
 .shortcuts {

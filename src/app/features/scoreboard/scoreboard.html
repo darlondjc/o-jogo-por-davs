@@ -8,7 +8,6 @@
         [class.changed]="changedIds().has(row.teamId)"
       >
         <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
-        <span class="dot" [style.background]="row.color"></span>
         <span class="name">{{ row.teamName }}</span>
         @if (row.trend === 'up') {
           <span class="trend trend-up" aria-label="subiu no ranking">{{ trendIcon(row.trend) }}</span>

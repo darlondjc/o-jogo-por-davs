@@ -15,9 +15,13 @@
         </p>
         <ul class="meta-chips">
           <li class="chip">{{ gameTypeLabel(game.gameType) }}</li>
-          <li class="chip">{{ game.rounds }} rodadas</li>
-          <li class="chip">{{ game.questionsPerRound }} perguntas por rodada</li>
-          <li class="chip">{{ gameState.teams().length }} equipes</li>
+          <li class="chip">{{ game.rounds }} {{ pluralize(game.rounds, 'rodada', 'rodadas') }}</li>
+          <li class="chip">
+            {{ game.questionsPerRound }} {{ pluralize(game.questionsPerRound, 'pergunta', 'perguntas') }} por rodada
+          </li>
+          <li class="chip">
+            {{ gameState.teams().length }} {{ pluralize(gameState.teams().length, 'equipe', 'equipes') }}
+          </li>
         </ul>
       </div>
 

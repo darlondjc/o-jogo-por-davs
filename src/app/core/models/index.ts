@@ -48,3 +48,8 @@ const GAME_TYPE_LABELS: Record<GameType, string> = {
 export function gameTypeLabel(gameType: GameType): string {
   return GAME_TYPE_LABELS[gameType];
 }
+
+/** Concordância singular/plural simples pros contadores da UI ("1 rodada" vs "2 rodadas"). */
+export function pluralize(count: number, singular: string, plural: string): string {
+  return count === 1 ? singular : plural;
+}

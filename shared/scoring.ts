@@ -31,9 +31,21 @@ export function computeRoundTotals(
   return [...totals.entries()].map(([teamId, total]) => ({ teamId, total }));
 }
 
-/** Soma de todas as pontuações finais (todas as rodadas/perguntas) por equipe. */
-export function computeOverallTotals(scores: Score[]): TeamRoundTotal[] {
+/**
+ * Soma de todas as pontuações finais (todas as rodadas/perguntas) por equipe.
+ * `knownTeamIds`, quando informado, garante uma entrada (com total 0) pra
+ * toda equipe do jogo, mesmo quem ainda não tem nenhuma pontuação lançada —
+ * sem isso, uma equipe sem pontuação some do ranking em vez de empatar em
+ * 1º com as outras zeradas (bug: "①"/"②" errados no placar de jogo recém-criado).
+ */
+export function computeOverallTotals(
+  scores: Score[],
+  knownTeamIds?: string[],
+): TeamRoundTotal[] {
   const totals = new Map<string, number>();
+  for (const teamId of knownTeamIds ?? []) {
+    totals.set(teamId, 0);
+  }
   for (const score of scores) {
     totals.set(score.teamId, (totals.get(score.teamId) ?? 0) + score.total);
   }

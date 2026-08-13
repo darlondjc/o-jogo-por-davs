@@ -135,22 +135,66 @@
           <li class="team-row">
             <span class="dot" [style.background]="teamColorAt(i)"></span>
             <span class="team-name">{{ team.name }}</span>
-            <span class="muted">{{ team.playersCount }} jogadores</span>
+            <span class="team-players muted">{{ team.playersCount }} jogadores</span>
             <div class="team-actions">
-              <button class="btn btn-ghost" type="button" (click)="moveTeamDraft(team.key, -1)" [disabled]="i === 0">
-                ↑
+              <div class="reorder-actions">
+                <button
+                  class="btn btn-ghost"
+                  type="button"
+                  (click)="moveTeamDraft(team.key, -1)"
+                  [disabled]="i === 0"
+                  aria-label="Mover equipe para cima"
+                >
+                  ↑
+                </button>
+                <button
+                  class="btn btn-ghost"
+                  type="button"
+                  (click)="moveTeamDraft(team.key, 1)"
+                  [disabled]="i === draftTeams().length - 1"
+                  aria-label="Mover equipe para baixo"
+                >
+                  ↓
+                </button>
+              </div>
+              <button class="btn btn-ghost" type="button" (click)="startEditTeam(team)" aria-label="Editar equipe">
+                <svg
+                  class="action-icon"
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M13.5 3.5l3 3L6 17l-4 1 1-4L13.5 3.5z" />
+                </svg>
+                <span class="action-text">Editar</span>
               </button>
               <button
-                class="btn btn-ghost"
+                class="btn btn-ghost btn-danger"
                 type="button"
-                (click)="moveTeamDraft(team.key, 1)"
-                [disabled]="i === draftTeams().length - 1"
+                (click)="removeTeamDraft(team.key)"
+                aria-label="Remover equipe"
               >
-                ↓
-              </button>
-              <button class="btn btn-ghost" type="button" (click)="startEditTeam(team)">Editar</button>
-              <button class="btn btn-ghost btn-danger" type="button" (click)="removeTeamDraft(team.key)">
-                Remover
+                <svg
+                  class="action-icon"
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" />
+                </svg>
+                <span class="action-text">Remover</span>
               </button>
             </div>
           </li>

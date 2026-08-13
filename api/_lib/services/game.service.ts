@@ -270,14 +270,18 @@ export async function finishGame(gameId: string): Promise<Game> {
 
 export async function getRoundSummary(gameId: string, round: number): Promise<RoundSummary> {
   const game = await getGameOrThrow(gameId);
+  const teams = await repos().teams.findByGameId(gameId);
   const allScores = await repos().scores.findByGameId(gameId);
+  const teamIds = teams.map((t) => t.id);
 
   const roundTotals = computeRoundTotals(allScores, round);
   const overallTotals = computeOverallTotals(
     allScores.filter((s) => s.round <= round),
+    teamIds,
   );
   const previousOverallTotals = computeOverallTotals(
     allScores.filter((s) => s.round < round),
+    teamIds,
   );
   const overallRanking = computeRanking(overallTotals, previousOverallTotals);
 
@@ -305,9 +309,11 @@ export async function getScoreboard(gameId: string): Promise<Scoreboard> {
   const teams = await repos().teams.findByGameId(gameId);
   const allScores = await repos().scores.findByGameId(gameId);
 
-  const overallTotals = computeOverallTotals(allScores);
+  const teamIds = teams.map((t) => t.id);
+  const overallTotals = computeOverallTotals(allScores, teamIds);
   const previousOverallTotals = computeOverallTotals(
     allScores.filter((s) => s.round < game.currentRound),
+    teamIds,
   );
   const ranking = computeRanking(overallTotals, previousOverallTotals);
   const currentRoundTotals = computeRoundTotals(allScores, game.currentRound);
@@ -327,7 +333,9 @@ export async function getScoreboard(gameId: string): Promise<Scoreboard> {
         order: team.order,
         roundTotal,
         overallTotal: rankEntry?.total ?? 0,
-        position: rankEntry?.position ?? teams.length,
+        // `teamIds` acima garante uma entrada no ranking pra toda equipe,
+        // então esse fallback não deveria disparar — mantido só por segurança.
+        position: rankEntry?.position ?? 1,
         previousPosition: rankEntry?.previousPosition ?? null,
       };
     })

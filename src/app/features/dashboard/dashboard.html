@@ -31,8 +31,9 @@
             </div>
             <p class="muted">{{ game.date | date: 'dd/MM/yyyy' }} · {{ game.location }}</p>
             <p class="muted small">
-              {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }} rodadas ·
-              {{ game.questionsPerRound }} perguntas por rodada
+              {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }}
+              {{ pluralize(game.rounds, 'rodada', 'rodadas') }} ·
+              {{ game.questionsPerRound }} {{ pluralize(game.questionsPerRound, 'pergunta', 'perguntas') }} por rodada
             </p>
           </a>
         }

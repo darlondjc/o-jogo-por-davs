@@ -11,7 +11,7 @@
   </p>
 
   <section class="quick-bar">
-    <span class="quick-label">Pontuação da pergunta — botões de fliperama</span>
+    <span class="quick-label">Pontuação da pergunta</span>
 
     <div class="quick-controls">
       <div class="value-boxes">
@@ -28,7 +28,8 @@
       </div>
 
       <button class="btn btn-ghost btn-outline" type="button" (click)="selectAll()">
-        Selecionar todas (A)
+        <span class="label-full">Selecionar todas (A)</span>
+        <span class="label-short">Todas</span>
       </button>
 
       <button
@@ -37,7 +38,8 @@
         (click)="clearSelection()"
         [disabled]="!selectedCount()"
       >
-        Limpar seleção (ESC)
+        <span class="label-full">Limpar seleção (ESC)</span>
+        <span class="label-short">Limpar</span>
       </button>
 
       <button
@@ -125,7 +127,8 @@
           (click)="requestConfirm()"
           [disabled]="!hasAnyScore() || submitting()"
         >
-          {{ correcting() ? 'REVISAR CORREÇÃO' : 'REGISTRAR PONTUAÇÕES' }}
+          <span class="label-full">{{ correcting() ? 'REVISAR CORREÇÃO' : 'REGISTRAR PONTUAÇÕES' }}</span>
+          <span class="label-short">{{ correcting() ? 'REVISAR' : 'REGISTRAR' }}</span>
         </button>
         <button
           class="btn btn-ghost btn-outline btn-xl"
@@ -133,7 +136,8 @@
           (click)="requestNobodyGotIt()"
           [disabled]="submitting()"
         >
-          Ninguém acertou
+          <span class="label-full">Ninguém acertou</span>
+          <span class="label-short">Ninguém</span>
         </button>
         @if (!correcting() && pickableQuestions().length) {
           <button
@@ -148,7 +152,10 @@
       </div>
     } @else if (confirmingNobody()) {
       <div class="confirm-bar">
-        <span>Registrar que ninguém acertou? As pontuações preenchidas serão descartadas.</span>
+        <span>
+          <span class="label-full">Registrar que ninguém acertou? As pontuações preenchidas serão descartadas.</span>
+          <span class="label-short">Ninguém acertou?</span>
+        </span>
         <button class="btn btn-ghost" type="button" (click)="cancelNobodyConfirm()" [disabled]="submitting()">
           Cancelar
         </button>
@@ -163,7 +170,10 @@
       </div>
     } @else {
       <div class="confirm-bar">
-        <span>Confirmar pontuações desta pergunta?</span>
+        <span>
+          <span class="label-full">Confirmar pontuações desta pergunta?</span>
+          <span class="label-short">Confirmar pontuações?</span>
+        </span>
         <button class="btn btn-ghost" type="button" (click)="cancelConfirm()" [disabled]="submitting()">
           Cancelar
         </button>
@@ -209,7 +219,8 @@
             [disabled]="!pickerSelection()"
             (click)="confirmPickerSelection()"
           >
-            Corrigir pergunta selecionada
+            <span class="label-full">Corrigir pergunta selecionada</span>
+            <span class="label-short">Corrigir</span>
           </button>
         </div>
       </div>

@@ -1,5 +1,8 @@
 .page {
-  padding: var(--space-7) 0;
+  /* Longhand de propósito: ver comentário equivalente em game-config.scss —
+     shorthand aqui zerava o padding horizontal do `.container` global. */
+  padding-top: var(--space-7);
+  padding-bottom: var(--space-7);
   max-width: 800px;
   display: flex;
   flex-direction: column;

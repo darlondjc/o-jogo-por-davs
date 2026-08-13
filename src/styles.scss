@@ -233,9 +233,8 @@ a {
 }
 
 .badge-configuracao {
-  background: var(--bg-elevated-2);
-  color: var(--text-muted);
-  box-shadow: none;
+  background: rgba(192, 132, 252, 0.15);
+  color: var(--arcade-purple);
 }
 .badge-em_andamento {
   background: rgba(51, 255, 153, 0.15);

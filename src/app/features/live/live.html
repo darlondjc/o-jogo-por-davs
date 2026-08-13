@@ -35,12 +35,26 @@
       />
     </div>
 
-    <aside class="side">      
+    <button
+      class="side-toggle"
+      type="button"
+      (click)="toggleSide()"
+      [attr.aria-expanded]="sideOpen()"
+      [attr.aria-label]="sideOpen() ? 'Fechar placar' : 'Mostrar placar'"
+    >
+      {{ sideOpen() ? '✕' : '🏆' }}
+    </button>
+
+    @if (sideOpen()) {
+      <div class="side-backdrop" (click)="closeSide()"></div>
+    }
+
+    <aside class="side" [class.open]="sideOpen()">
       <section class="side-section side-round">
         <h2>Placar da rodada</h2>
         <app-scoreboard [scoreboard]="roundScoreboard()" [compact]="true" variant="arcade" />
       </section>
-     
+
       @if (game.currentRound > 1) {
         <section class="side-section side-overall">
           <h2>Placar geral</h2>

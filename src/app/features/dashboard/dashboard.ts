@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
-import { gameTypeLabel, statusLabel } from '../../core/models';
+import { gameTypeLabel, pluralize, statusLabel } from '../../core/models';
 import type { Game } from '../../core/models';
 
 @Component({
@@ -33,4 +33,5 @@ export class Dashboard {
 
   protected readonly statusLabel = statusLabel;
   protected readonly gameTypeLabel = gameTypeLabel;
+  protected readonly pluralize = pluralize;
 }

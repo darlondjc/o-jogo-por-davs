@@ -20,6 +20,11 @@ export class UserChip {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  protected get firstName(): string {
+    const user = this.auth.user();
+    return user?.name?.split(' ')[0] || '';
+  }
+
   protected async logout(): Promise<void> {
     await this.auth.logout();
     void this.router.navigateByUrl('/login');

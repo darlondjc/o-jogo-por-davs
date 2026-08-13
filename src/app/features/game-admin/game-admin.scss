@@ -1,8 +1,35 @@
 .page {
-  padding: var(--space-6) 0 var(--space-7);
+  /* Longhand de propósito: um shorthand `padding: topo 0 base` aqui zera
+     também o padding horizontal do `.container` global (mesmo elemento,
+     `class="page container"`), grudando o conteúdo nas bordas da tela em
+     qualquer largura menor que o max-width — bug real reportado em mobile
+     (afetava também game-config, game-form e round-summary, mesma causa). */
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-7);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+
+  @media (max-width: 480px) {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-6);
+  }
+
+  /* Container global reserva 24px de cada lado; num celular de 360px isso
+     já come 48px, some com card padding fica cramped. Aperta um pouco só
+     aqui (adaptação mobile "Tela principal do jogo"). */
+  &.container {
+    @media (max-width: 480px) {
+      padding-left: var(--space-4);
+      padding-right: var(--space-4);
+    }
+  }
+
+  .card {
+    @media (max-width: 480px) {
+      padding: var(--space-4);
+    }
+  }
 }
 
 .back {
@@ -22,6 +49,15 @@
   align-items: flex-start;
   gap: var(--space-5);
   flex-wrap: wrap;
+
+  /* Abaixo de 720px o hero-main e o hero-actions já quebram linha (flex-wrap),
+     mas cada um só ocupa a largura do próprio conteúdo. Empilhar de verdade
+     (coluna, esticado) deixa o card organizado em vez de sobrar respiro à
+     direita. */
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* Ações principais (iniciar/continuar, configurar, finalizar) agora vivem
@@ -37,6 +73,15 @@
 
   @media (max-width: 720px) {
     align-items: flex-start;
+  }
+
+  /* Botão principal e ações secundárias esticados de ponta a ponta: em
+     celular é mais fácil tocar num botão largo do que num botão pequeno
+     alinhado à esquerda. O badge sai desse esticamento (ver `.hero .badge`
+     abaixo), senão vira uma pílula esquisita ocupando a tela toda. */
+  @media (max-width: 480px) {
+    align-items: stretch;
+    width: 100%;
   }
 }
 
@@ -59,6 +104,10 @@ h1 {
   word-break: break-word;
   color: var(--text);
   text-shadow: 0 0 24px rgba(78, 161, 255, 0.25);
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
 }
 
 .hero-date {
@@ -97,6 +146,10 @@ h1 {
   flex-shrink: 0;
   font-size: 0.8rem;
   padding: var(--space-2) var(--space-4);
+
+  @media (max-width: 480px) {
+    align-self: flex-start;
+  }
 }
 
 .muted {
@@ -129,6 +182,12 @@ h1 {
   display: flex;
   gap: var(--space-2);
   flex-wrap: wrap;
+
+  /* Coluna, esticado: "Configurar" e "Finalizar jogo" viram dois botões
+     largos empilhados em vez de dois botões pequenos lado a lado. */
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
 }
 
 .grid {
@@ -152,6 +211,15 @@ h2 {
   text-transform: uppercase;
 }
 
+/* "Placar geral" é o único app-scoreboard desta tela — nome do time menor
+   no celular, pra caber melhor num card mais estreito (mesmo tamanho já
+   usado no modo `compact` do componente, ver scoreboard.scss). */
+app-scoreboard {
+  @media (max-width: 480px) {
+    --scoreboard-name-size: 0.85rem;
+  }
+}
+
 .share {
   display: flex;
   flex-direction: column;
@@ -166,6 +234,8 @@ h2 {
   border-radius: var(--radius-sm);
   background: #fff;
   padding: var(--space-2);
+  max-width: 100%;
+  height: auto;
 }
 
 .qr-actions {
@@ -191,6 +261,14 @@ h2 {
    se saiu rodada a rodada, não só o placar geral acumulado). */
 .round-breakdown-scroll {
   overflow-x: auto;
+
+  /* Sangra até a borda da tela em celular: a tabela ganha a largura toda
+     do viewport pra rolar, em vez de ficar espremida dentro do padding
+     (reduzido) do card. */
+  @media (max-width: 480px) {
+    margin: 0 calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
+  }
 }
 
 .round-breakdown {

@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
-import { gameTypeLabel, statusLabel, teamColor } from '../../core/models';
+import { gameTypeLabel, pluralize, statusLabel, teamColor } from '../../core/models';
 
 interface RoundBreakdownRow {
   teamId: string;
@@ -36,6 +36,7 @@ export class GameAdmin {
   readonly qrDataUrl = signal<string | null>(null);
   protected readonly statusLabel = statusLabel;
   protected readonly gameTypeLabel = gameTypeLabel;
+  protected readonly pluralize = pluralize;
 
   readonly roundNumbers = computed<number[]>(() => {
     const game = this.gameState.game();

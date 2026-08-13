@@ -9,7 +9,13 @@
 
 .row {
   display: grid;
-  grid-template-columns: 2.4rem 10px 1fr auto auto;
+  /* `minmax(0, 1fr)`, não `1fr` puro: sem o `0`, a coluna do nome não
+     encolhe além do tamanho da palavra mais longa, e numa tela estreita
+     ela nunca fica pequena o bastante — o nome quebra em várias linhas e a
+     tendência (auto, ao lado) centraliza verticalmente bem no meio desse
+     bloco alto, dando a impressão de estar embaralhada com o texto (bug
+     real reportado em mobile). */
+  grid-template-columns: 2.4rem 10px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -122,7 +128,20 @@
 
 .name {
   font-weight: 700;
-  font-size: 1.05rem;
+  /* Custom property em vez de valor fixo: dá pra uma tela que usa o
+     componente (ex: game-admin, seção "Placar geral") diminuir a fonte só
+     no mobile sem afetar as outras telas — atravessa o encapsulamento de
+     estilo do Angular porque custom property herda pela árvore real do
+     DOM, diferente de um seletor CSS comum. */
+  font-size: var(--scoreboard-name-size, 1.05rem);
+  /* Trunca com "…" em vez de quebrar linha — nome comprido numa coluna
+     estreita não pode esticar a altura da linha, senão a tendência e o
+     total (ao lado, verticalmente centralizados) somem no meio do bloco
+     de texto quebrado. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .total {
@@ -137,6 +156,42 @@
   font-weight: 800;
   width: 1.4rem;
   text-align: center;
+}
+
+/* Colunas fixas (posição, tendência, placar) mais enxutas no mobile —
+   sobra o máximo de largura pro nome, que é a única coluna flexível.
+   `min-width: 3.5ch` no `.total` é o pior ofensor: na variante arcade
+   (fonte pixel, bem mais larga por caractere) isso reservava ~56px só
+   pra caber um placar de 1 dígito, texto colado à direita e um vão vazio
+   enorme à esquerda dele — o "traço ...... placar" reportado no mobile. */
+@media (max-width: 480px) {
+  .row {
+    /* Sem a coluna de tendência (ver `.trend` abaixo) — só 4 colunas. */
+    grid-template-columns: 1.6rem 8px minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .position {
+    font-size: 0.9rem;
+  }
+
+  /* Nome e pontuação são o que importa pra ler o placar num relance — a
+     seta de tendência (subiu/desceu/manteve) é informação extra que não
+     cabe mais no orçamento de espaço do mobile. Sai do grid inteiramente
+     (não só visualmente) pra devolver a coluna pro nome. */
+  .trend {
+    display: none;
+  }
+
+  .total {
+    min-width: 2ch;
+    font-size: 0.95rem;
+  }
+
+  .board.arcade .total {
+    font-size: 0.85rem;
+  }
 }
 
 .trend-up {

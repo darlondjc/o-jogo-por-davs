@@ -83,4 +83,9 @@ export class GoogleSheetsQuestionRepository implements QuestionRepository {
     await this.table.append(toRow(created));
     return created;
   }
+
+  /** Só para o backup de jogo finalizado — ver `GoogleSheetsGameRepository.importRecord`. */
+  async importRecord(question: Question): Promise<void> {
+    await this.table.append(toRow(question));
+  }
 }

@@ -2,8 +2,11 @@
 
 Sistema para administrar e transmitir ao vivo um jogo de trivia entre várias
 equipes. Feito em **Angular 20** (standalone, signals) com uma **API
-serverless** (compatível com Vercel Functions) que persiste os dados em uma
-**planilha Google Sheets**.
+serverless** (compatível com Vercel Functions). Durante o jogo, os dados
+ficam no **Firestore** (rápido, para o ritmo de lançar pontuação em
+segundos); ao finalizar, o jogo inteiro é copiado de uma vez pra uma
+**planilha Google Sheets**, como backup/arquivo — ver seção
+[Armazenamento](#armazenamento).
 
 A prioridade do sistema é **velocidade de operação durante o jogo** — em
 especial a tela `/jogo/:id/ao-vivo`, otimizada para lançar a pontuação de uma
@@ -19,9 +22,12 @@ shared/                 tipos de domínio + regras de cálculo puras,
 api/                     funções serverless (Vercel) — rotas /api/games/...
   _lib/
     repositories/        GameRepository, TeamRepository, QuestionRepository,
-                          ScoreRepository — interfaces + 2 implementações:
-                          Google Sheets (produção) e memória (dev/demo)
-    services/             game.service.ts — orquestra regras de negócio
+                          ScoreRepository — interfaces + 3 implementações:
+                          Firestore (ativo durante o jogo), Google Sheets
+                          (backup ao finalizar, ou ativo se o Firestore não
+                          estiver configurado) e memória (dev/demo)
+    services/             game.service.ts — orquestra regras de negócio;
+                          backup.service.ts — cópia pro Sheets ao finalizar
     http/                 validação (zod) e helpers de resposta HTTP
 src/app/
   core/                  ApiService (HttpClient) e GameStateService (signals)
@@ -43,10 +49,10 @@ npm install
 npm start          # ng serve — abre em http://localhost:4200
 ```
 
-Sem as variáveis do Google Sheets configuradas, a API usa automaticamente um
-**repositório em memória com dados de demonstração** (um jogo de exemplo com
-4 equipes, 3 rodadas, 20 perguntas). Isso permite rodar o fluxo completo
-localmente sem nenhuma credencial.
+Sem nenhuma credencial configurada (nem Firestore, nem Google Sheets), a API
+usa automaticamente um **repositório em memória com dados de demonstração**
+(um jogo de exemplo com 4 equipes, 3 rodadas, 20 perguntas). Isso permite
+rodar o fluxo completo localmente sem nenhuma credencial.
 
 Para rodar o front-end **e** as funções serverless juntos (como na Vercel):
 
@@ -79,8 +85,11 @@ de pergunta/rodada e validação de lançamentos.
 
 | Variável | Descrição |
 |---|---|
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-mail da Service Account do Google Cloud |
-| `GOOGLE_PRIVATE_KEY` | Chave privada da Service Account (mantenha as quebras de linha como `\n`) |
+| `FIREBASE_PROJECT_ID` | ID do projeto Firebase |
+| `FIREBASE_CLIENT_EMAIL` | E-mail da Service Account do Firebase |
+| `FIREBASE_PRIVATE_KEY` | Chave privada da Service Account (mantenha as quebras de linha como `\n`) |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-mail da Service Account do Google Cloud (Sheets) |
+| `GOOGLE_PRIVATE_KEY` | Chave privada da Service Account do Sheets (mantenha as quebras de linha como `\n`) |
 | `GOOGLE_SHEET_ID` | ID da planilha (está na URL da planilha) |
 | `GOOGLE_CLIENT_ID` | OAuth Client ID (tipo "Web application") usado no login com Google — ver seção [Login](#login) |
 | `SESSION_SECRET` | Segredo para assinar o cookie de sessão do login. Opcional em dev (um segredo temporário é gerado por processo); **defina em produção** |
@@ -93,7 +102,52 @@ servido via `GET /api/auth/config`.
 
 Copie `.env.example` para `.env` para desenvolvimento local com `vercel dev`.
 
+## Armazenamento
+
+A fábrica de repositórios (`api/_lib/repositories/index.ts`) escolhe entre
+três implementações, nesta ordem:
+
+1. **Firestore**, se as três variáveis `FIREBASE_*` estiverem configuradas —
+   repositório ativo durante o jogo inteiro (configuração, lançamento de
+   pontuação, correções). É rápido porque as chaves dos documentos já são a
+   própria chave de idempotência (`rodada-pergunta-equipe`), então
+   atualizar uma pontuação é sempre uma escrita direta, sem varrer planilha.
+   Quando o jogo é finalizado (`POST /finish` ou a última pergunta da
+   última rodada), o jogo inteiro é copiado de uma vez pro Google Sheets
+   (se também configurado) como backup — a aplicação **não volta a ler do
+   Sheets depois disso**, continua lendo do Firestore normalmente.
+2. **Google Sheets**, se o Firestore não estiver configurado mas as
+   variáveis `GOOGLE_SHEET_ID`/`GOOGLE_SERVICE_ACCOUNT_EMAIL`/
+   `GOOGLE_PRIVATE_KEY` estiverem — comportamento anterior à migração para o
+   Firestore, sem depender dele.
+3. **Memória com dados de demonstração**, se nada estiver configurado.
+
+## Configurando o Firebase (Firestore)
+
+1. Crie (ou reutilize) um projeto no [console do Firebase](https://console.firebase.google.com/).
+2. Ative o **Firestore Database** (modo produção).
+3. Em **Configurações do projeto → Contas de serviço**, gere uma nova chave
+   privada. O JSON baixado tem `project_id`, `client_email` e
+   `private_key` — viram `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` e
+   `FIREBASE_PRIVATE_KEY`.
+4. Configure as três variáveis na Vercel (Project Settings → Environment
+   Variables) ou em `.env` para rodar `vercel dev` localmente.
+
+Não é preciso criar coleções manualmente — os repositórios
+(`api/_lib/repositories/firestore/`) criam os documentos sob demanda:
+`games/{gameId}`, `games/{gameId}/teams/{teamId}`,
+`games/{gameId}/questions/{rodada}-{numero}` e
+`games/{gameId}/scores/{rodada}-{pergunta}-{equipeId}`.
+
+Sem o Firestore configurado, a API funciona exatamente como antes da
+migração (Google Sheets ou memória) — ele é inteiramente opcional.
+
 ## Configurando o Google Sheets
+
+Necessário para restringir o login com Google a quem é editor da planilha
+(ver seção [Login](#login)) e, opcionalmente, como backup de jogos
+finalizados quando o Firestore está configurado (ver
+[Armazenamento](#armazenamento)).
 
 1. Crie (ou reutilize) um projeto no [Google Cloud Console](https://console.cloud.google.com/).
 2. Ative a **Google Sheets API** para o projeto.
@@ -182,13 +236,14 @@ uma reescrita de rota para que o roteamento do Angular funcione em qualquer
 URL profunda (ex: acessar `/jogo/abc/placar` diretamente). As funções em
 `api/` são detectadas automaticamente pela Vercel.
 
-Lembre-se de configurar `GOOGLE_SERVICE_ACCOUNT_EMAIL`,
-`GOOGLE_PRIVATE_KEY` e `GOOGLE_SHEET_ID` nas variáveis de ambiente do
-projeto na Vercel antes do primeiro deploy em produção — sem elas, a API
-roda em modo de demonstração (memória, não durável entre invocações).
-Configure também `GOOGLE_CLIENT_ID` e `SESSION_SECRET` (ver seção
-[Login](#login)) — sem `GOOGLE_CLIENT_ID` o botão de login some do
-front-end.
+Lembre-se de configurar `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` e
+`FIREBASE_PRIVATE_KEY` (ver [Armazenamento](#armazenamento)) nas variáveis
+de ambiente do projeto na Vercel antes do primeiro deploy em produção — sem
+elas, a API roda em modo de demonstração (memória, não durável entre
+invocações), a menos que `GOOGLE_SERVICE_ACCOUNT_EMAIL`/`GOOGLE_PRIVATE_KEY`/
+`GOOGLE_SHEET_ID` estejam configuradas. Configure também `GOOGLE_CLIENT_ID`
+e `SESSION_SECRET` (ver seção [Login](#login)) — sem `GOOGLE_CLIENT_ID` o
+botão de login some do front-end.
 
 ## Fluxo principal
 
@@ -213,7 +268,7 @@ Participantes: "/jogo/:id/placar" (sem login, atualiza a cada 3s)
 | `Enter` | Confirma o registro da pergunta (primeiro toque abre a barra de confirmação, segundo efetiva) |
 | `Espaço` | Mesmo que `Enter`, quando nenhum campo está focado |
 | `A` | Seleciona/desseleciona todas as equipes |
-| `P` | Corrige a última pergunta registrada |
+| `P` | Abre o dialog para corrigir uma pergunta já registrada (qualquer uma, não só a última) |
 | `Esc` | Cancela a confirmação pendente |
 
 ## Idempotência e correção

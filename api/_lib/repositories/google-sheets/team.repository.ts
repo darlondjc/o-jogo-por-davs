@@ -90,4 +90,9 @@ export class GoogleSheetsTeamRepository implements TeamRepository {
   async delete(gameId: string, teamId: string): Promise<void> {
     await this.table.deleteWhere((r) => r.jogoId === gameId && r.id === teamId);
   }
+
+  /** Só para o backup de jogo finalizado — ver `GoogleSheetsGameRepository.importRecord`. */
+  async importRecord(team: Team): Promise<void> {
+    await this.table.append(toRow(team));
+  }
 }

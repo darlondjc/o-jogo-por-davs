@@ -19,6 +19,7 @@ import type {
 } from '../../../shared/domain/types';
 import { getRepositories } from '../repositories';
 import { badRequest, notFound } from '../http/respond';
+import { backupFinishedGameToSheets } from './backup.service';
 
 function repos() {
   return getRepositories();
@@ -203,6 +204,10 @@ export async function submitQuestionScores(
     ? await getRoundSummary(gameId, payload.round)
     : null;
 
+  if (result.gameFinished) {
+    await backupFinishedGameToSheets(gameId);
+  }
+
   return {
     game: updatedGame,
     scores,
@@ -243,7 +248,9 @@ export async function continueToNextRound(gameId: string): Promise<Game> {
 
 export async function finishGame(gameId: string): Promise<Game> {
   await getGameOrThrow(gameId);
-  return repos().games.update(gameId, { status: 'FINALIZADO' });
+  const game = await repos().games.update(gameId, { status: 'FINALIZADO' });
+  await backupFinishedGameToSheets(gameId);
+  return game;
 }
 
 export async function getRoundSummary(gameId: string, round: number): Promise<RoundSummary> {

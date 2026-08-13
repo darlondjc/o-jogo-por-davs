@@ -108,4 +108,11 @@ export class GoogleSheetsGameRepository implements GameRepository {
     if (!result) throw new Error(`Falha ao atualizar jogo: ${id}`);
     return updated;
   }
+
+  /** Só para o backup de jogo finalizado (ver `services/backup.service.ts`):
+   * grava o registro tal como veio do repositório ativo (Firestore),
+   * preservando o `id` original em vez de gerar um novo. */
+  async importRecord(game: Game): Promise<void> {
+    await this.table.append(toRow(game));
+  }
 }

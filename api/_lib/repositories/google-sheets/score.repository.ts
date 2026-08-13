@@ -131,6 +131,11 @@ export class GoogleSheetsScoreRepository implements ScoreRepository {
     return result;
   }
 
+  /** Só para o backup de jogo finalizado — ver `GoogleSheetsGameRepository.importRecord`. */
+  async importRecord(score: Score): Promise<void> {
+    await this.table.append(toRow(score));
+  }
+
   async findLastRegisteredQuestion(
     gameId: string,
   ): Promise<{ round: number; question: number } | null> {

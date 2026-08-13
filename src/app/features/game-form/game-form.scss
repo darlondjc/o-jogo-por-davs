@@ -9,6 +9,7 @@
   text-decoration: none;
   margin-bottom: var(--space-3);
   font-size: 0.9rem;
+  font-family: var(--font-mono);
 
   &:hover {
     color: var(--text);
@@ -16,9 +17,12 @@
 }
 
 h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: var(--space-1);
+  font-family: var(--font-pixel);
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 204, 51, 0.35);
 }
 
 .muted {
@@ -27,40 +31,7 @@ h1 {
 }
 
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
   margin-top: var(--space-5);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  flex: 1;
-
-  span {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-}
-
-.field-row {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.field input.invalid,
-.field select.invalid,
-.field textarea.invalid {
-  border-color: var(--negative);
-  outline-color: var(--negative);
-}
-
-.field-error {
-  font-size: 0.8rem;
-  color: var(--negative);
 }
 
 .error {

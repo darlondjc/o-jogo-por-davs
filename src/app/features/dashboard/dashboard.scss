@@ -11,25 +11,29 @@
   flex-wrap: wrap;
 }
 
-.eyebrow {
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  margin-bottom: var(--space-1);
+.hero-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-pixel);
+  font-size: 1.6rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 204, 51, 0.35);
 }
 
 .section-title {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  font-weight: 400;
   margin-bottom: var(--space-4);
   color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .muted {
@@ -51,6 +55,13 @@ h1 {
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-7) var(--space-5);
+
+  h2 {
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+  }
 }
 
 .grid {
@@ -67,10 +78,12 @@ h1 {
   color: var(--text);
   transition:
     border-color 0.15s ease,
+    box-shadow 0.15s ease,
     transform 0.08s ease;
 
   &:hover {
-    border-color: var(--accent);
+    border-color: var(--arcade-accent);
+    box-shadow: 0 0 24px -12px var(--arcade-accent);
   }
 
   &:active {
@@ -85,7 +98,12 @@ h1 {
   gap: var(--space-3);
 
   h3 {
+    font-family: var(--font-arcade-body);
     font-size: 1.15rem;
     font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

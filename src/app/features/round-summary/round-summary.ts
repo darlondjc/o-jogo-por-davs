@@ -96,9 +96,9 @@ export class RoundSummaryPage {
   }
 
   medal(position: number): string | null {
-    if (position === 1) return '🥇';
-    if (position === 2) return '🥈';
-    if (position === 3) return '🥉';
+    if (position === 1) return '①';
+    if (position === 2) return '②';
+    if (position === 3) return '③';
     return null;
   }
 

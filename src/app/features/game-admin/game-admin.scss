@@ -9,6 +9,7 @@
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.9rem;
+  font-family: var(--font-mono);
 
   &:hover {
     color: var(--text);
@@ -30,24 +31,24 @@
   min-width: 0;
 }
 
-.eyebrow {
-  color: var(--accent);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-}
-
+/* Nome do jogo é texto do usuário e pode ser longo — fica em
+   --font-arcade-body com destaque de cor, não em fonte pixel (ver regra em
+   docs-migracao-design-arcade). */
 h1 {
-  font-size: 2.1rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-arcade-body);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   line-height: 1.15;
   word-break: break-word;
+  color: var(--text);
+  text-shadow: 0 0 24px rgba(78, 161, 255, 0.25);
 }
 
 .hero-date {
   color: var(--text-muted);
   font-size: 0.95rem;
+  font-family: var(--font-mono);
 
   .dot {
     color: var(--text-faint);
@@ -62,16 +63,18 @@ h1 {
   list-style: none;
   margin: var(--space-1) 0 0;
   padding: 0;
+}
 
-  li {
-    background: var(--bg-elevated-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-1) var(--space-3);
-    font-size: 0.78rem;
-    color: var(--text-faint);
-    white-space: nowrap;
-  }
+.chip {
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  white-space: nowrap;
 }
 
 .hero .badge {
@@ -99,18 +102,15 @@ h1 {
   align-items: flex-start;
 }
 
-.btn-xl {
-  font-size: 1.15rem;
-  padding: var(--space-4) var(--space-6);
-}
-
 .finished {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  color: var(--accent);
 }
 
 .blockers {
   color: var(--negative);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   margin: 0;
   padding-left: 1.2em;
@@ -134,9 +134,13 @@ h1 {
 }
 
 h2 {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: var(--space-3);
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-bottom: var(--space-4);
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .share {
@@ -147,6 +151,8 @@ h2 {
   text-align: center;
 }
 
+/* Fundo branco mantido de propósito — QR code precisa de contraste alto
+   pra escanear bem, não segue a paleta escura do resto da tela. */
 .qr {
   border-radius: var(--radius-sm);
   background: #fff;

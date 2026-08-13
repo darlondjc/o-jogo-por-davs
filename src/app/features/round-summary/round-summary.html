@@ -30,7 +30,7 @@
             <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
             <span class="dot" [style.background]="row.color"></span>
             <span class="name">{{ row.teamName }}</span>
-            <span class="total">{{ row.total }}</span>
+            <span class="total" [style.color]="row.color">{{ row.total }}</span>
           </li>
         }
       </ol>

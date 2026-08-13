@@ -14,10 +14,10 @@
           }
         </p>
         <ul class="meta-chips">
-          <li>{{ gameTypeLabel(game.gameType) }}</li>
-          <li>{{ game.rounds }} rodadas</li>
-          <li>{{ game.questionsPerRound }} perguntas por rodada</li>
-          <li>{{ gameState.teams().length }} equipes</li>
+          <li class="chip">{{ gameTypeLabel(game.gameType) }}</li>
+          <li class="chip">{{ game.rounds }} rodadas</li>
+          <li class="chip">{{ game.questionsPerRound }} perguntas por rodada</li>
+          <li class="chip">{{ gameState.teams().length }} equipes</li>
         </ul>
       </div>
       <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
@@ -82,7 +82,7 @@
     <section class="grid">
       <div class="card">
         <h2>Placar geral</h2>
-        <app-scoreboard [scoreboard]="gameState.scoreboard()" [teams]="gameState.teams()" />
+        <app-scoreboard [scoreboard]="gameState.scoreboard()" [teams]="gameState.teams()" variant="arcade" />
       </div>
 
       <div class="card share">

@@ -15,6 +15,7 @@
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.9rem;
+  font-family: var(--font-mono);
 
   &:hover {
     color: var(--text);
@@ -22,54 +23,25 @@
 }
 
 h1 {
-  font-size: 2rem;
-  font-weight: 800;
+  font-family: var(--font-pixel);
+  font-size: 1.3rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 204, 51, 0.35);
 }
 
 h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  font-weight: 400;
   margin-bottom: var(--space-4);
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  flex: 1;
-
-  span {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-muted);
-  }
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .field.small {
   flex: 0 0 120px;
-}
-
-.field-row {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.field input.invalid,
-.field select.invalid,
-.field textarea.invalid {
-  border-color: var(--negative);
-  outline-color: var(--negative);
-}
-
-.field-error {
-  font-size: 0.8rem;
-  color: var(--negative);
 }
 
 .error {
@@ -93,7 +65,8 @@ h2 {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
 }
@@ -103,11 +76,17 @@ h2 {
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 8px -2px currentColor;
 }
 
 .team-name {
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-weight: 700;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-actions {

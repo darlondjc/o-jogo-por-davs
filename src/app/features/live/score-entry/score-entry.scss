@@ -136,6 +136,37 @@ h2 {
     transform: translateY(2px);
   }
 
+  /* Parada (não selecionada): mesmo "plástico" colorido, mas escurecido
+     e dessaturado — cara de botão apagado/desabilitado — pra sobrar
+     contraste de verdade pro valor que está ativo (spec "Botões de
+     pontuação (0-5)... quando não selecionados podem ficar mais
+     escuros"). Cada .value-box-N só troca as duas custom properties de
+     cor abaixo; o resto do visual (gradiente, sombra, filtro, estados) é
+     compartilhado por todas as cores. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--vb-color) 80%, transparent),
+    color-mix(in srgb, var(--vb-color) 47%, transparent)
+  );
+  box-shadow: 0 4px 0 var(--vb-shadow);
+  filter: brightness(0.48) saturate(0.55);
+
+  &:hover {
+    filter: brightness(0.65) saturate(0.7);
+  }
+
+  &:active {
+    box-shadow: 0 1px 0 var(--vb-shadow);
+  }
+
+  &.active {
+    background: var(--vb-color);
+    box-shadow:
+      0 4px 0 var(--vb-shadow),
+      0 0 16px -4px var(--vb-color);
+    filter: none;
+  }
+
   $presets: (
     0: (#ff4d6a, #7a1a2c),
     1: (#ff9f4e, #7a3f10),
@@ -147,32 +178,8 @@ h2 {
 
   @each $value, $pair in $presets {
     &.value-box-#{$value} {
-      $color: list.nth($pair, 1);
-      $shadow: list.nth($pair, 2);
-      /* Parada (não selecionada): mesmo "plástico" colorido, mas escurecido
-         e dessaturado — cara de botão apagado/desabilitado — pra sobrar
-         contraste de verdade pro valor que está ativo (spec "Botões de
-         pontuação (0-5)... quando não selecionados podem ficar mais
-         escuros"). */
-      background: linear-gradient(180deg, rgba($color, 0.8), rgba($color, 0.47));
-      box-shadow: 0 4px 0 $shadow;
-      filter: brightness(0.48) saturate(0.55);
-
-      &:hover {
-        filter: brightness(0.65) saturate(0.7);
-      }
-
-      &:active {
-        box-shadow: 0 1px 0 $shadow;
-      }
-
-      &.active {
-        background: $color;
-        box-shadow:
-          0 4px 0 $shadow,
-          0 0 16px -4px $color;
-        filter: none;
-      }
+      --vb-color: #{list.nth($pair, 1)};
+      --vb-shadow: #{list.nth($pair, 2)};
     }
   }
 }
@@ -330,23 +337,22 @@ h2 {
   flex-wrap: wrap;
 }
 
+.btn-xl {
+  font-size: 0.8rem;
+  padding: var(--space-4) var(--space-5);
+  border-radius: 10px;
+}
+
 /* Botão primário no estilo "letreiro de fliperama": gradiente dourado,
    sombra sólida embaixo (efeito 3D) e glow externo; afunda no clique. */
 .btn-primary.btn-xl {
   font-family: var(--font-pixel);
-  font-size: 0.8rem;
-  padding: var(--space-4) var(--space-5);
   border: none;
-  border-radius: 10px;
   background: linear-gradient(180deg, #ffe27a, var(--arcade-gold));
   color: var(--arcade-gold-ink);
   box-shadow:
     0 5px 0 var(--arcade-gold-shadow),
     0 0 26px -6px var(--arcade-gold);
-
-  &:hover {
-    background: linear-gradient(180deg, #ffe27a, var(--arcade-gold));
-  }
 
   &:active:not(:disabled) {
     transform: translateY(3px);
@@ -357,10 +363,7 @@ h2 {
 .btn-ghost.btn-outline.btn-xl {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.8rem;
-  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--arcade-border);
-  border-radius: 10px;
   background: transparent;
   color: var(--arcade-text);
 

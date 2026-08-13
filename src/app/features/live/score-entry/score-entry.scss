@@ -405,7 +405,7 @@ h2 {
 
 .picker-dialog {
   width: 100%;
-  max-width: 380px;
+  max-width: 500px;
   max-height: min(70vh, 520px);
   display: flex;
   flex-direction: column;
@@ -456,10 +456,19 @@ h2 {
   &:hover {
     border-color: var(--arcade-accent);
   }
+
+  &.selected {
+    border-color: var(--arcade-accent);
+    background: var(--arcade-bg-elevated);
+    box-shadow: inset 0 0 0 1px var(--arcade-accent);
+  }
 }
 
-.picker-cancel {
-  align-self: flex-end;
+.picker-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
 }
 
 .shortcuts {

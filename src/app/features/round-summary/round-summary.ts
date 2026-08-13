@@ -48,6 +48,9 @@ export class RoundSummaryPage {
   readonly summary = signal<RoundSummary | null>(null);
   readonly loading = signal(true);
   readonly continuing = signal(false);
+  readonly roundCardExpanded = signal(true);
+  readonly rankedCardExpanded = signal(true);
+  readonly selectedTeamId = signal<string | null>(null);
 
   private readonly teamsById = computed(() => {
     const map = new Map<string, Team>();
@@ -123,6 +126,20 @@ export class RoundSummaryPage {
     const game = this.gameState.game();
     return game ? this.round >= game.rounds : false;
   });
+
+  toggleRoundCard(): void {
+    this.roundCardExpanded.set(!this.roundCardExpanded());
+  }
+
+  toggleRankedCard(): void {
+    this.rankedCardExpanded.set(!this.rankedCardExpanded());
+  }
+
+  selectTeam(teamId: string): void {
+    this.selectedTeamId.set(
+      this.selectedTeamId() === teamId ? null : teamId
+    );
+  }
 
   constructor() {
     this.gameState.loadGame(this.gameId).then(async () => {

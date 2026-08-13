@@ -1,0 +1,24 @@
+# Tela de registro de pontuações (score-entry): 
+- Essa área de botões (registrar, ninguem acertou, confirmação, corrigir ultima pergunta, etc), coloque ela fixa no rodapé da página (para rolagem não afetá-la). O parágrafo de atalhos procure outro lugar pra ele.
+- Botão "corrigir ultima pergunta": acho melhor mudar para uma funcionalidade de corrigir perguntas anteriores. Abre uma dialog com as perguntas anteriores (caso nao seja a primeira esse botão nem aparece), pro usuario selecionar a pergunta e atualizar as pontuações. Cuidado com a atualização do placar.
+- Botões de pontuação (0-5) quando não estiverem selecionados podem ficar mais escuros (mais com cara de disabled tavlez), pois o botão selecionado não ficou muito diferente visualmente;
+- Crie um cabeçalho (header) da página fixo no topo, com o botão "<- painel do jogo" à esquerda, o título "O Jogo" no centro e o chip (usuário logado + botão sair) do lado direito
+
+# Componente do placar geral:
+- Melhore a animação de ultrapassagem, tanto dos que sobem quanto dos que descem.
+
+# Melhorias de armazenamento
+- Pensei numa melhoria que pode deixar a aplicação mais rápida. Percebo que salvar e recuperar informação da planilha é muito lento. Pensei em migrar toda a questão do armazenamento para o firebase. Somente quando o jogo for finalizado, ele é salvo inteiro na planilha. Ou seja, jogo em andamento as operações são feitas todas no firebase. Acho que deve ficar bem mais rápido.
+
+# Tela pública de acompanhamento do jogo
+- Assim como quando o jogo está finalizado não precisa mais ficar requisitando atualização do placar, quando o jogo ainda não iniciou tb deve ser do mesmo jeito.
+- A seção do placar geral deve ser colapsável, para melhor acompanhamento da rodada atual. Quando o placar geral estiver colapsado (fechado), suas animações de ultrapassagem não precisam ser processadas (não sei se isso ocorre automaticamente). Somente as animações da seção da rodada atual. 
+- Na seção da rodada atual, coloque antes do nome da equipe a posição da mesma na rodada (exemplo: #1)
+- Verifique se a pontuação da equipe, quando é negativa está mostrando corretamente
+- Valide se a tela está apta a telas de dispositivos mobile 
+
+# Tela principal do jogo (game-admin)
+- Coloque os botões "Iniciar/Continuar jogo", "Configurar" e "Finalizar jogo" no card de cima, lado direito. O botão "ver placar" vai pro card acompanhar jogo (melhore esse card pra esses três botões agora). Dessa forma economizamos espaço.
+
+# Tela de login
+- Incluí uma imagem de logo. Pode colocar ela inicialmente na tela de login e no favicon, de uma forma que fique bem legal.

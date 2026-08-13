@@ -189,13 +189,29 @@
         <ul class="picker-list">
           @for (q of pickableQuestions(); track q.round + '-' + q.question) {
             <li>
-              <button type="button" class="picker-item" (click)="requestCorrection(q)">
+              <button
+                type="button"
+                class="picker-item"
+                [class.selected]="isPickerItemSelected(q)"
+                [attr.aria-pressed]="isPickerItemSelected(q)"
+                (click)="selectPickerItem(q)"
+              >
                 Rodada {{ q.round }} · Pergunta {{ q.question }}
               </button>
             </li>
           }
         </ul>
-        <button class="btn btn-ghost picker-cancel" type="button" (click)="closePicker()">Cancelar</button>
+        <div class="picker-actions">
+          <button class="btn btn-ghost picker-cancel" type="button" (click)="closePicker()">Cancelar</button>
+          <button
+            class="btn btn-primary picker-confirm"
+            type="button"
+            [disabled]="!pickerSelection()"
+            (click)="confirmPickerSelection()"
+          >
+            Corrigir pergunta selecionada
+          </button>
+        </div>
       </div>
     </div>
   }

@@ -8,32 +8,42 @@
     } @else {
       <h1>Rodada {{ round }} finalizada</h1>
     }
-
-    <section class="card card-round">
-      <h2>Placar da rodada</h2>
-      <ol class="list">
-        @for (row of roundRows(); track row.teamId) {
-          <li class="row row-round">
-            <span class="dot" [style.background]="row.color"></span>
-            <span class="name">{{ row.teamName }}</span>
-            <span class="total" [class.negative]="row.total < 0">{{ row.total }}</span>
-          </li>
-        }
-      </ol>
-    </section>
-
+    
     <section class="card card-ranked">
-      <h2>Placar geral</h2>
+      <button class="card-header" type="button" (click)="toggleRankedCard()">
+        <h2>Placar geral</h2>
+        <span class="chevron" [class.expanded]="rankedCardExpanded()">▼</span>
+      </button>
+      @if (rankedCardExpanded()) {
       <ol class="list">
         @for (row of rankingRows(); track row.teamId) {
-          <li class="row row-ranked">
-            <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
-            <span class="dot" [style.background]="row.color"></span>
-            <span class="name">{{ row.teamName }}</span>
-            <span class="total" [style.color]="row.color">{{ row.total }}</span>
-          </li>
+        <li class="row row-ranked">
+          <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
+          <span class="dot" [style.background]="row.color"></span>
+          <span class="name">{{ row.teamName }}</span>
+          <span class="total" [style.color]="row.color">{{ row.total }}</span>
+        </li>
         }
       </ol>
+      }
+    </section>
+
+    <section class="card card-round">
+      <button class="card-header" type="button" (click)="toggleRoundCard()">
+        <h2>Placar da rodada</h2>
+        <span class="chevron" [class.expanded]="roundCardExpanded()">▼</span>
+      </button>
+      @if (roundCardExpanded()) {
+        <ol class="list">
+          @for (row of roundRows(); track row.teamId) {
+            <li class="row row-round">
+              <span class="dot" [style.background]="row.color"></span>
+              <span class="name">{{ row.teamName }}</span>
+              <span class="total" [class.negative]="row.total < 0">{{ row.total }}</span>
+            </li>
+          }
+        </ol>
+      }
     </section>
 
     @if (questionRows().length) {
@@ -46,7 +56,12 @@
               <tr>
                 <th class="question-col">Pergunta</th>
                 @for (col of teamColumns(); track col.teamId) {
-                  <th>
+                  <th
+                    class="team-header"
+                    [attr.data-team-id]="col.teamId"
+                    [class.selected]="selectedTeamId() === col.teamId"
+                    (click)="selectTeam(col.teamId)"
+                  >
                     <span class="dot" [style.background]="col.color"></span>
                     {{ col.teamName }}
                   </th>
@@ -55,10 +70,18 @@
             </thead>
             <tbody>
               @for (row of questionRows(); track row.question) {
-                <tr>
+                <tr class="question-row">
                   <td class="question-col">{{ row.question }}</td>
-                  @for (score of row.scores; track $index) {
-                    <td [class.negative]="score < 0" [class.zero]="score === 0">{{ score }}</td>
+                  @for (col of teamColumns(); track col.teamId; let scoreIndex = $index) {
+                    <td
+                      class="score-cell"
+                      [attr.data-team-id]="col.teamId"
+                      [class.negative]="row.scores[scoreIndex] < 0"
+                      [class.zero]="row.scores[scoreIndex] === 0"
+                      [class.selected]="selectedTeamId() === col.teamId"
+                    >
+                      {{ row.scores[scoreIndex] }}
+                    </td>
                   }
                 </tr>
               }

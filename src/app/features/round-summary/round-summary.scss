@@ -105,6 +105,51 @@ h2 {
   }
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+
+  h2 {
+    margin: 0;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  transition: transform 0.2s ease;
+  color: var(--text-muted);
+
+  &.expanded {
+    transform: rotate(0deg);
+  }
+
+  &:not(.expanded) {
+    transform: rotate(-90deg);
+  }
+}
+
+
 .card-ranked {
   border-color: rgba(255, 204, 51, 0.3);
   background: linear-gradient(180deg, rgba(255, 204, 51, 0.06), var(--bg-elevated) 65%);
@@ -166,11 +211,25 @@ h2 {
       border-top-left-radius: var(--radius-sm);
       border-bottom-left-radius: var(--radius-sm);
     }
+
     &:last-child {
       border-right: 1px solid var(--border);
       border-top-right-radius: var(--radius-sm);
       border-bottom-right-radius: var(--radius-sm);
     }
+  }
+
+  td.score-cell.selected {
+    background-color: rgba(78, 161, 255, 0.35) !important;
+    color: var(--info);
+    font-weight: 800;
+  }
+
+  th.team-header.selected {
+    background-color: rgba(78, 161, 255, 0.35) !important;
+    color: var(--info);
+    font-weight: 800;
+    text-shadow: 0 0 12px rgba(78, 161, 255, 0.5);
   }
 
   td.negative {
@@ -184,10 +243,76 @@ h2 {
 }
 
 .question-col {
+  position: sticky;
+  left: 0;
   text-align: left !important;
   color: var(--text-muted);
   font-weight: 700;
   min-width: 70px;
+  background: var(--bg-elevated);
+  z-index: 1;
+}
+
+.team-header {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  border-radius: var(--radius-sm);
+
+  &:hover {
+    background-color: rgba(78, 161, 255, 0.12);
+    color: var(--info);
+  }
+
+  &.selected {
+    background-color: rgba(78, 161, 255, 0.25);
+    color: var(--info);
+    text-shadow: 0 0 12px rgba(78, 161, 255, 0.5);
+    font-weight: 800;
+  }
+}
+
+.question-row {
+  &:hover .score-cell:not(.selected) {
+    opacity: 0.7;
+  }
+}
+
+.score-cell {
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(78, 161, 255, 0.08);
+  }
+
+  &.selected {
+    background-color: rgba(78, 161, 255, 0.25);
+    color: var(--info);
+    font-weight: 800;
+  }
+}
+
+.team-header.selected {
+  background-color: rgba(78, 161, 255, 0.35);
+  color: var(--info);
+  text-shadow: 0 0 12px rgba(78, 161, 255, 0.5);
+}
+
+.score-cell.selected {
+  background-color: rgba(78, 161, 255, 0.18);
+  color: var(--info);
+  font-weight: 800;
+}
+
+.question-row {
+  &:hover {
+    .question-col {
+      background-color: rgba(78, 161, 255, 0.08);
+    }
+  }
 }
 
 .actions {

@@ -108,10 +108,26 @@
 
   <section class="card">
     <h2>Equipes</h2>
-    <p class="muted hint">
-      Cadastrar/editar/remover equipes aqui é instantâneo — só vai pro servidor de uma vez quando
-      você clicar em "Concluir configuração" no final.
-    </p>
+    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeamDraft()" novalidate>
+      <label class="field">
+        <span>Nome da equipe *</span>
+        <input type="text" formControlName="name" placeholder="Ex: Os Inteligentes"
+          [class.invalid]="teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())" />
+        @if (teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())) {
+        <span class="field-error">Informe o nome da equipe.</span>
+        }
+      </label>
+      <label class="field small">
+        <span>Jogadores</span>
+        <input type="number" formControlName="playersCount" min="0" />
+      </label>
+      <button class="btn btn-primary" type="submit">
+        {{ editingKey() ? 'Salvar equipe' : '+ Adicionar equipe' }}
+      </button>
+      @if (editingKey()) {
+      <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
+      }
+    </form>
 
     @if (draftTeams().length) {
       <ul class="team-list">
@@ -143,31 +159,6 @@
     } @else {
       <p class="muted">Nenhuma equipe cadastrada ainda.</p>
     }
-
-    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeamDraft()" novalidate>
-      <label class="field">
-        <span>Nome da equipe *</span>
-        <input
-          type="text"
-          formControlName="name"
-          placeholder="Ex: Os Inteligentes"
-          [class.invalid]="teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())"
-        />
-        @if (teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())) {
-          <span class="field-error">Informe o nome da equipe.</span>
-        }
-      </label>
-      <label class="field small">
-        <span>Jogadores</span>
-        <input type="number" formControlName="playersCount" min="0" />
-      </label>
-      <button class="btn btn-primary" type="submit">
-        {{ editingKey() ? 'Salvar equipe' : '+ Adicionar equipe' }}
-      </button>
-      @if (editingKey()) {
-        <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
-      }
-    </form>
   </section>
 
   <button class="btn btn-primary" type="button" (click)="goToGame()" [disabled]="savingTeams()">

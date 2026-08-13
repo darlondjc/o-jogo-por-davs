@@ -72,6 +72,9 @@ export class ScoreEntry {
   readonly correctionTarget = signal<CorrectionTarget | null>(null);
   /** Dialog de seleção "corrigir perguntas anteriores" está aberto. */
   readonly pickerOpen = signal(false);
+  /** Pergunta marcada no dialog, ainda não confirmada — só navega pra
+   * correção quando o operador clica no botão de confirmar. */
+  readonly pickerSelection = signal<CorrectionTarget | null>(null);
   /** Confirmação separada do fluxo normal — só aparece quando "Ninguém
    * acertou" é clicado com alguma pontuação já preenchida (spec: perguntar
    * antes de descartar o que foi digitado). */
@@ -159,7 +162,7 @@ export class ScoreEntry {
     });
 
     // Assim que o pai devolve as pontuações da pergunta escolhida no dialog
-    // (ver `requestCorrection`), preenche o formulário com elas e entra em
+    // (ver `confirmPickerSelection`), preenche o formulário com elas e entra em
     // modo de correção — sempre que `correctionData` mudar (o pai emite um
     // objeto novo a cada resposta, mesmo se for a mesma pergunta de novo).
     effect(() => {
@@ -218,17 +221,31 @@ export class ScoreEntry {
 
   openPicker(): void {
     if (this.submitting() || this.confirming() || !this.pickableQuestions().length) return;
+    this.pickerSelection.set(null);
     this.pickerOpen.set(true);
   }
 
   closePicker(): void {
     this.pickerOpen.set(false);
+    this.pickerSelection.set(null);
   }
 
-  /** Operador escolheu, no dialog, qual pergunta corrigir — pede ao pai as
+  /** Marca a pergunta no dialog — ainda não navega, só destaca a escolha. */
+  selectPickerItem(target: CorrectionTarget): void {
+    this.pickerSelection.set(target);
+  }
+
+  isPickerItemSelected(target: CorrectionTarget): boolean {
+    const sel = this.pickerSelection();
+    return !!sel && sel.round === target.round && sel.question === target.question;
+  }
+
+  /** Operador confirmou, no dialog, qual pergunta corrigir — pede ao pai as
    * pontuações já registradas dessa pergunta (`correctionData` traz a
    * resposta, tratada no effect do construtor). */
-  requestCorrection(target: CorrectionTarget): void {
+  confirmPickerSelection(): void {
+    const target = this.pickerSelection();
+    if (!target) return;
     this.correctionRequested.emit(target);
   }
 

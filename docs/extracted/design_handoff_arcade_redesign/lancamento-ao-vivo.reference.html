@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes led-blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes title-pop{from{opacity:0;transform:scale(.85) translateY(3px)}to{opacity:1;transform:none}}
+@keyframes coin-spin{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+@keyframes fade-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes combo-pop{0%{transform:scale(.6) rotate(-6deg);opacity:0}60%{transform:scale(1.1) rotate(2deg)}100%{transform:scale(1) rotate(-2deg);opacity:1}}
+</style>
+</helmet>
+<div style="--bg:#05070d;--bg-elev:#0d1220;--bg-elev2:#141a2e;--border:#223050;--text:#eef2fb;--muted:#8894b8;--faint:#5c6890;--accent:{{ accentColor }};--gold:#ffcc33;--pos:#33ff99;--neg:#ff4d6a;--purple:#c084fc; background:var(--bg); color:var(--text); font-family:'Space Grotesk',sans-serif; min-height:100vh; display:grid; grid-template-columns:minmax(0,1fr) 420px; position:relative;"
+  style-before="content:''; position:absolute; inset:0; background:repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0px, rgba(255,255,255,.035) 1px, transparent 1px, transparent 3px); pointer-events:none; z-index:5; mix-blend-mode:overlay;">
+
+  <div style="grid-column:1/-1; grid-row:1; padding:14px 32px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:linear-gradient(180deg, rgba(255,255,255,.03), transparent);">
+    <span style="font-family:'Press Start 2P',monospace; font-size:13px; color:var(--gold); letter-spacing:1px;">O JOGO</span>
+    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--faint); letter-spacing:2px;">TRIVIA · AO VIVO</span>
+  </div>
+
+  <div style="padding:28px 32px 40px; max-width:980px; min-width:0; grid-row:2;">
+    <a href="#" style="color:var(--muted); text-decoration:none; font-size:13px; font-family:'JetBrains Mono',monospace;">← PAINEL DO JOGO</a>
+
+    <div style="display:flex; align-items:center; gap:10px; margin:16px 0 22px; flex-wrap:wrap;">
+      <span style="background:var(--bg-elev2); border:1px solid var(--border); border-radius:4px; padding:6px 12px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; color:var(--accent); box-shadow:0 0 12px -4px var(--accent);">RODADA {{ round }}/{{ totalRounds }}</span>
+      <span style="background:var(--bg-elev2); border:1px solid var(--border); border-radius:4px; padding:6px 12px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; color:var(--gold); box-shadow:0 0 12px -4px var(--gold);">PERGUNTA {{ question }}/{{ questionsPerRound }}</span>
+      <sc-if value="{{ showCombo }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ comboVisible }}" hint-placeholder-val="{{ true }}">
+          <span style="font-family:'Press Start 2P',monospace; font-size:11px; color:#1a1305; background:linear-gradient(180deg,#ffe27a,var(--gold)); border-radius:4px; padding:6px 12px; animation:combo-pop .35s ease; box-shadow:0 3px 0 #a8791a, 0 0 16px -2px var(--gold);">COMBO x{{ combo }}</span>
+        </sc-if>
+      </sc-if>
+    </div>
+
+    <div style="min-height:44px;">
+      <sc-if value="{{ flashVisible }}" hint-placeholder-val="{{ false }}">
+        <p style="color:var(--pos); font-weight:700; font-family:'JetBrains Mono',monospace; margin:0 0 6px; animation:fade-in .2s ease;">✓ PONTUAÇÕES DA PERGUNTA {{ lastRegisteredQuestion }} CONFIRMADAS</p>
+      </sc-if>
+      <h1 style="font-family:'Press Start 2P',monospace; font-size:28px; margin:0; color:{{ titleColor }}; text-shadow:0 0 18px {{ titleColor }}66; animation:title-pop .3s ease;">{{ questionLabel }}</h1>
+    </div>
+
+    <section style="margin-top:24px; background:var(--bg-elev); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.02), 0 0 24px -12px var(--accent);">
+      <p style="margin:0 0 14px; font-size:12px; letter-spacing:1px; color:var(--muted); font-family:'JetBrains Mono',monospace; text-transform:uppercase;">Pontuação da pergunta — botões de fliperama</p>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <sc-for list="{{ quickPresets }}" as="p" hint-placeholder-count="6">
+            <button type="button" onClick="{{ p.select }}" style="{{ p.style }}" style-active="transform:translateY(2px); box-shadow:0 1px 0 {{ p.shadowColor }};">
+              {{ p.value }}
+            </button>
+          </sc-for>
+        </div>
+        <button type="button" onClick="{{ selectAll }}" style="margin-left:auto; background:transparent; border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; padding:10px 16px; border-radius:8px; cursor:pointer;" style-hover="border-color:var(--accent);">SELECIONAR TODAS (A)</button>
+        <button type="button" onClick="{{ clearSelection }}" disabled="{{ noneSelected }}" style="background:transparent; border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; padding:10px 16px; border-radius:8px; cursor:pointer; opacity:{{ noneSelectedOpacity }};">LIMPAR (ESC)</button>
+        <button type="button" onClick="{{ applyQuickValue }}" disabled="{{ applyDisabled }}" style="background:linear-gradient(180deg,#ffe27a,var(--gold)); color:#1a1305; border:none; font-family:'Press Start 2P',monospace; font-size:11px; padding:12px 20px; border-radius:8px; cursor:pointer; box-shadow:0 4px 0 #a8791a; opacity:{{ applyOpacity }};" style-active="transform:translateY(3px); box-shadow:0 1px 0 #a8791a;">APLICAR</button>
+      </div>
+    </section>
+
+    <ul style="list-style:none; margin:20px 0 0; padding:0; display:flex; flex-direction:column; gap:10px;">
+      <sc-for list="{{ rows }}" as="row" hint-placeholder-count="4">
+        <li onClick="{{ row.toggle }}" style="{{ row.rowStyle }}">
+          <button type="button" style="{{ row.coinStyle }}" aria-pressed="{{ row.selected }}">
+            <sc-if value="{{ row.selected }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family:'Press Start 2P',monospace; font-size:11px;">✓</span>
+            </sc-if>
+          </button>
+          <span style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ row.name }}</span>
+          <label onClick="{{ row.stop }}" style="display:flex; flex-direction:column; gap:3px; cursor:default;">
+            <span style="font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-family:'JetBrains Mono',monospace;">Base</span>
+            <input type="number" value="{{ row.base }}" onChange="{{ row.setBase }}" style="width:64px; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; background:#04070f; color:var(--pos); border:1px solid var(--border); border-radius:6px; padding:6px;" />
+          </label>
+          <label onClick="{{ row.stop }}" style="display:flex; flex-direction:column; gap:3px; cursor:default;">
+            <span style="font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-family:'JetBrains Mono',monospace;">Bônus</span>
+            <input type="number" value="{{ row.bonus }}" onChange="{{ row.setBonus }}" style="width:64px; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; background:#04070f; color:var(--accent); border:1px solid var(--border); border-radius:6px; padding:6px;" />
+          </label>
+          <label onClick="{{ row.stop }}" style="display:flex; flex-direction:column; gap:3px; cursor:default;">
+            <span style="font-size:10px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-family:'JetBrains Mono',monospace;">Penal.</span>
+            <input type="number" value="{{ row.penalty }}" onChange="{{ row.setPenalty }}" style="width:64px; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; background:#04070f; color:var(--neg); border:1px solid var(--border); border-radius:6px; padding:6px;" />
+          </label>
+          <span style="font-family:'Press Start 2P',monospace; font-size:16px; text-align:right; color:{{ row.totalColor }};">{{ row.totalLabel }}</span>
+        </li>
+      </sc-for>
+    </ul>
+
+    <footer style="position:sticky; bottom:0; background:var(--bg); padding:18px 0 6px; margin-top:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; border-top:1px solid var(--border);">
+      <sc-if value="{{ showPrimaryActions }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+          <button type="button" onClick="{{ requestConfirm }}" disabled="{{ registerDisabled }}" style="font-family:'Press Start 2P',monospace; font-size:13px; padding:16px 26px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffe27a,var(--gold)); color:#1a1305; cursor:pointer; box-shadow:0 5px 0 #a8791a, 0 0 26px -6px var(--gold); opacity:{{ registerOpacity }};" style-active="transform:translateY(3px); box-shadow:0 2px 0 #a8791a;">REGISTRAR PONTUAÇÕES</button>
+          <button type="button" onClick="{{ requestNobody }}" style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; padding:16px 22px; border:1px solid var(--border); border-radius:10px; background:transparent; color:var(--text); cursor:pointer;" style-hover="border-color:var(--neg); color:var(--neg);">NINGUÉM ACERTOU</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ showConfirmBar }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; align-items:center; gap:14px; background:var(--bg-elev2); border:1px solid var(--accent); border-radius:10px; padding:12px 18px; animation:fade-in .15s ease;">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px;">{{ confirmMessage }}</span>
+          <button type="button" onClick="{{ cancelConfirm }}" style="background:transparent; border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; padding:8px 14px; border-radius:8px; cursor:pointer;">CANCELAR</button>
+          <button type="button" onClick="{{ doConfirm }}" style="font-family:'Press Start 2P',monospace; font-size:11px; padding:10px 18px; border:none; border-radius:8px; background:linear-gradient(180deg,#ffe27a,var(--gold)); color:#1a1305; cursor:pointer; box-shadow:0 4px 0 #a8791a;">CONFIRMAR</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasLastRegistered }}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{ startCorrection }}" style="background:transparent; border:none; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:12px; cursor:pointer;">Corrigir última pergunta (P)</button>
+      </sc-if>
+    </footer>
+
+    <p style="text-align:center; color:var(--faint); font-family:'JetBrains Mono',monospace; font-size:11px; margin-top:8px;">0-5 escolhe o valor · Enter/Espaço confirma · A seleciona todas · Esc limpa · P corrige a última</p>
+  </div>
+
+  <aside style="grid-row:2; border-left:1px solid var(--border); background:var(--bg-elev); padding:28px 24px;">
+    <h2 style="font-family:'Press Start 2P',monospace; font-size:13px; color:var(--gold); margin:0 0 16px; letter-spacing:1px;">PLACAR GERAL</h2>
+    <ol style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">
+      <sc-for list="{{ boardRows }}" as="b" hint-placeholder-count="4">
+        <li style="{{ b.rowStyle }}">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); width:28px; text-align:center;">{{ b.rankLabel }}</span>
+          <span style="width:9px; height:9px; border-radius:50%; background:{{ b.color }};"></span>
+          <span style="font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; flex:1;">{{ b.name }}</span>
+          <span style="font-family:'Press Start 2P',monospace; font-size:14px; color:{{ b.color }};">{{ b.total }}</span>
+        </li>
+      </sc-for>
+    </ol>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#4ea1ff&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#4ea1ff&quot;,&quot;#ffcc33&quot;,&quot;#c084fc&quot;,&quot;#33ff99&quot;],&quot;section&quot;:&quot;Arcade&quot;},&quot;showCombo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Arcade&quot;}}">
+class Component extends DCLogic {
+  state = {
+    round: 2, totalRounds: 3, question: 7, questionsPerRound: 10,
+    quickValue: null,
+    combo: 3, comboVisible: true,
+    flashVisible: true, lastRegisteredQuestion: 6,
+    confirmMode: null,
+    titleColorIdx: 0,
+    teams: [
+      { id: 't1', name: 'OS FURIOSOS', color: '#ff4d6a', base: 10, bonus: 0, penalty: 0, selected: true },
+      { id: 't2', name: 'QUIZ KINGS', color: '#4ea1ff', base: 0, bonus: 0, penalty: 0, selected: false },
+      { id: 't3', name: 'TRIVIA NINJAS', color: '#33ff99', base: 10, bonus: 5, penalty: 0, selected: true },
+      { id: 't4', name: 'CÉREBRO TOTAL', color: '#c084fc', base: 0, bonus: 0, penalty: 5, selected: false },
+    ],
+  };
+
+  toggleSelect(id) {
+    this.setState((s) => ({ teams: s.teams.map((t) => (t.id === id ? { ...t, selected: !t.selected } : t)) }));
+  }
+  setField(id, field, value) {
+    const v = value === '' ? 0 : Number(value);
+    this.setState((s) => ({ teams: s.teams.map((t) => (t.id === id ? { ...t, [field]: v } : t)) }));
+  }
+  selectAll() { this.setState((s) => ({ teams: s.teams.map((t) => ({ ...t, selected: true })) })); }
+  clearSelection() { this.setState((s) => ({ teams: s.teams.map((t) => ({ ...t, selected: false })) })); }
+  selectQuickValue(v) { this.setState({ quickValue: v }); }
+  applyQuickValue() {
+    const v = this.state.quickValue;
+    if (v === null) return;
+    this.setState((s) => ({ teams: s.teams.map((t) => (t.selected ? { ...t, base: v } : t)) }));
+  }
+  requestConfirm() { this.setState({ confirmMode: 'confirm' }); }
+  requestNobody() { this.setState({ confirmMode: 'nobody' }); }
+  cancelConfirm() { this.setState({ confirmMode: null }); }
+  doConfirm() {
+    const anyScore = this.state.teams.some((t) => t.base + t.bonus - t.penalty > 0);
+    this.setState((s) => ({
+      confirmMode: null,
+      question: Math.min(s.question + 1, s.questionsPerRound),
+      titleColorIdx: s.titleColorIdx + 1,
+      lastRegisteredQuestion: s.question,
+      flashVisible: true,
+      combo: s.confirmMode === 'nobody' ? 0 : (anyScore ? s.combo + 1 : 0),
+      comboVisible: s.confirmMode !== 'nobody' && anyScore,
+      teams: s.teams.map((t) => ({ ...t, base: 0, bonus: 0, penalty: 0, selected: false })),
+      quickValue: null,
+    }));
+  }
+  startCorrection() {}
+
+  renderVals() {
+    const s = this.state;
+    const titleColors = ['#4ea1ff', '#33ff99', '#c084fc'];
+    const titleColor = titleColors[s.titleColorIdx % titleColors.length];
+    const presetColors = [
+      { c: '#ff4d6a', sh: '#7a1a2c' }, { c: '#ff9f4e', sh: '#7a3f10' }, { c: '#ffcc33', sh: '#7a5c0d' },
+      { c: '#33ff99', sh: '#0d7a44' }, { c: '#4ea1ff', sh: '#194f80' }, { c: '#c084fc', sh: '#5c2c86' },
+    ];
+    const selectedCount = s.teams.filter((t) => t.selected).length;
+
+    const rows = s.teams.map((t) => {
+      const total = t.base + t.bonus - t.penalty;
+      return {
+        teamId: t.id,
+        name: t.name,
+        base: t.base, bonus: t.bonus, penalty: t.penalty,
+        selected: t.selected,
+        toggle: () => this.toggleSelect(t.id),
+        stop: (e) => e.stopPropagation(),
+        setBase: (e) => this.setField(t.id, 'base', e.target.value),
+        setBonus: (e) => this.setField(t.id, 'bonus', e.target.value),
+        setPenalty: (e) => this.setField(t.id, 'penalty', e.target.value),
+        totalLabel: (total >= 0 ? '+' : '') + total,
+        totalColor: total > 0 ? '#33ff99' : total < 0 ? '#ff4d6a' : '#8894b8',
+        rowStyle: 'display:grid; grid-template-columns:auto minmax(90px,1fr) 64px 64px 64px 64px; align-items:center; gap:10px; padding:14px 16px; background:' + (t.selected ? '#141a2e' : '#0d1220') + '; border:1px solid ' + (t.selected ? t.color : '#223050') + '; border-radius:10px; cursor:pointer; box-shadow:' + (t.selected ? ('0 0 16px -6px ' + t.color) : 'none') + ';',
+        coinStyle: 'width:32px; height:32px; border-radius:50%; border:2px solid ' + t.color + '; background:' + (t.selected ? ('radial-gradient(circle at 35% 30%, #fff8, ' + t.color + ')') : 'transparent') + '; color:#1a1305; display:flex; align-items:center; justify-content:center; cursor:pointer;',
+      };
+    });
+
+    const boardRows = s.teams
+      .map((t) => Object.assign({}, t, { total: t.base + t.bonus - t.penalty + 40 }))
+      .sort((a, b) => b.total - a.total)
+      .map((t, i) => ({
+        name: t.name, color: t.color, total: String(t.total).padStart(3, '0'),
+        rankLabel: i === 0 ? '1º' : i === 1 ? '2º' : i === 2 ? '3º' : (i + 1) + 'º',
+        rowStyle: 'display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:' + (i === 0 ? 'linear-gradient(90deg, rgba(255,204,51,.14), transparent 70%)' : '#141a2e') + '; border:1px solid ' + (i === 0 ? '#ffcc33' : 'transparent') + ';',
+      }));
+
+    return {
+      round: s.round, totalRounds: s.totalRounds, question: s.question, questionsPerRound: s.questionsPerRound,
+      questionLabel: 'PERGUNTA ' + s.question,
+      titleColor,
+      accentColor: this.props.accentColor || '#4ea1ff',
+      showCombo: this.props.showCombo === undefined ? true : this.props.showCombo,
+      comboVisible: s.comboVisible && s.combo > 0,
+      combo: s.combo,
+      flashVisible: s.flashVisible,
+      lastRegisteredQuestion: s.lastRegisteredQuestion,
+      quickPresets: presetColors.map((p, v) => ({
+        value: v,
+        select: () => this.selectQuickValue(v),
+        shadowColor: p.sh,
+        style: "width:52px; height:52px; border-radius:12px; border:none; font-family:'Press Start 2P',monospace; font-size:16px; color:#fff; cursor:pointer; background:" + (s.quickValue === v ? p.c : ('linear-gradient(180deg, ' + p.c + 'cc, ' + p.c + '77)')) + '; box-shadow:0 4px 0 ' + p.sh + '; transition:transform .06s;',
+      })),
+      selectAll: () => this.selectAll(),
+      clearSelection: () => this.clearSelection(),
+      noneSelected: selectedCount === 0,
+      noneSelectedOpacity: selectedCount === 0 ? 0.4 : 1,
+      applyQuickValue: () => this.applyQuickValue(),
+      applyDisabled: s.quickValue === null || selectedCount === 0,
+      applyOpacity: (s.quickValue === null || selectedCount === 0) ? 0.4 : 1,
+      rows,
+      showPrimaryActions: s.confirmMode === null,
+      requestConfirm: () => this.requestConfirm(),
+      registerDisabled: !s.teams.some((t) => t.base || t.bonus || t.penalty),
+      registerOpacity: !s.teams.some((t) => t.base || t.bonus || t.penalty) ? 0.45 : 1,
+      requestNobody: () => this.requestNobody(),
+      showConfirmBar: s.confirmMode !== null,
+      confirmMessage: s.confirmMode === 'nobody' ? 'Registrar que ninguém acertou? As pontuações preenchidas serão descartadas.' : 'Confirmar pontuações desta pergunta?',
+      cancelConfirm: () => this.cancelConfirm(),
+      doConfirm: () => this.doConfirm(),
+      hasLastRegistered: true,
+      startCorrection: () => this.startCorrection(),
+      boardRows,
+    };
+  }
+}
+</script>
+</body>
+</html>

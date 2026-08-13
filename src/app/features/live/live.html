@@ -35,16 +35,18 @@
       />
     </div>
 
-    <aside class="side">
+    <aside class="side">      
       <section class="side-section side-round">
         <h2>Placar da rodada</h2>
         <app-scoreboard [scoreboard]="roundScoreboard()" [compact]="true" variant="arcade" />
       </section>
-
-      <section class="side-section side-overall">
-        <h2>Placar geral</h2>
-        <app-scoreboard [scoreboard]="gameState.scoreboard()" [compact]="true" variant="arcade" />
-      </section>
+     
+      @if (game.currentRound > 1) {
+        <section class="side-section side-overall">
+          <h2>Placar geral</h2>
+          <app-scoreboard [scoreboard]="gameState.scoreboard()" [compact]="true" variant="arcade" />
+        </section>
+      }
     </aside>
 
     @if (submitting()) {

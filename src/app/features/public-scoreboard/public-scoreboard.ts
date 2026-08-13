@@ -6,11 +6,17 @@ import { ScoreboardComponent } from '../scoreboard/scoreboard';
 import type { Scoreboard } from '../../core/models';
 
 const POLL_INTERVAL_MS = 3000;
+/** Enquanto o jogo ainda não começou não há nada novo pra mostrar a cada 3s
+ * — só precisa descobrir quando ele começa, então o polling fica bem mais
+ * espaçado (spec: "quando o jogo ainda não iniciou" deve parar de ficar
+ * requisitando, igual já acontece com o jogo finalizado). */
+const WAITING_POLL_INTERVAL_MS = 15000;
 
 interface RoundRow {
   teamId: string;
   teamName: string;
   total: number;
+  position: number;
 }
 
 /**
@@ -52,18 +58,27 @@ export class PublicScoreboard {
     if (!board) return [];
     return [...board.entries]
       .sort((a, b) => b.roundTotal - a.roundTotal)
-      .map((e) => ({ teamId: e.teamId, teamName: e.teamName, total: e.roundTotal }));
+      .map((e, i) => ({ teamId: e.teamId, teamName: e.teamName, total: e.roundTotal, position: i + 1 }));
   });
 
-  private pollTimer?: ReturnType<typeof setInterval>;
+  /** Seção "Placar geral" pode ser fechada pra dar mais espaço à rodada
+   * atual (spec public-scoreboard) — fechada, o `app-scoreboard` nem fica
+   * no DOM, então a animação de ultrapassagem simplesmente não roda
+   * enquanto ninguém está olhando pra ela. */
+  readonly boardCollapsed = signal(false);
+
+  toggleBoard(): void {
+    this.boardCollapsed.update((v) => !v);
+  }
+
+  private pollTimer?: ReturnType<typeof setTimeout>;
   private clockTimer?: ReturnType<typeof setInterval>;
 
   constructor() {
     this.poll();
-    this.pollTimer = setInterval(() => this.poll(), POLL_INTERVAL_MS);
     this.clockTimer = setInterval(() => this.now.set(Date.now()), 1000);
     this.destroyRef.onDestroy(() => {
-      clearInterval(this.pollTimer);
+      clearTimeout(this.pollTimer);
       clearInterval(this.clockTimer);
     });
   }
@@ -76,19 +91,13 @@ export class PublicScoreboard {
         this.error.set(null);
         this.lastSuccessAt.set(Date.now());
         this.now.set(Date.now());
-
-        // Jogo acabou: o placar não muda mais, então não há motivo pra
-        // continuar batendo na API a cada 3s.
-        if (scoreboard.status === 'FINALIZADO') {
-          clearInterval(this.pollTimer);
-          clearInterval(this.clockTimer);
-        }
+        this.scheduleNextPoll(scoreboard.status);
       },
       error: (err: unknown) => {
         this.loading.set(false);
 
         if (err instanceof HttpErrorResponse && err.status === 404) {
-          clearInterval(this.pollTimer);
+          clearTimeout(this.pollTimer);
           clearInterval(this.clockTimer);
           this.router.navigate(['/404']);
           return;
@@ -98,7 +107,25 @@ export class PublicScoreboard {
         // estar desatualizado. Some silenciosamente é o que mais confunde
         // quem está acompanhando ao vivo.
         this.error.set('Não foi possível atualizar o placar.');
+        this.scheduleNextPoll(this.scoreboard()?.status ?? 'EM_ANDAMENTO');
       },
     });
+  }
+
+  /**
+   * Decide o próximo polling a partir do status: jogo finalizado não muda
+   * mais e não reagenda nada; jogo ainda não iniciado reagenda bem mais
+   * devagar (só pra notar quando começar); o resto mantém o ritmo normal de
+   * 3s (spec: "quando o jogo ainda não iniciou" deve se comportar como o
+   * jogo finalizado — parar de bater na API toda hora).
+   */
+  private scheduleNextPoll(status: Scoreboard['status']): void {
+    clearTimeout(this.pollTimer);
+    if (status === 'FINALIZADO') {
+      clearInterval(this.clockTimer);
+      return;
+    }
+    const delay = status === 'CONFIGURACAO' ? WAITING_POLL_INTERVAL_MS : POLL_INTERVAL_MS;
+    this.pollTimer = setTimeout(() => this.poll(), delay);
   }
 }

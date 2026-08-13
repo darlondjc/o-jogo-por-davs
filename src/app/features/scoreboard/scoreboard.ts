@@ -112,22 +112,32 @@ export class ScoreboardComponent {
         const delta = oldTop === undefined ? 0 : oldTop - newTop;
         if (Math.abs(delta) < 1) return;
 
-        // First: salta instantaneamente de volta pra posição antiga (sem transição).
+        // delta > 0: a linha estava mais embaixo antes (topo maior) e subiu
+        // — equipe ultrapassou alguém. delta < 0: desceu.
+        const rising = delta > 0;
+        el.classList.remove('rising', 'falling');
+        el.classList.add(rising ? 'rising' : 'falling');
+
+        // First: salta instantaneamente de volta pra posição (e leve escala)
+        // antiga, sem transição — quem sobe parte um pouco "encolhida" e
+        // cresce até o tamanho normal; quem desce parte um pouco maior e
+        // "assenta". Reforça visualmente qual das duas ultrapassagens é essa.
         el.style.transition = 'none';
-        el.style.transform = `translateY(${delta}px)`;
+        el.style.transform = `translateY(${delta}px) scale(${rising ? 0.96 : 1.04})`;
         el.classList.add('flip-moving');
         el.getBoundingClientRect(); // força reflow antes de animar (senão o browser agrupa os dois estilos)
 
-        // Play: solta pra posição nova de verdade, agora com transição — é isso que anima.
+        // Play: solta pra posição e escala normais, agora com transição — é isso que anima.
         requestAnimationFrame(() => {
-          el.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+          el.style.transition =
+            'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.55s ease, background 0.55s ease';
           el.style.transform = '';
         });
         el.addEventListener(
           'transitionend',
           () => {
             el.style.transition = '';
-            el.classList.remove('flip-moving');
+            el.classList.remove('flip-moving', 'rising', 'falling');
           },
           { once: true },
         );

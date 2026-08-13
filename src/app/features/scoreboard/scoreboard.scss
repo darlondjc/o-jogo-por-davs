@@ -46,6 +46,25 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Cor do glow diferencia quem está subindo (ultrapassando) de quem está
+   descendo durante o deslocamento — sem isso as duas ultrapassagens
+   pareciam a mesma animação. */
+.flip-moving.rising {
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--positive),
+    0 0 20px -4px var(--positive);
+  background: rgba(51, 209, 122, 0.14);
+}
+
+.flip-moving.falling {
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--negative),
+    0 0 20px -4px var(--negative);
+  background: rgba(255, 77, 106, 0.1);
+}
+
 .compact .row {
   padding: var(--space-2) var(--space-3);
 }

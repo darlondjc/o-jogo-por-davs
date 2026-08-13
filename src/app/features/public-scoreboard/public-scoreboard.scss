@@ -1,6 +1,9 @@
 .public-page {
-  min-height: 100vh;
-  padding: var(--space-6) var(--space-4) var(--space-7);
+  /* dvh (não vh) e safe-area: a tela costuma ser acompanhada no celular, com
+     a barra de endereço do navegador aparecendo/sumindo e, em alguns
+     aparelhos, notch/home indicator cortando a borda. */
+  min-height: 100dvh;
+  padding: var(--space-6) var(--space-4) max(var(--space-7), env(safe-area-inset-bottom));
   max-width: 640px;
   margin: 0 auto;
   display: flex;
@@ -9,6 +12,12 @@
   background: radial-gradient(ellipse at 50% -10%, #101830 0%, var(--arcade-bg) 55%);
   color: var(--arcade-text);
   font-family: var(--font-arcade-body);
+
+  @media (max-width: 380px) {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    gap: var(--space-5);
+  }
 }
 
 .head {
@@ -44,6 +53,16 @@
   font-size: 0.8rem;
   letter-spacing: 0.12em;
   margin-top: var(--space-2);
+}
+
+.waiting-status {
+  display: inline-flex;
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--arcade-text-muted);
 }
 
 .live-status {
@@ -112,6 +131,37 @@ h2 {
   margin-bottom: var(--space-4);
 }
 
+/* Seção "Placar geral" colapsável (spec public-scoreboard: dá mais espaço
+   pra rodada atual e evita processar a animação de ultrapassagem enquanto
+   ninguém está olhando pra ela). */
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: none;
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-4);
+  cursor: pointer;
+  /* Alvo de toque confortável em celular mesmo com conteúdo baixo. */
+  min-height: 44px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.chevron {
+  color: var(--arcade-text-faint);
+  font-size: 0.7rem;
+}
+
+.collapsible.collapsed .section-toggle {
+  margin-bottom: 0;
+}
+
 .round-list {
   list-style: none;
   margin: 0;
@@ -122,8 +172,8 @@ h2 {
 
   li {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: var(--space-3);
     padding: var(--space-2) var(--space-4);
     background: var(--arcade-bg-elevated-2);
     border: 1px solid var(--arcade-border);
@@ -131,14 +181,28 @@ h2 {
     font-family: var(--font-mono);
   }
 
+  .position {
+    color: var(--arcade-text-faint);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
   .name {
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
+    overflow-wrap: anywhere;
   }
 
   .total {
     font-weight: 700;
     color: var(--arcade-positive);
     font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+
+    &.negative {
+      color: var(--arcade-negative);
+    }
   }
 }
 

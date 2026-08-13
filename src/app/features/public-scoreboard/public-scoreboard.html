@@ -2,12 +2,16 @@
   <header class="head">
     <p class="brand">O JOGO</p>
     @if (scoreboard(); as board) {
-      <p class="progress">RODADA {{ board.currentRound }} · PERGUNTA {{ board.currentQuestion }}</p>
-      @if (board.status !== 'FINALIZADO') {
-        <p class="live-status" [class.stale]="stale()">
-          <span class="live-dot"></span>
-          {{ stale() ? 'Sem conexão · última atualização há ' + secondsSinceUpdate() + 's' : 'Ao vivo' }}
-        </p>
+      @if (board.status === 'CONFIGURACAO') {
+        <p class="waiting-status">Aguardando início do jogo…</p>
+      } @else {
+        <p class="progress">RODADA {{ board.currentRound }} · PERGUNTA {{ board.currentQuestion }}</p>
+        @if (board.status !== 'FINALIZADO') {
+          <p class="live-status" [class.stale]="stale()">
+            <span class="live-dot"></span>
+            {{ stale() ? 'Sem conexão · última atualização há ' + secondsSinceUpdate() + 's' : 'Ao vivo' }}
+          </p>
+        }
       }
     }
   </header>
@@ -18,19 +22,30 @@
     <p class="status error">{{ error() }}</p>
   } @else if (scoreboard(); as board) {
     <main class="content">
-      <section>
-        <h2>High score</h2>
-        <app-scoreboard [scoreboard]="board" variant="arcade" />
+      <section class="collapsible" [class.collapsed]="boardCollapsed()">
+        <button
+          type="button"
+          class="section-toggle"
+          (click)="toggleBoard()"
+          [attr.aria-expanded]="!boardCollapsed()"
+        >
+          <h2>Placar geral</h2>
+          <span class="chevron">{{ boardCollapsed() ? '▸' : '▾' }}</span>
+        </button>
+        @if (!boardCollapsed()) {
+          <app-scoreboard [scoreboard]="board" variant="arcade" />
+        }
       </section>
 
-      @if (board.currentRound) {
+      @if (board.status !== 'CONFIGURACAO' && board.currentRound) {
         <section>
           <h2>Rodada {{ board.currentRound }}</h2>
           <ol class="round-list">
             @for (row of roundRows(); track row.teamId) {
               <li>
+                <span class="position">#{{ row.position }}</span>
                 <span class="name">{{ row.teamName }}</span>
-                <span class="total">+{{ row.total }}</span>
+                <span class="total" [class.negative]="row.total < 0">{{ row.total }}</span>
               </li>
             }
           </ol>

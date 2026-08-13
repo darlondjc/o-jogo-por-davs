@@ -1,47 +1,38 @@
+@use 'sass:list';
+
 .score-entry {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  font-family: var(--font-arcade-body);
 }
 
 .head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.eyebrow {
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  font-size: 0.8rem;
+  min-height: 2.75rem;
 }
 
 h2 {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-family: var(--font-pixel);
+  font-size: 1.75rem;
   transition: color 0.15s ease;
+  transform-origin: left center;
 }
 
 /* Cicla a cor do título a cada pergunta, para deixar visível que a
-   pergunta avançou. Evita --accent, já usado em botões/badges/eyebrow. */
+   pergunta avançou. */
 .title-color-0 {
-  color: var(--info);
+  color: var(--arcade-accent);
+  text-shadow: 0 0 18px rgba(78, 161, 255, 0.4);
 }
 .title-color-1 {
-  color: var(--positive);
+  color: var(--arcade-positive);
+  text-shadow: 0 0 18px rgba(51, 255, 153, 0.4);
 }
 .title-color-2 {
-  color: #c084fc;
+  color: var(--arcade-purple);
+  text-shadow: 0 0 18px rgba(192, 132, 252, 0.4);
 }
 
-/* "Pop" a cada pergunta. Duas classes com a mesma animação, alternadas via
-   template — trocar de classe reinicia a animação. */
-h2 {
-  transform-origin: left center;
-}
 .title-pulse-a,
 .title-pulse-b {
   animation: title-pop 0.3s ease;
@@ -59,8 +50,11 @@ h2 {
 }
 
 .flash {
-  color: var(--positive);
+  color: var(--arcade-positive);
   font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin: 0 0 var(--space-1);
   animation: fade-in 0.2s ease;
 }
 
@@ -78,23 +72,25 @@ h2 {
 .quick-bar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  gap: var(--space-3);
+  background: var(--arcade-bg-elevated);
+  border: 1px solid var(--arcade-border);
+  border-radius: 14px;
   padding: var(--space-4);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 0 24px -12px var(--arcade-accent);
 }
 
 .quick-label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.7rem;
+  color: var(--arcade-text-muted);
   font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Todos os controles da barra (presets, selecionar todas, limpar seleção,
-   aplicar) numa única linha, centralizados no eixo cruzado — sem isso, o
-   botão dentro do bloco com o rótulo em cima ficava mais alto que os outros
-   e desalinhava verticalmente com o resto. */
 .quick-controls {
   display: flex;
   align-items: center;
@@ -106,43 +102,59 @@ h2 {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .quick-apply {
   margin-left: auto;
 }
 
+/* Botões de fliperama: 6 caixas 0-5, cada uma com uma "cor de plástico"
+   diferente, sombra sólida embaixo simulando um botão físico 3D e efeito
+   de "afundar" no clique. */
 .value-box {
-  width: 3.2rem;
-  height: 3.2rem;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--text);
-  background: var(--bg-elevated-2);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-md);
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  transition:
-    border-color 0.12s ease,
-    background 0.12s ease,
-    transform 0.08s ease;
-
-  &:hover {
-    border-color: var(--accent);
-  }
+  transition: transform 0.06s ease;
 
   &:active {
-    transform: scale(0.95);
+    transform: translateY(2px);
   }
 
-  &.active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-ink);
+  $presets: (
+    0: (#ff4d6a, #7a1a2c),
+    1: (#ff9f4e, #7a3f10),
+    2: (#ffcc33, #7a5c0d),
+    3: (#33ff99, #0d7a44),
+    4: (#4ea1ff, #194f80),
+    5: (#c084fc, #5c2c86),
+  );
+
+  @each $value, $pair in $presets {
+    &.value-box-#{$value} {
+      $color: list.nth($pair, 1);
+      $shadow: list.nth($pair, 2);
+      background: linear-gradient(180deg, rgba($color, 0.8), rgba($color, 0.47));
+      box-shadow: 0 4px 0 $shadow;
+
+      &:active {
+        box-shadow: 0 1px 0 $shadow;
+      }
+
+      &.active {
+        background: $color;
+        box-shadow: 0 4px 0 $shadow;
+      }
+    }
   }
 }
 
@@ -157,26 +169,28 @@ h2 {
 
 .team-row {
   display: grid;
-  grid-template-columns: auto 1fr 5.5rem 5.5rem 5.5rem 4.5rem;
+  grid-template-columns: auto minmax(90px, 1fr) 5.5rem 5.5rem 5.5rem 4.5rem;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: var(--arcade-bg-elevated);
+  border: 1px solid var(--arcade-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
 
   /* Clicar em qualquer lugar da linha seleciona/desseleciona a equipe (só o
      círculo era pouco alvo demais); os campos numéricos abaixo cancelam essa
      propagação pra não brigar com o clique de digitar um valor. */
   &:hover {
-    border-color: var(--accent);
+    border-color: var(--arcade-accent);
   }
 
   &.selected {
-    border-color: var(--accent);
-    background: var(--bg-elevated-2);
+    background: var(--arcade-bg-elevated-2);
   }
 
   @media (max-width: 860px) {
@@ -185,54 +199,87 @@ h2 {
 }
 
 .select-toggle {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid var(--border);
+  border: 2px solid var(--arcade-border);
   background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-ink);
+  color: var(--arcade-gold-ink);
 
   .check {
-    font-weight: 900;
+    font-family: var(--font-pixel);
+    font-size: 0.68rem;
   }
 }
 
 .name {
+  font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mini-field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   cursor: default;
 
   span {
-    font-size: 0.68rem;
-    color: var(--text-faint);
+    font-size: 0.63rem;
+    color: var(--arcade-text-faint);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-family: var(--font-mono);
   }
 
   input {
-    width: 100%;
-    font-size: 1.05rem;
+    width: 64px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
     font-weight: 700;
     text-align: center;
     padding: var(--space-1) var(--space-2);
+    background: #04070f;
+    border: 1px solid var(--arcade-border);
+    border-radius: 6px;
+    color: var(--arcade-text);
+  }
+
+  &.field-base input {
+    color: var(--arcade-positive);
+  }
+
+  &.field-bonus input {
+    color: var(--arcade-accent);
+  }
+
+  &.field-penalty input {
+    color: var(--arcade-negative);
   }
 }
 
 .row-total {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-family: var(--font-pixel);
+  font-size: 1rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  color: var(--arcade-text-faint);
+
+  &.positive {
+    color: var(--arcade-positive);
+  }
+
+  &.negative {
+    color: var(--arcade-negative);
+  }
 }
 
 .footer {
@@ -243,46 +290,103 @@ h2 {
   flex-wrap: wrap;
   position: sticky;
   bottom: 0;
-  background: var(--bg);
+  background: var(--arcade-bg);
   padding: var(--space-3) 0;
-}
-
-.total {
-  color: var(--text-muted);
-  font-size: 1rem;
-
-  strong {
-    color: var(--text);
-    font-size: 1.3rem;
-  }
+  border-top: 1px solid var(--arcade-border);
 }
 
 .primary-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   flex-wrap: wrap;
+}
+
+/* Botão primário no estilo "letreiro de fliperama": gradiente dourado,
+   sombra sólida embaixo (efeito 3D) e glow externo; afunda no clique. */
+.btn-primary.btn-xl {
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  padding: var(--space-4) var(--space-5);
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffe27a, var(--arcade-gold));
+  color: var(--arcade-gold-ink);
+  box-shadow:
+    0 5px 0 var(--arcade-gold-shadow),
+    0 0 26px -6px var(--arcade-gold);
+
+  &:hover {
+    background: linear-gradient(180deg, #ffe27a, var(--arcade-gold));
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--arcade-gold-shadow);
+  }
+}
+
+.btn-ghost.btn-outline.btn-xl {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--arcade-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--arcade-text);
+
+  &:hover {
+    border-color: var(--arcade-negative);
+    color: var(--arcade-negative);
+    background: transparent;
+  }
 }
 
 .confirm-bar {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  background: var(--bg-elevated-2);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  background: var(--arcade-bg-elevated-2);
+  border: 1px solid var(--arcade-accent);
+  border-radius: 10px;
+  padding: var(--space-3) var(--space-4);
   animation: fade-in 0.15s ease;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
 }
 
 .correction-link {
   align-self: flex-start;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--arcade-text-muted);
 }
 
 .shortcuts {
-  font-size: 0.78rem;
-  color: var(--text-faint);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--arcade-text-faint);
   text-align: center;
+}
+
+/* Botões genéricos (.btn) usados aqui além do primário/xl acima. */
+.btn {
+  font-family: var(--font-mono);
+  border-radius: 8px;
+
+  &.btn-ghost:not(.btn-outline):not(.btn-xl) {
+    color: var(--arcade-text);
+  }
+
+  &.btn-ghost.btn-outline:not(.btn-xl) {
+    border-color: var(--arcade-border);
+    color: var(--arcade-text);
+    font-weight: 700;
+    font-size: 0.75rem;
+
+    &:hover {
+      border-color: var(--arcade-accent);
+    }
+  }
 }

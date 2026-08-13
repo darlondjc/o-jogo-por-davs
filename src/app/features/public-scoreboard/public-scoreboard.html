@@ -1,4 +1,4 @@
-<div class="public-page">
+<div class="public-page arcade-scanlines">
   <header class="head">
     <p class="brand">O JOGO</p>
     @if (scoreboard(); as board) {
@@ -19,8 +19,8 @@
   } @else if (scoreboard(); as board) {
     <main class="content">
       <section>
-        <h2>Placar geral</h2>
-        <app-scoreboard [scoreboard]="board" />
+        <h2>High score</h2>
+        <app-scoreboard [scoreboard]="board" variant="arcade" />
       </section>
 
       @if (board.currentRound) {

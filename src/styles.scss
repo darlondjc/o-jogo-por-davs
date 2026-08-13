@@ -33,6 +33,27 @@
   --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
 
   color-scheme: dark;
+
+  /* Tokens do redesign arcade — só usados em live/score-entry/public-scoreboard
+     e na variant="arcade" do scoreboard (spec: docs-migracao-design-arcade). Os
+     tokens acima continuam intactos, o resto do app não muda. */
+  --arcade-bg: #05070d;
+  --arcade-bg-elevated: #0d1220;
+  --arcade-bg-elevated-2: #141a2e;
+  --arcade-border: #223050;
+  --arcade-text: #eef2fb;
+  --arcade-text-muted: #8894b8;
+  --arcade-text-faint: #5c6890;
+  --arcade-accent: #4ea1ff;
+  --arcade-gold: #ffcc33;
+  --arcade-gold-ink: #1a1305;
+  --arcade-gold-shadow: #a8791a;
+  --arcade-positive: #33ff99;
+  --arcade-negative: #ff4d6a;
+  --arcade-purple: #c084fc;
+
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-arcade-body: 'Space Grotesk', sans-serif;
 }
 
 * {
@@ -205,4 +226,27 @@ textarea {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* Overlay de scanlines de CRT, usado nas telas com visual arcade (live,
+   public-scoreboard). O host precisa de `position: relative` para o
+   `::before` absoluto se ancorar nele. */
+.arcade-scanlines {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.035) 0px,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: overlay;
+  }
 }

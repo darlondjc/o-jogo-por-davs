@@ -1,5 +1,5 @@
 @if (rows().length) {
-  <ol class="board" [class.compact]="compact()">
+  <ol class="board" [class.compact]="compact()" [class.arcade]="variant() === 'arcade'">
     @for (row of rows(); track row.teamId) {
       <li
         #rowEl
@@ -11,16 +11,16 @@
         <span class="dot" [style.background]="row.color"></span>
         <span class="name">{{ row.teamName }}</span>
         @if (row.trend === 'up') {
-          <span class="trend trend-up" aria-label="subiu no ranking">↑</span>
+          <span class="trend trend-up" aria-label="subiu no ranking">{{ trendIcon(row.trend) }}</span>
         } @else if (row.trend === 'down') {
-          <span class="trend trend-down" aria-label="desceu no ranking">↓</span>
+          <span class="trend trend-down" aria-label="desceu no ranking">{{ trendIcon(row.trend) }}</span>
         } @else {
-          <span class="trend trend-same" aria-label="manteve a posição">—</span>
+          <span class="trend trend-same" aria-label="manteve a posição">{{ trendIcon(row.trend) }}</span>
         }
-        <span class="total">{{ row.overallTotal }}</span>
+        <span class="total" [style.color]="variant() === 'arcade' ? row.color : null">{{ row.overallTotal }}</span>
       </li>
     }
   </ol>
 } @else {
-  <p class="empty">Nenhuma pontuação registrada ainda.</p>
+  <p class="empty" [class.arcade]="variant() === 'arcade'">Nenhuma pontuação registrada ainda.</p>
 }

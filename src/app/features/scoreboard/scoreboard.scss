@@ -97,3 +97,55 @@
 .empty {
   color: var(--text-muted);
 }
+
+/* Variant HUD de fliperama (live e public-scoreboard). O game-admin não
+   liga essa classe e mantém o visual padrão acima. */
+.board.arcade {
+  .row {
+    background: var(--arcade-bg-elevated);
+    border-color: var(--arcade-border);
+  }
+
+  .leader {
+    border-color: var(--arcade-gold);
+    background: linear-gradient(90deg, rgba(255, 204, 51, 0.15), var(--arcade-bg-elevated-2) 65%);
+    box-shadow: 0 0 20px -8px var(--arcade-gold);
+  }
+
+  .position {
+    font-family: var(--font-mono);
+    color: var(--arcade-text-muted);
+  }
+
+  .leader .position {
+    color: var(--arcade-gold);
+  }
+
+  .name {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--arcade-text);
+  }
+
+  .total {
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+  }
+
+  .trend-up {
+    color: var(--arcade-positive);
+  }
+
+  .trend-down {
+    color: var(--arcade-negative);
+  }
+
+  .trend-same {
+    color: var(--arcade-text-faint);
+  }
+}
+
+.empty.arcade {
+  color: var(--arcade-text-muted);
+  font-family: var(--font-arcade-body);
+}

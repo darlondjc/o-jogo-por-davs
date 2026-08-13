@@ -1,22 +1,19 @@
 <div class="score-entry">
   <header class="head">
-    <div>
-      <p class="eyebrow">RODADA {{ round() }}</p>
-      <h2 [class]="titleColorClass() + ' ' + titlePulseClass()">{{ targetLabel() }}</h2>
-    </div>
     @if (justRegisteredQuestion(); as done) {
       <p class="flash">✓ Pontuações da pergunta {{ done }} confirmadas</p>
     }
+    <h2 [class]="titleColorClass() + ' ' + titlePulseClass()">{{ targetLabel() }}</h2>
   </header>
 
   <section class="quick-bar">
-    <span class="quick-label">Pontuação da pergunta</span>
+    <span class="quick-label">Pontuação da pergunta — botões de fliperama</span>
 
     <div class="quick-controls">
       <div class="value-boxes">
         @for (preset of quickValuePresets; track preset) {
           <button
-            class="value-box"
+            class="value-box value-box-{{ preset }}"
             type="button"
             [class.active]="quickValue() === preset"
             (click)="selectQuickValue(preset)"
@@ -45,7 +42,7 @@
         (click)="applyQuickValue()"
         [disabled]="quickValue() === null || !selectedCount()"
       >
-        Aplicar pontuação
+        Aplicar
       </button>
     </div>
   </section>
@@ -55,13 +52,15 @@
       <li
         class="team-row"
         [class.selected]="row.selected"
+        [style.borderColor]="row.selected ? row.color : null"
+        [style.boxShadow]="row.selected ? '0 0 16px -6px ' + row.color : null"
         (click)="toggleSelect(row.teamId)"
       >
         <button
           class="select-toggle"
           type="button"
           [style.borderColor]="row.color"
-          [style.background]="row.selected ? row.color : 'transparent'"
+          [style.background]="row.selected ? 'radial-gradient(circle at 35% 30%, #fff8, ' + row.color + ')' : 'transparent'"
           [attr.aria-pressed]="row.selected"
         >
           @if (row.selected) {
@@ -71,7 +70,7 @@
 
         <span class="name">{{ row.name }}</span>
 
-        <label class="mini-field" (click)="$event.stopPropagation()">
+        <label class="mini-field field-base" (click)="$event.stopPropagation()">
           <span>Base</span>
           <input
             type="number"
@@ -80,7 +79,7 @@
           />
         </label>
 
-        <label class="mini-field" (click)="$event.stopPropagation()">
+        <label class="mini-field field-bonus" (click)="$event.stopPropagation()">
           <span>Bônus</span>
           <input
             type="number"
@@ -89,7 +88,7 @@
           />
         </label>
 
-        <label class="mini-field" (click)="$event.stopPropagation()">
+        <label class="mini-field field-penalty" (click)="$event.stopPropagation()">
           <span>Penal.</span>
           <input
             type="number"
@@ -98,7 +97,11 @@
           />
         </label>
 
-        <span class="row-total">{{ finalScore(row) >= 0 ? '+' : '' }}{{ finalScore(row) }}</span>
+        <span
+          class="row-total"
+          [class.positive]="finalScore(row) > 0"
+          [class.negative]="finalScore(row) < 0"
+        >{{ finalScore(row) >= 0 ? '+' : '' }}{{ finalScore(row) }}</span>
       </li>
     }
   </ul>

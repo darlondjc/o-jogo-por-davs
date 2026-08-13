@@ -38,7 +38,7 @@ export class ScoreEntry {
 
   /** Caixas de valor rápido (spec seção 13: velocidade > tudo). Clicar numa
    * caixa já seleciona o valor — sem precisar digitar. */
-  readonly quickValuePresets: readonly number[] = [1, 2, 3, 4, 5];
+  readonly quickValuePresets: readonly number[] = [0, 1, 2, 3, 4, 5];
 
   /** Nenhum valor inicia selecionado — o operador escolhe explicitamente
    * antes de aplicar pontuação aos selecionados. */
@@ -50,6 +50,14 @@ export class ScoreEntry {
    * acertou" é clicado com alguma pontuação já preenchida (spec: perguntar
    * antes de descartar o que foi digitado). */
   readonly confirmingNobody = signal(false);
+
+  /** Combo do visual arcade: quantas confirmações seguidas tiveram pelo
+   * menos uma equipe com pontuação final positiva. Zera assim que uma
+   * confirmação fecha sem ninguém pontuar (inclui "Ninguém acertou", que já
+   * zera as linhas antes de chamar `confirmSubmit`). Só estado visual, não
+   * é persistido nem enviado ao back-end. */
+  readonly combo = signal(0);
+  readonly comboVisible = computed(() => this.combo() > 0);
 
   readonly selectedCount = computed(() => this.rows().filter((r) => r.selected).length);
 
@@ -230,6 +238,8 @@ export class ScoreEntry {
   confirmSubmit(): void {
     if (this.submitting()) return;
     const target = this.correcting() ? this.lastRegistered() : null;
+    const anyPositive = this.rows().some((r) => this.finalScore(r) > 0);
+    this.combo.set(anyPositive ? this.combo() + 1 : 0);
     const scores: TeamScoreInput[] = this.rows().map((r) => ({
       teamId: r.teamId,
       baseScore: r.base,

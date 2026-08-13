@@ -26,6 +26,9 @@ export class ScoreboardComponent {
   readonly scoreboard = input.required<Scoreboard | null>();
   readonly teams = input<Team[]>([]);
   readonly compact = input(false);
+  /** `arcade` liga o visual HUD de fliperama (redesign de live/public-scoreboard).
+   * O `game-admin` não passa esse input e continua com o visual padrão. */
+  readonly variant = input<'default' | 'arcade'>('default');
 
   private readonly teamOrderById = computed(() => {
     const map = new Map<string, number>();
@@ -135,9 +138,20 @@ export class ScoreboardComponent {
   }
 
   medal(position: number): string | null {
+    if (this.variant() === 'arcade') {
+      if (position === 1) return '①';
+      if (position === 2) return '②';
+      if (position === 3) return '③';
+      return null;
+    }
     if (position === 1) return '🥇';
     if (position === 2) return '🥈';
     if (position === 3) return '🥉';
     return null;
+  }
+
+  trendIcon(trend: ScoreboardRow['trend']): string {
+    if (this.variant() !== 'arcade') return trend === 'up' ? '↑' : trend === 'down' ? '↓' : '—';
+    return trend === 'up' ? '▲' : trend === 'down' ? '▼' : '—';
   }
 }

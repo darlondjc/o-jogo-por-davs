@@ -4,20 +4,19 @@
   <p class="muted">Preencha os dados básicos. Você poderá ajustar tudo depois.</p>
 
   <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <label class="field">
-      <span>Nome do jogo *</span>
-      <input
-        type="text"
-        formControlName="name"
-        placeholder="Ex: Trivia de sábado"
-        [class.invalid]="form.controls.name.invalid && (form.controls.name.touched || submitted())"
-      />
-      @if (form.controls.name.invalid && (form.controls.name.touched || submitted())) {
-        <span class="field-error">Informe o nome do jogo.</span>
-      }
-    </label>
-
     <div class="field-row">
+      <label class="field">
+        <span>Nome do jogo *</span>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Ex: Trivia de sábado"
+          [class.invalid]="form.controls.name.invalid && (form.controls.name.touched || submitted())"
+        />
+        @if (form.controls.name.invalid && (form.controls.name.touched || submitted())) {
+          <span class="field-error">Informe o nome do jogo.</span>
+        }
+      </label>
       <label class="field">
         <span>Data *</span>
         <input
@@ -48,16 +47,15 @@
       <textarea formControlName="description" rows="2" placeholder="Opcional"></textarea>
     </label>
 
-    <label class="field">
-      <span>Tipo de jogo</span>
-      <select formControlName="gameType">
-        @for (option of gameTypeOptions; track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
-        }
-      </select>
-    </label>
-
     <div class="field-row">
+      <label class="field">
+        <span>Tipo de jogo</span>
+        <select formControlName="gameType">
+          @for (option of gameTypeOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
       <label class="field">
         <span>Rodadas *</span>
         <input

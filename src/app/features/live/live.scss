@@ -1,8 +1,13 @@
+/* Altura do cabeçalho fixo — usada tanto no `.page-header` quanto no
+   respiro (`padding-top`) do restante da página, pra nada ficar escondido
+   atrás dele (spec "cabeçalho da página fixo no topo"). */
+$header-h: 3.75rem;
+
 .live-page {
   display: grid;
   grid-template-columns: 1fr 550px;
-  grid-template-rows: auto 1fr;
   min-height: 100vh;
+  padding-top: $header-h;
   background: var(--arcade-bg);
   color: var(--arcade-text);
   font-family: var(--font-arcade-body);
@@ -12,28 +17,38 @@
   }
 }
 
-.arcade-header {
-  grid-column: 1 / -1;
-  display: flex;
+/* Cabeçalho fixo no topo da tela: voltar (esquerda), marca (centro), chip
+   de sessão (direita) — troca a barra antiga (só marca+modo) mais o link
+   solto "← Painel do jogo" que ficava dentro do conteúdo rolável. */
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: $header-h;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-5);
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
   border-bottom: 1px solid var(--arcade-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--arcade-bg);
 
   .brand {
+    grid-column: 2;
+    justify-self: center;
     font-family: var(--font-pixel);
     font-size: 0.8rem;
     color: var(--arcade-gold);
     letter-spacing: 0.06em;
   }
+}
 
-  .mode {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--arcade-text-faint);
-    letter-spacing: 0.12em;
-  }
+.page-header-user {
+  grid-column: 3;
+  justify-self: end;
+  min-width: 0;
 }
 
 .main {
@@ -43,10 +58,13 @@
 }
 
 .back {
+  grid-column: 1;
+  justify-self: start;
   color: var(--arcade-text-muted);
   text-decoration: none;
   font-size: 0.8rem;
   font-family: var(--font-mono);
+  white-space: nowrap;
 
   &:hover {
     color: var(--arcade-text);
@@ -115,7 +133,10 @@
 
 .side {
   border-left: 1px solid var(--arcade-border);
-  padding: var(--space-5);
+  /* Espaço extra embaixo: no layout empilhado (mobile), o rodapé fixo de
+     ações da score-entry cobre a base da tela mesmo quando o placar (não a
+     score-entry) é o que está visível ali. */
+  padding: var(--space-5) var(--space-5) 6.5rem;
   background: var(--arcade-bg-elevated);
 
   @media (max-width: 960px) {

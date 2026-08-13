@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { ApiService, type LiveState } from './api.service';
+import { ApiService, type LiveState, type RegisteredQuestion } from './api.service';
 import type {
   Game,
   NewGame,
@@ -27,6 +27,7 @@ export class GameStateService {
   readonly scoreboard = signal<Scoreboard | null>(null);
   readonly previousQuestionScores = signal<Score[]>([]);
   readonly lastRegistered = signal<{ round: number; question: number } | null>(null);
+  readonly registeredQuestions = signal<RegisteredQuestion[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   /** Id da rota não corresponde a nenhum jogo (API respondeu 404) — telas
@@ -67,6 +68,7 @@ export class GameStateService {
       this.scoreboard.set(state.scoreboard);
       this.previousQuestionScores.set(state.previousQuestionScores);
       this.lastRegistered.set(state.lastRegistered);
+      this.registeredQuestions.set(state.registeredQuestions);
       return state;
     } catch (err) {
       if (err instanceof HttpErrorResponse && err.status === 404) {
@@ -146,5 +148,11 @@ export class GameStateService {
 
   async getRoundSummary(gameId: string, round: number): Promise<RoundSummary> {
     return firstValueFrom(this.api.getRoundSummary(gameId, round));
+  }
+
+  /** Pontuações já registradas de uma pergunta específica — usado pelo
+   * dialog "corrigir perguntas anteriores" da tela ao vivo. */
+  async getQuestionScores(gameId: string, round: number, question: number): Promise<Score[]> {
+    return firstValueFrom(this.api.getQuestionScores(gameId, round, question));
   }
 }

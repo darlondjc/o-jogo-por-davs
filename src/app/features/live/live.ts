@@ -3,11 +3,17 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreEntry } from './score-entry/score-entry';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
-import type { SubmitQuestionScoresRequest } from '../../core/models';
+import { UserChip } from '../../core/components/user-chip/user-chip';
+import type { Score, SubmitQuestionScoresRequest } from '../../core/models';
+
+interface CorrectionTarget {
+  round: number;
+  question: number;
+}
 
 @Component({
   selector: 'app-live',
-  imports: [RouterLink, ScoreEntry, ScoreboardComponent],
+  imports: [RouterLink, ScoreEntry, ScoreboardComponent, UserChip],
   templateUrl: './live.html',
   styleUrl: './live.scss',
 })
@@ -22,8 +28,18 @@ export class Live {
   readonly error = signal<string | null>(null);
   readonly justRegisteredQuestion = signal<number | null>(null);
 
+  /** Resposta em andamento pro dialog "corrigir perguntas anteriores" (ver
+   * `score-entry.ts`): busca as pontuações da pergunta escolhida e devolve
+   * pro componente via `correctionData`. */
+  readonly correctionData = signal<{ target: CorrectionTarget; scores: Score[] } | null>(null);
+
   constructor() {
     this.refresh();
+  }
+
+  async onCorrectionRequested(target: CorrectionTarget): Promise<void> {
+    const scores = await this.gameState.getQuestionScores(this.gameId, target.round, target.question);
+    this.correctionData.set({ target, scores });
   }
 
   private async refresh(): Promise<void> {

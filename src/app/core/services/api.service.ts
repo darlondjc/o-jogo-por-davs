@@ -13,12 +13,18 @@ import type {
   Team,
 } from '../models';
 
+export interface RegisteredQuestion {
+  round: number;
+  question: number;
+}
+
 export interface LiveState {
   game: Game;
   teams: Team[];
   scoreboard: Scoreboard;
   previousQuestionScores: Score[];
   lastRegistered: { round: number; question: number } | null;
+  registeredQuestions: RegisteredQuestion[];
 }
 
 export interface SubmitScoresResult {
@@ -103,6 +109,14 @@ export class ApiService {
     payload: SubmitQuestionScoresRequest,
   ): Observable<SubmitScoresResult> {
     return this.http.post<SubmitScoresResult>(`${this.base}/${gameId}/scores`, payload);
+  }
+
+  /** Pontuações já registradas de uma pergunta específica (não necessariamente
+   * a última) — usado pelo dialog "corrigir perguntas anteriores". */
+  getQuestionScores(gameId: string, round: number, question: number): Observable<Score[]> {
+    return this.http
+      .get<{ scores: Score[] }>(`${this.base}/${gameId}/scores`, { params: { round, question } })
+      .pipe(map((r) => r.scores));
   }
 
   correctScore(

@@ -3,6 +3,17 @@ import { FormsModule } from '@angular/forms';
 import { computeFinalScore } from '@shared/scoring';
 import { teamColor } from '../../../core/models';
 import type { Score, SubmitQuestionScoresRequest, Team, TeamScoreInput } from '../../../core/models';
+import type { RegisteredQuestion } from '../../../core/services/api.service';
+
+interface CorrectionTarget {
+  round: number;
+  question: number;
+}
+
+interface CorrectionData {
+  target: CorrectionTarget;
+  scores: Score[];
+}
 
 interface TeamRow {
   teamId: string;
@@ -29,12 +40,22 @@ export class ScoreEntry {
   readonly teams = input.required<Team[]>();
   readonly round = input.required<number>();
   readonly question = input.required<number>();
-  readonly previousQuestionScores = input<Score[]>([]);
-  readonly lastRegistered = input<{ round: number; question: number } | null>(null);
   readonly submitting = input(false);
   readonly justRegisteredQuestion = input<number | null>(null);
 
+  /** Perguntas já registradas no jogo (todas as rodadas), pra alimentar o
+   * dialog de "corrigir perguntas anteriores". Vazio na primeira pergunta —
+   * é quando o botão de correção fica escondido. */
+  readonly registeredQuestions = input<RegisteredQuestion[]>([]);
+  /** Pontuações da pergunta escolhida no dialog, buscadas pelo pai
+   * (ScoreEntry não conhece persistência — só pede via `correctionRequested`
+   * e recebe aqui o resultado). */
+  readonly correctionData = input<CorrectionData | null>(null);
+
   readonly scoresSubmitted = output<SubmitQuestionScoresRequest>();
+  /** Emitido quando o operador escolhe, no dialog, qual pergunta corrigir —
+   * o pai busca as pontuações dessa pergunta e devolve via `correctionData`. */
+  readonly correctionRequested = output<CorrectionTarget>();
 
   /** Caixas de valor rápido (spec seção 13: velocidade > tudo). Clicar numa
    * caixa já seleciona o valor — sem precisar digitar. */
@@ -46,10 +67,19 @@ export class ScoreEntry {
   readonly rows = signal<TeamRow[]>([]);
   readonly confirming = signal(false);
   readonly correcting = signal(false);
+  /** Rodada/pergunta sendo corrigida no momento — só tem valor enquanto
+   * `correcting()` for true; preenchido a partir do dialog de seleção. */
+  readonly correctionTarget = signal<CorrectionTarget | null>(null);
+  /** Dialog de seleção "corrigir perguntas anteriores" está aberto. */
+  readonly pickerOpen = signal(false);
   /** Confirmação separada do fluxo normal — só aparece quando "Ninguém
    * acertou" é clicado com alguma pontuação já preenchida (spec: perguntar
    * antes de descartar o que foi digitado). */
   readonly confirmingNobody = signal(false);
+
+  /** Lista pro dialog, mais recente primeiro — é assim que o operador
+   * costuma pensar ("a de agora pouco", não "a primeira"). */
+  readonly pickableQuestions = computed(() => [...this.registeredQuestions()].reverse());
 
   /** Combo do visual arcade: quantas confirmações seguidas tiveram pelo
    * menos uma equipe com pontuação final positiva. Zera assim que uma
@@ -69,11 +99,12 @@ export class ScoreEntry {
 
   // `distributedTotal` removed — total is no longer shown in the UI
 
-  readonly targetLabel = computed(() =>
-    this.correcting() && this.lastRegistered()
-      ? `Corrigindo pergunta ${this.lastRegistered()!.question}`
-      : `Pergunta ${this.question()}`,
-  );
+  readonly targetLabel = computed(() => {
+    const target = this.correctionTarget();
+    return this.correcting() && target
+      ? `Corrigindo rodada ${target.round} · pergunta ${target.question}`
+      : `Pergunta ${this.question()}`;
+  });
 
   /**
    * Cicla entre 3 cores para o título "Pergunta X", só para deixar visível
@@ -96,6 +127,8 @@ export class ScoreEntry {
       // Ler `question` só para disparar o efeito a cada avanço de pergunta.
       this.question();
       this.correcting.set(false);
+      this.correctionTarget.set(null);
+      this.pickerOpen.set(false);
       this.confirming.set(false);
       this.confirmingNobody.set(false);
       this.rows.set(
@@ -123,6 +156,15 @@ export class ScoreEntry {
         this.correcting.set(false);
         this.confirmingNobody.set(false);
       }
+    });
+
+    // Assim que o pai devolve as pontuações da pergunta escolhida no dialog
+    // (ver `requestCorrection`), preenche o formulário com elas e entra em
+    // modo de correção — sempre que `correctionData` mudar (o pai emite um
+    // objeto novo a cada resposta, mesmo se for a mesma pergunta de novo).
+    effect(() => {
+      const data = this.correctionData();
+      if (data) this.applyCorrectionData(data);
     });
   }
 
@@ -174,13 +216,28 @@ export class ScoreEntry {
     return computeFinalScore({ baseScore: row.base, bonus: row.bonus, penalty: row.penalty });
   }
 
-  startCorrection(): void {
-    const target = this.lastRegistered();
-    const previous = this.previousQuestionScores();
-    if (!target || !previous.length) return;
-    const byTeam = new Map(previous.map((s) => [s.teamId, s]));
+  openPicker(): void {
+    if (this.submitting() || this.confirming() || !this.pickableQuestions().length) return;
+    this.pickerOpen.set(true);
+  }
+
+  closePicker(): void {
+    this.pickerOpen.set(false);
+  }
+
+  /** Operador escolheu, no dialog, qual pergunta corrigir — pede ao pai as
+   * pontuações já registradas dessa pergunta (`correctionData` traz a
+   * resposta, tratada no effect do construtor). */
+  requestCorrection(target: CorrectionTarget): void {
+    this.correctionRequested.emit(target);
+  }
+
+  private applyCorrectionData(data: CorrectionData): void {
+    const byTeam = new Map(data.scores.map((s) => [s.teamId, s]));
+    this.correctionTarget.set(data.target);
     this.correcting.set(true);
     this.confirming.set(false);
+    this.pickerOpen.set(false);
     this.rows.update((rows) =>
       rows.map((r) => {
         const prev = byTeam.get(r.teamId);
@@ -193,6 +250,7 @@ export class ScoreEntry {
 
   cancelCorrection(): void {
     this.correcting.set(false);
+    this.correctionTarget.set(null);
     this.confirming.set(false);
     this.rows.update((rows) => rows.map((r) => ({ ...r, base: 0, bonus: 0, penalty: 0, selected: false })));
   }
@@ -237,7 +295,7 @@ export class ScoreEntry {
 
   confirmSubmit(): void {
     if (this.submitting()) return;
-    const target = this.correcting() ? this.lastRegistered() : null;
+    const target = this.correcting() ? this.correctionTarget() : null;
     const anyPositive = this.rows().some((r) => this.finalScore(r) > 0);
     this.combo.set(anyPositive ? this.combo() + 1 : 0);
     const scores: TeamScoreInput[] = this.rows().map((r) => ({
@@ -279,10 +337,13 @@ export class ScoreEntry {
     }
 
     if (event.key === 'Escape') {
-      // Durante a confirmação, Esc cancela a confirmação; fora dela, Esc
-      // limpa a seleção (atalho do botão "Limpar seleção").
+      // Durante a confirmação, Esc cancela a confirmação; durante a escolha
+      // no dialog, Esc fecha o dialog; fora disso, Esc limpa a seleção
+      // (atalho do botão "Limpar seleção").
       if (this.confirming()) {
         this.cancelConfirm();
+      } else if (this.pickerOpen()) {
+        this.closePicker();
       } else {
         this.clearSelection();
       }
@@ -297,7 +358,7 @@ export class ScoreEntry {
 
     if ((event.key === 'p' || event.key === 'P') && !this.confirming() && !this.correcting()) {
       event.preventDefault();
-      this.startCorrection();
+      this.openPicker();
       return;
     }
 

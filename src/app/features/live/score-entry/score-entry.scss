@@ -5,6 +5,9 @@
   flex-direction: column;
   gap: var(--space-4);
   font-family: var(--font-arcade-body);
+  /* O rodapé de ações é `position: fixed` (ver `.footer` abaixo) — esse
+     respiro evita que a última linha de equipes fique escondida atrás dele. */
+  padding-bottom: 6.5rem;
 }
 
 .head {
@@ -124,7 +127,10 @@ h2 {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: transform 0.06s ease;
+  transition:
+    transform 0.06s ease,
+    filter 0.12s ease,
+    box-shadow 0.12s ease;
 
   &:active {
     transform: translateY(2px);
@@ -143,8 +149,18 @@ h2 {
     &.value-box-#{$value} {
       $color: list.nth($pair, 1);
       $shadow: list.nth($pair, 2);
+      /* Parada (não selecionada): mesmo "plástico" colorido, mas escurecido
+         e dessaturado — cara de botão apagado/desabilitado — pra sobrar
+         contraste de verdade pro valor que está ativo (spec "Botões de
+         pontuação (0-5)... quando não selecionados podem ficar mais
+         escuros"). */
       background: linear-gradient(180deg, rgba($color, 0.8), rgba($color, 0.47));
       box-shadow: 0 4px 0 $shadow;
+      filter: brightness(0.48) saturate(0.55);
+
+      &:hover {
+        filter: brightness(0.65) saturate(0.7);
+      }
 
       &:active {
         box-shadow: 0 1px 0 $shadow;
@@ -152,7 +168,10 @@ h2 {
 
       &.active {
         background: $color;
-        box-shadow: 0 4px 0 $shadow;
+        box-shadow:
+          0 4px 0 $shadow,
+          0 0 16px -4px $color;
+        filter: none;
       }
     }
   }
@@ -282,17 +301,26 @@ h2 {
   }
 }
 
+/* Fixo na base da PÁGINA (não só do container de score-entry) — rolar a
+   lista de equipes não pode afastar essas ações da mão do operador (spec
+   "coloque ela fixa no rodapé da página, pra rolagem não afetá-la"). Por
+   ser `fixed`, o footer já ocupa a largura toda da viewport independente da
+   coluna onde o componente está encaixado (grid de `.live-page`). */
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-4);
   flex-wrap: wrap;
-  position: sticky;
+  position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  background: var(--arcade-bg);
-  padding: var(--space-3) 0;
+  z-index: 40;
+  background: var(--arcade-bg-elevated);
+  padding: var(--space-3) var(--space-5);
   border-top: 1px solid var(--arcade-border);
+  box-shadow: 0 -8px 24px -8px rgba(0, 0, 0, 0.4);
 }
 
 .primary-actions {
@@ -356,11 +384,82 @@ h2 {
   font-size: 0.85rem;
 }
 
-.correction-link {
-  align-self: flex-start;
-  font-size: 0.78rem;
+.correction-trigger {
+  font-size: 0.75rem;
+  padding: var(--space-3) var(--space-4);
+}
+
+/* Dialog "corrigir perguntas anteriores" (spec score-entry) — overlay
+   simples, sem dependência de biblioteca de modal. */
+.picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 4, 10, 0.72);
+  padding: var(--space-5);
+  animation: fade-in 0.15s ease;
+}
+
+.picker-dialog {
+  width: 100%;
+  max-width: 380px;
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--arcade-bg-elevated);
+  border: 1px solid var(--arcade-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+  h3 {
+    font-family: var(--font-pixel);
+    font-size: 0.95rem;
+    color: var(--arcade-gold);
+  }
+}
+
+.picker-hint {
+  font-size: 0.8rem;
   font-family: var(--font-mono);
   color: var(--arcade-text-muted);
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.picker-item {
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--arcade-text);
+  background: var(--arcade-bg-elevated-2);
+  border: 1px solid var(--arcade-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+
+  &:hover {
+    border-color: var(--arcade-accent);
+  }
+}
+
+.picker-cancel {
+  align-self: flex-end;
 }
 
 .shortcuts {

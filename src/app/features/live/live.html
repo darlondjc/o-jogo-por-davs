@@ -2,14 +2,13 @@
   <p class="loading">Carregando…</p>
 } @else if (gameState.game(); as game) {
   <div class="live-page">
-    <header class="arcade-header">
+    <header class="page-header">
+      <a class="back" [routerLink]="['/jogo', gameId]">← Painel do jogo</a>
       <span class="brand">O JOGO</span>
-      <span class="mode">TRIVIA · AO VIVO</span>
+      <app-user-chip class="page-header-user" />
     </header>
 
     <div class="main container">
-      <a class="back" [routerLink]="['/jogo', gameId]">← Painel do jogo</a>
-
       <div class="progress">
         <span class="chip chip-round">RODADA {{ game.currentRound }}/{{ game.rounds }}</span>
         <span class="chip chip-question">PERGUNTA {{ game.currentQuestion }}/{{ game.questionsPerRound }}</span>
@@ -27,11 +26,12 @@
         [teams]="gameState.teams()"
         [round]="game.currentRound"
         [question]="game.currentQuestion"
-        [previousQuestionScores]="gameState.previousQuestionScores()"
-        [lastRegistered]="gameState.lastRegistered()"
+        [registeredQuestions]="gameState.registeredQuestions()"
+        [correctionData]="correctionData()"
         [submitting]="submitting()"
         [justRegisteredQuestion]="justRegisteredQuestion()"
         (scoresSubmitted)="onSubmit($event)"
+        (correctionRequested)="onCorrectionRequested($event)"
       />
     </div>
 

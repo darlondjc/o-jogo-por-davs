@@ -88,12 +88,20 @@ export async function startGame(gameId: string): Promise<Game> {
   });
 }
 
+export interface RegisteredQuestion {
+  round: number;
+  question: number;
+}
+
 export interface LiveState {
   game: Game;
   teams: Team[];
   scoreboard: Scoreboard;
   previousQuestionScores: Score[];
   lastRegistered: { round: number; question: number } | null;
+  /** Perguntas já registradas no jogo, em ordem — alimenta o dialog de
+   * "corrigir perguntas anteriores" (melhorias doc, seção score-entry). */
+  registeredQuestions: RegisteredQuestion[];
 }
 
 export async function getLiveState(gameId: string): Promise<LiveState> {
@@ -104,8 +112,23 @@ export async function getLiveState(gameId: string): Promise<LiveState> {
   const previousQuestionScores = lastRegistered
     ? await repos().scores.findByQuestion(gameId, lastRegistered.round, lastRegistered.question)
     : [];
+  const registeredQuestions = (await repos().questions.findByGameId(gameId))
+    .map((q) => ({ round: q.round, question: q.number }))
+    .sort((a, b) => a.round - b.round || a.question - b.question);
 
-  return { game, teams, scoreboard, previousQuestionScores, lastRegistered };
+  return { game, teams, scoreboard, previousQuestionScores, lastRegistered, registeredQuestions };
+}
+
+/** Pontuações de uma pergunta específica (não necessariamente a última) —
+ * usado pelo dialog de correção de perguntas anteriores para pré-preencher
+ * o formulário com o que já foi registrado. */
+export async function getQuestionScores(
+  gameId: string,
+  round: number,
+  question: number,
+): Promise<Score[]> {
+  await getGameOrThrow(gameId);
+  return repos().scores.findByQuestion(gameId, round, question);
 }
 
 export interface SubmitScoresResult {

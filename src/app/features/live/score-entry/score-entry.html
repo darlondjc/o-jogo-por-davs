@@ -6,6 +6,10 @@
     <h2 [class]="titleColorClass() + ' ' + titlePulseClass()">{{ targetLabel() }}</h2>
   </header>
 
+  <p class="shortcuts">
+    0-5 escolhe o valor · Enter/Espaço confirma · A seleciona todas · Esc limpa a seleção · P corrige uma pergunta anterior
+  </p>
+
   <section class="quick-bar">
     <span class="quick-label">Pontuação da pergunta — botões de fliperama</span>
 
@@ -107,8 +111,6 @@
   </ul>
 
   <footer class="footer">
-    <!-- Total distribuído removido conforme solicitado -->
-
     @if (correcting()) {
       <button class="btn btn-ghost" type="button" (click)="cancelCorrection()">
         Cancelar correção
@@ -133,6 +135,16 @@
         >
           Ninguém acertou
         </button>
+        @if (!correcting() && pickableQuestions().length) {
+          <button
+            class="btn btn-ghost btn-outline correction-trigger"
+            type="button"
+            (click)="openPicker()"
+            [disabled]="submitting()"
+          >
+            Corrigir perguntas anteriores (P)
+          </button>
+        }
       </div>
     } @else if (confirmingNobody()) {
       <div class="confirm-bar">
@@ -167,13 +179,24 @@
     }
   </footer>
 
-  @if (lastRegistered() && !correcting()) {
-    <button class="btn btn-ghost correction-link" type="button" (click)="startCorrection()">
-      Corrigir última pergunta (P)
-    </button>
+  @if (pickerOpen()) {
+    <div class="picker-overlay" (click)="closePicker()">
+      <div class="picker-dialog" (click)="$event.stopPropagation()">
+        <h3>Corrigir pergunta anterior</h3>
+        <p class="picker-hint">
+          Escolha a pergunta pra revisar a pontuação já registrada. Cuidado: isso atualiza o placar geral.
+        </p>
+        <ul class="picker-list">
+          @for (q of pickableQuestions(); track q.round + '-' + q.question) {
+            <li>
+              <button type="button" class="picker-item" (click)="requestCorrection(q)">
+                Rodada {{ q.round }} · Pergunta {{ q.question }}
+              </button>
+            </li>
+          }
+        </ul>
+        <button class="btn btn-ghost picker-cancel" type="button" (click)="closePicker()">Cancelar</button>
+      </div>
+    </div>
   }
-
-  <p class="shortcuts">
-    0-5 escolhe o valor · Enter/Espaço confirma · A seleciona todas · Esc limpa a seleção · P corrige a última pergunta
-  </p>
 </div>

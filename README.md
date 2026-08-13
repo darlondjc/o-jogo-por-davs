@@ -10,6 +10,7 @@ especial a tela `/jogo/:id/ao-vivo`, otimizada para lançar a pontuação de uma
 pergunta inteira, para todas as equipes, em segundos e majoritariamente pelo
 teclado.
 
+
 ## Estrutura do projeto
 
 ```

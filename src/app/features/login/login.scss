@@ -41,6 +41,10 @@ h1 {
   width: 100%;
 }
 
+.google-button-wrap.hidden {
+  display: none;
+}
+
 .muted {
   color: var(--text-muted);
   font-size: 0.9rem;

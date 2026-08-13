@@ -18,9 +18,16 @@
 .hero {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-5);
   flex-wrap: wrap;
+}
+
+.hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .eyebrow {
@@ -31,9 +38,46 @@
 }
 
 h1 {
-  font-size: 2.2rem;
+  font-size: 2.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.hero-date {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+
+  .dot {
+    color: var(--text-faint);
+    margin: 0 var(--space-1);
+  }
+}
+
+.meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+
+  li {
+    background: var(--bg-elevated-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-3);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+}
+
+.hero .badge {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  padding: var(--space-2) var(--space-4);
 }
 
 .muted {

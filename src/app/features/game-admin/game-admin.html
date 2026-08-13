@@ -2,17 +2,23 @@
   <div class="page container">
     <a class="back" routerLink="/">← Todos os jogos</a>
 
-    <header class="hero">
-      <div>
+    <header class="hero card">
+      <div class="hero-main">
         <p class="eyebrow">O JOGO</p>
         <h1>{{ game.name }}</h1>
-        <p class="muted">
-          {{ game.date | date: 'dd/MM/yyyy' }} · {{ game.location }}
+        <p class="hero-date">
+          {{ game.date | date: 'dd/MM/yyyy' }}
+          @if (game.location) {
+            <span class="dot">·</span>
+            {{ game.location }}
+          }
         </p>
-        <p class="muted small">
-          {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }} rodadas ·
-          {{ game.questionsPerRound }} perguntas por rodada · {{ gameState.teams().length }} equipes
-        </p>
+        <ul class="meta-chips">
+          <li>{{ gameTypeLabel(game.gameType) }}</li>
+          <li>{{ game.rounds }} rodadas</li>
+          <li>{{ game.questionsPerRound }} perguntas por rodada</li>
+          <li>{{ gameState.teams().length }} equipes</li>
+        </ul>
       </div>
       <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
     </header>
@@ -80,8 +86,8 @@
       </div>
 
       <div class="card share">
-        <h2>Compartilhar placar</h2>
-        <p class="muted small">Escaneie para acompanhar o placar</p>
+        <h2>Acompanhar Jogo ao vivo</h2>
+        <p class="muted small">Escaneie para acompanhar o jogo</p>
         @if (qrDataUrl(); as qr) {
           <img class="qr" [src]="qr" alt="QR Code do placar público" width="176" height="176" />
         }
@@ -93,7 +99,6 @@
             {{ linkCopied() ? 'Link copiado!' : 'Copiar link' }}
           </button>
         </div>
-        <input class="link-input" type="text" readonly [value]="publicUrl()" />
       </div>
     </section>
   </div>

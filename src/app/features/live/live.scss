@@ -215,7 +215,10 @@ $header-h: 3.75rem;
 
 /* Enquanto a pontuação está sendo salva, mostra uma caixinha centralizada
    na tela — só pra deixar claro que o clique em "Registrar pontuações" foi
-   recebido, sem escurecer a tela inteira. */
+   recebido. Caixa clara (não escura como o resto do HUD) de propósito: numa
+   tela quase toda preta, uma caixinha escura sumia no fundo — branco
+   destaca de verdade que algo está em andamento. Um leve escurecimento
+   atrás reforça o efeito de "pausa" sem apagar a tela inteira. */
 .saving-overlay {
   position: fixed;
   inset: 0;
@@ -223,6 +226,8 @@ $header-h: 3.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(2, 4, 10, 0.55);
+  animation: fade-in 0.15s ease;
 }
 
 .saving-box {
@@ -230,15 +235,14 @@ $header-h: 3.75rem;
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  background: var(--arcade-bg-elevated);
-  border: 1px solid var(--arcade-border);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-lg);
   padding: var(--space-6) var(--space-7);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  animation: fade-in 0.15s ease;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 
   p {
-    color: var(--arcade-text);
+    color: #0d1220;
     font-weight: 700;
     font-size: 1.1rem;
     font-family: var(--font-arcade-body);
@@ -249,7 +253,7 @@ $header-h: 3.75rem;
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(13, 18, 32, 0.15);
   border-top-color: var(--arcade-accent);
   animation: saving-spin 0.7s linear infinite;
 }

@@ -65,6 +65,44 @@
   background: rgba(255, 77, 106, 0.1);
 }
 
+/* Cards e fonte um pouco menores no modo compacto (sidebar da tela ao
+   vivo) — pra caber mais equipes visíveis sem rolar (spec "diminua um
+   pouco a fonte e os cards dos times pra ficar melhor de ver quando tiver
+   muitos times"). Especificidade batendo a combinação exata de classes
+   (`.board.compact.arcade`) porque as regras do variant arcade, mais
+   específicas, senão ganhariam da genérica `.compact`. */
+.board.compact {
+  gap: var(--space-1);
+}
+
+.board.compact.arcade .row,
+.board.compact .row {
+  gap: var(--space-2);
+}
+
+.board.compact .position {
+  font-size: 0.85rem;
+}
+
+.board.compact .dot {
+  width: 8px;
+  height: 8px;
+}
+
+.board.compact .name {
+  font-size: 0.85rem;
+}
+
+.board.compact.arcade .total,
+.board.compact .total {
+  font-size: 0.8rem;
+}
+
+.board.compact .trend {
+  font-size: 0.8rem;
+  width: 1.1rem;
+}
+
 .compact .row {
   padding: var(--space-2) var(--space-3);
 }

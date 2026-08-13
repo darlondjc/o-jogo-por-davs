@@ -1,10 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreEntry } from './score-entry/score-entry';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
 import { UserChip } from '../../core/components/user-chip/user-chip';
-import type { Score, SubmitQuestionScoresRequest } from '../../core/models';
+import type { Scoreboard, Score, SubmitQuestionScoresRequest } from '../../core/models';
 
 interface CorrectionTarget {
   round: number;
@@ -32,6 +32,27 @@ export class Live {
    * `score-entry.ts`): busca as pontuações da pergunta escolhida e devolve
    * pro componente via `correctionData`. */
   readonly correctionData = signal<{ target: CorrectionTarget; scores: Score[] } | null>(null);
+
+  /**
+   * Reaproveita o `app-scoreboard` (mesmo visual, mesma animação de
+   * ultrapassagem) pra mostrar a pontuação só desta rodada, na metade de
+   * cima da sidebar — rankeado pelo total da rodada em vez do total geral.
+   * Sem posição anterior conhecida por rodada (só o back-end rastreia isso
+   * pro total geral), então a seta de tendência fica neutra aqui.
+   */
+  readonly roundScoreboard = computed<Scoreboard | null>(() => {
+    const board = this.gameState.scoreboard();
+    if (!board) return null;
+    const entries = [...board.entries]
+      .sort((a, b) => b.roundTotal - a.roundTotal)
+      .map((entry, i) => ({
+        ...entry,
+        overallTotal: entry.roundTotal,
+        position: i + 1,
+        previousPosition: null,
+      }));
+    return { ...board, entries };
+  });
 
   constructor() {
     this.refresh();

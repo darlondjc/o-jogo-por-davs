@@ -131,27 +131,81 @@ $header-h: 3.75rem;
   font-family: var(--font-mono);
 }
 
+/* Dividida ao meio: pontuação desta rodada em cima, geral embaixo — cada
+   metade rola por conta própria (spec "diminua os cards pra ficar melhor
+   de ver quando tiver muitos times"), então uma lista grande não empurra a
+   outra pra fora da tela. */
 .side {
   border-left: 1px solid var(--arcade-border);
-  /* Espaço extra embaixo: no layout empilhado (mobile), o rodapé fixo de
-     ações da score-entry cobre a base da tela mesmo quando o placar (não a
-     score-entry) é o que está visível ali. */
-  padding: var(--space-5) var(--space-5) 6.5rem;
   background: var(--arcade-bg-elevated);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Gruda na viewport (abaixo do cabeçalho fixo) com altura fixa — sem
+     isso, a coluna cresceria junto com a lista de equipes da score-entry
+     ao lado e as duas metades nunca teriam uma altura real pra dividir e
+     rolar por conta própria. */
+  position: sticky;
+  top: $header-h;
+  height: calc(100vh - #{$header-h});
 
   @media (max-width: 960px) {
     border-left: none;
     border-top: 1px solid var(--arcade-border);
+    /* Empilhado (mobile), a coluna já rola junto com o resto da página —
+       cada metade vira só uma lista com altura máxima própria (ver
+       `.side-section` abaixo), não a viewport inteira. */
+    position: static;
+    height: auto;
   }
+}
 
-  h2 {
-    font-family: var(--font-pixel);
-    font-size: 0.8rem;
-    color: var(--arcade-gold);
-    font-weight: 400;
-    margin-bottom: var(--space-4);
-    letter-spacing: 0.06em;
+.side-section {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-5);
+
+  @media (max-width: 960px) {
+    flex: none;
+    max-height: 40vh;
   }
+}
+
+/* Espaço extra embaixo só na última metade: no layout empilhado (mobile),
+   o rodapé fixo de ações da score-entry cobre a base da tela mesmo quando
+   o placar (não a score-entry) é o que está visível ali. */
+.side-overall {
+  padding-bottom: 6.5rem;
+  border-top: 1px solid var(--arcade-border);
+
+  @media (max-width: 960px) {
+    padding-bottom: var(--space-4);
+  }
+}
+
+.side-section h2 {
+  font-family: var(--font-pixel);
+  font-size: 0.72rem;
+  font-weight: 400;
+  margin-bottom: var(--space-3);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.side-round h2 {
+  color: var(--arcade-accent);
+}
+
+.side-overall h2 {
+  color: var(--arcade-gold);
+}
+
+.side-section app-scoreboard {
+  display: block;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .loading {

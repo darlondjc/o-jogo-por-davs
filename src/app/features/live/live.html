@@ -36,13 +36,25 @@
     </div>
 
     <aside class="side">
-      <h2>Placar geral</h2>
-      <app-scoreboard
-        [scoreboard]="gameState.scoreboard()"
-        [teams]="gameState.teams()"
-        [compact]="true"
-        variant="arcade"
-      />
+      <section class="side-section side-round">
+        <h2>Placar da rodada</h2>
+        <app-scoreboard
+          [scoreboard]="roundScoreboard()"
+          [teams]="gameState.teams()"
+          [compact]="true"
+          variant="arcade"
+        />
+      </section>
+
+      <section class="side-section side-overall">
+        <h2>Placar geral</h2>
+        <app-scoreboard
+          [scoreboard]="gameState.scoreboard()"
+          [teams]="gameState.teams()"
+          [compact]="true"
+          variant="arcade"
+        />
+      </section>
     </aside>
 
     @if (submitting()) {

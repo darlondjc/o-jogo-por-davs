@@ -19,9 +19,25 @@
 .hero {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-5);
   flex-wrap: wrap;
+}
+
+/* Ações principais (iniciar/continuar, configurar, finalizar) agora vivem
+   aqui, lado direito do card de cima, em vez de um card "actions" próprio
+   abaixo — economiza espaço vertical (melhorias doc "Tela principal do
+   jogo"). */
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-shrink: 0;
+
+  @media (max-width: 720px) {
+    align-items: flex-start;
+  }
 }
 
 .hero-main {
@@ -93,13 +109,6 @@ h1 {
 
 .error {
   color: var(--negative);
-}
-
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: flex-start;
 }
 
 .finished {

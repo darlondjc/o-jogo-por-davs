@@ -20,64 +20,66 @@
           <li class="chip">{{ gameState.teams().length }} equipes</li>
         </ul>
       </div>
-      <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
+
+      <!-- Ações principais no card de cima, lado direito — economiza o
+           espaço vertical que o card "actions" separado ocupava (melhorias
+           doc "Tela principal do jogo"). "Ver placar" foi pro card
+           "Acompanhar jogo ao vivo", que já é sobre a mesma coisa. -->
+      <div class="hero-actions">
+        <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
+
+        @switch (game.status) {
+          @case ('CONFIGURACAO') {
+            <button
+              class="btn btn-primary btn-xl"
+              type="button"
+              (click)="start()"
+              [disabled]="starting() || startBlockers().length > 0"
+            >
+              {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
+            </button>
+            @if (startBlockers().length) {
+              <ul class="blockers">
+                @for (b of startBlockers(); track b) {
+                  <li>{{ b }}</li>
+                }
+              </ul>
+            }
+          }
+          @case ('EM_ANDAMENTO') {
+            <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
+              Continuar jogo
+            </a>
+          }
+          @case ('RODADA_FINALIZADA') {
+            <a
+              class="btn btn-primary btn-xl"
+              [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
+            >
+              Ver resumo da rodada
+            </a>
+          }
+          @case ('FINALIZADO') {
+            <p class="finished">🏁 Jogo finalizado</p>
+          }
+        }
+
+        <div class="secondary-actions">
+          @if (game.status !== 'FINALIZADO') {
+            <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
+          }
+          @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
+            <button class="btn btn-ghost btn-danger" type="button" (click)="finish()" [disabled]="finishing()">
+              {{ finishing() ? 'Finalizando…' : 'Finalizar jogo' }}
+            </button>
+          }
+        </div>
+      </div>
     </header>
 
     @if (error()) {
       <p class="error">{{ error() }}</p>
     }
-
-    <section class="actions card">
-      @switch (game.status) {
-        @case ('CONFIGURACAO') {
-          <button
-            class="btn btn-primary btn-xl"
-            type="button"
-            (click)="start()"
-            [disabled]="starting() || startBlockers().length > 0"
-          >
-            {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
-          </button>
-          @if (startBlockers().length) {
-            <ul class="blockers">
-              @for (b of startBlockers(); track b) {
-                <li>{{ b }}</li>
-              }
-            </ul>
-          }
-        }
-        @case ('EM_ANDAMENTO') {
-          <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
-            Continuar jogo
-          </a>
-        }
-        @case ('RODADA_FINALIZADA') {
-          <a
-            class="btn btn-primary btn-xl"
-            [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
-          >
-            Ver resumo da rodada
-          </a>
-        }
-        @case ('FINALIZADO') {
-          <p class="finished">🏁 Jogo finalizado</p>
-        }
-      }
-
-      <div class="secondary-actions">
-        @if (game.status !== 'FINALIZADO') {
-          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
-        }
-        <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
-          Ver placar
-        </a>
-        @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
-          <button class="btn btn-ghost btn-danger" type="button" (click)="finish()" [disabled]="finishing()">
-            {{ finishing() ? 'Finalizando…' : 'Finalizar jogo' }}
-          </button>
-        }
-      </div>
-    </section>
 
     <section class="grid">
       <div class="card">
@@ -98,6 +100,9 @@
           <button class="btn btn-ghost btn-outline" type="button" (click)="copyLink()">
             {{ linkCopied() ? 'Link copiado!' : 'Copiar link' }}
           </button>
+          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
+            Ver placar
+          </a>
         </div>
       </div>
     </section>

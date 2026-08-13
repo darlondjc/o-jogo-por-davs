@@ -133,29 +133,42 @@ h2 {
 
 /* Seção "Placar geral" colapsável (spec public-scoreboard: dá mais espaço
    pra rodada atual e evita processar a animação de ultrapassagem enquanto
-   ninguém está olhando pra ela). */
+   ninguém está olhando pra ela). Estilo de botão de verdade (fundo, borda,
+   destaque) — como texto solto igual ao h2 estático de "Rodada X" logo
+   abaixo, não ficava claro que dava pra tocar/clicar ali. */
 .section-toggle {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  background: transparent;
-  border: none;
-  padding: var(--space-2) 0;
+  background: var(--arcade-bg-elevated-2);
+  border: 1px solid var(--arcade-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
   cursor: pointer;
-  /* Alvo de toque confortável em celular mesmo com conteúdo baixo. */
+  /* Alvo de toque confortável em celular. */
   min-height: 44px;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
 
   h2 {
     margin: 0;
+    color: var(--arcade-text);
+  }
+
+  &:hover,
+  &:active {
+    border-color: var(--arcade-accent);
+    background: var(--arcade-bg-elevated);
   }
 }
 
 .chevron {
-  color: var(--arcade-text-faint);
-  font-size: 0.7rem;
+  color: var(--arcade-accent);
+  font-size: 0.9rem;
 }
 
 .collapsible.collapsed .section-toggle {

@@ -1,5 +1,5 @@
 import { Component, computed, effect, ElementRef, input, signal, viewChildren } from '@angular/core';
-import type { Scoreboard, Team } from '../../core/models';
+import type { Scoreboard } from '../../core/models';
 import { teamColor } from '../../core/models';
 
 export interface ScoreboardRow {
@@ -24,24 +24,15 @@ export interface ScoreboardRow {
 })
 export class ScoreboardComponent {
   readonly scoreboard = input.required<Scoreboard | null>();
-  readonly teams = input<Team[]>([]);
   readonly compact = input(false);
   /** `arcade` liga o visual HUD de fliperama (redesign de live/public-scoreboard).
    * O `game-admin` não passa esse input e continua com o visual padrão. */
   readonly variant = input<'default' | 'arcade'>('default');
 
-  private readonly teamOrderById = computed(() => {
-    const map = new Map<string, number>();
-    for (const team of this.teams()) map.set(team.id, team.order);
-    return map;
-  });
-
   readonly rows = computed<ScoreboardRow[]>(() => {
     const board = this.scoreboard();
     if (!board) return [];
-    const orderById = this.teamOrderById();
     return board.entries.map((entry) => {
-      const order = orderById.get(entry.teamId) ?? 1;
       let trend: ScoreboardRow['trend'] = 'same';
       if (entry.previousPosition !== null) {
         if (entry.position < entry.previousPosition) trend = 'up';
@@ -50,7 +41,7 @@ export class ScoreboardComponent {
       return {
         teamId: entry.teamId,
         teamName: entry.teamName,
-        color: teamColor(order),
+        color: teamColor(entry.order),
         overallTotal: entry.overallTotal,
         roundTotal: entry.roundTotal,
         position: entry.position,

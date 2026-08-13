@@ -110,6 +110,10 @@ export interface RoundSummary {
 export interface ScoreboardEntry {
   teamId: string;
   teamName: string;
+  /** Ordem de cadastro da equipe — só pra cor de identificação visual
+   * (`teamColor`), embutida aqui porque o placar público não tem acesso à
+   * lista de equipes (rota sem login, spec seção 19). */
+  order: number;
   roundTotal: number;
   overallTotal: number;
   position: number;

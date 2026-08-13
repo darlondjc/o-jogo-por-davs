@@ -307,6 +307,7 @@ export async function getScoreboard(gameId: string): Promise<Scoreboard> {
       return {
         teamId: team.id,
         teamName: team.name,
+        order: team.order,
         roundTotal,
         overallTotal: rankEntry?.total ?? 0,
         position: rankEntry?.position ?? teams.length,

@@ -92,7 +92,16 @@ function readCookie(req: VercelRequest, name: string): string | null {
     const idx = pair.indexOf('=');
     if (idx === -1) continue;
     const key = pair.slice(0, idx).trim();
-    if (key === name) return decodeURIComponent(pair.slice(idx + 1).trim());
+    if (key !== name) continue;
+    try {
+      // Um cookie de sessão de uma versão antiga/formato diferente pode
+      // conter um `%` que não é uma sequência de escape válida —
+      // `decodeURIComponent` lança `URIError` nesse caso. Trata como
+      // "sem sessão" em vez de derrubar o endpoint inteiro com 500.
+      return decodeURIComponent(pair.slice(idx + 1).trim());
+    } catch {
+      return null;
+    }
   }
   return null;
 }

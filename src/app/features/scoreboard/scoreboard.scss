@@ -1,0 +1,99 @@
+.board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2.4rem 10px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated-2);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.leader {
+  border-color: rgba(255, 204, 51, 0.4);
+  background: linear-gradient(90deg, rgba(255, 204, 51, 0.1), var(--bg-elevated-2) 60%);
+}
+
+.changed {
+  animation: row-flash 1s ease;
+}
+
+@keyframes row-flash {
+  from {
+    background: rgba(51, 209, 122, 0.35);
+    border-color: var(--positive);
+  }
+}
+
+/* Durante a ultrapassagem (animação FLIP disparada em scoreboard.ts), a
+   linha em movimento ganha um leve destaque pra parecer que está "por cima"
+   das outras enquanto desliza até o novo lugar. */
+.row {
+  position: relative;
+}
+
+.flip-moving {
+  z-index: 2;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.compact .row {
+  padding: var(--space-2) var(--space-3);
+}
+
+.position {
+  font-size: 1.1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 1.2rem;
+  min-width: 3.5ch;
+  text-align: right;
+}
+
+.trend {
+  font-weight: 800;
+  width: 1.4rem;
+  text-align: center;
+}
+
+.trend-up {
+  color: var(--positive);
+}
+
+.trend-down {
+  color: var(--negative);
+}
+
+.trend-same {
+  color: var(--text-faint);
+}
+
+.empty {
+  color: var(--text-muted);
+}

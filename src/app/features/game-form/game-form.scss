@@ -1,0 +1,68 @@
+.page {
+  padding: var(--space-6) 0 var(--space-7);
+  max-width: 800px;
+}
+
+.back {
+  display: inline-block;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-3);
+  font-size: 0.9rem;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: var(--space-1);
+}
+
+.muted {
+  color: var(--text-muted);
+  margin-bottom: var(--space-5);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+
+  span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+}
+
+.field-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.field input.invalid,
+.field select.invalid,
+.field textarea.invalid {
+  border-color: var(--negative);
+  outline-color: var(--negative);
+}
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--negative);
+}
+
+.error {
+  color: var(--negative);
+}

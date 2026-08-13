@@ -1,0 +1,122 @@
+.live-page {
+  display: grid;
+  grid-template-columns: 1fr 450px;
+  min-height: 100vh;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main {
+  padding: var(--space-5) var(--space-5) var(--space-7);
+  max-width: 1000px;
+}
+
+.back {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.progress {
+  display: flex;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: var(--space-2) 0 var(--space-4);
+
+  .sep {
+    color: var(--text-faint);
+  }
+}
+
+.error {
+  color: var(--negative);
+  margin-bottom: var(--space-3);
+}
+
+.side {
+  border-left: 1px solid var(--border);
+  padding: var(--space-5);
+  background: var(--bg-elevated);
+
+  @media (max-width: 960px) {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: var(--space-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.loading {
+  padding: var(--space-6);
+  color: var(--text-muted);
+}
+
+/* Enquanto a pontuação está sendo salva, mostra uma caixinha centralizada
+   na tela — só pra deixar claro que o clique em "Registrar pontuações" foi
+   recebido, sem escurecer a tela inteira. */
+.saving-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saving-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  animation: fade-in 0.15s ease;
+
+  p {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+}
+
+.saving-spinner {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--accent);
+  animation: saving-spin 0.7s linear infinite;
+}
+
+@keyframes saving-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

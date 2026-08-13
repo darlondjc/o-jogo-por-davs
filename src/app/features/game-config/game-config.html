@@ -1,0 +1,175 @@
+@if (gameState.game()) {
+<div class="page container">
+  <a class="back" [routerLink]="['/jogo', gameId]">← Voltar ao jogo</a>
+  <h1>Configuração</h1>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <section class="card">
+    <h2>Dados do jogo</h2>
+    <form class="form" [formGroup]="gameForm" (ngSubmit)="saveGame()" novalidate>
+      <label class="field">
+        <span>Nome do jogo *</span>
+        <input
+          type="text"
+          formControlName="name"
+          [class.invalid]="gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())"
+        />
+        @if (gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())) {
+          <span class="field-error">Informe o nome do jogo.</span>
+        }
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Data *</span>
+          <input
+            type="date"
+            formControlName="date"
+            [class.invalid]="gameForm.controls.date.invalid && (gameForm.controls.date.touched || gameSubmitted())"
+          />
+          @if (gameForm.controls.date.invalid && (gameForm.controls.date.touched || gameSubmitted())) {
+            <span class="field-error">Informe a data.</span>
+          }
+        </label>
+        <label class="field">
+          <span>Local *</span>
+          <input
+            type="text"
+            formControlName="location"
+            [class.invalid]="
+              gameForm.controls.location.invalid && (gameForm.controls.location.touched || gameSubmitted())
+            "
+          />
+          @if (
+            gameForm.controls.location.invalid && (gameForm.controls.location.touched || gameSubmitted())
+          ) {
+            <span class="field-error">Informe o local.</span>
+          }
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Descrição</span>
+        <textarea formControlName="description" rows="2"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Tipo de jogo</span>
+        <select formControlName="gameType">
+          @for (option of gameTypeOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Rodadas *</span>
+          <input
+            type="number"
+            formControlName="rounds"
+            min="1"
+            [class.invalid]="
+              gameForm.controls.rounds.invalid && (gameForm.controls.rounds.touched || gameSubmitted())
+            "
+          />
+          @if (
+            gameForm.controls.rounds.invalid && (gameForm.controls.rounds.touched || gameSubmitted())
+          ) {
+            <span class="field-error">Deve ser >= 1.</span>
+          }
+        </label>
+        <label class="field">
+          <span>Perguntas por rodada *</span>
+          <input
+            type="number"
+            formControlName="questionsPerRound"
+            min="1"
+            [class.invalid]="
+              gameForm.controls.questionsPerRound.invalid &&
+              (gameForm.controls.questionsPerRound.touched || gameSubmitted())
+            "
+          />
+          @if (
+            gameForm.controls.questionsPerRound.invalid &&
+            (gameForm.controls.questionsPerRound.touched || gameSubmitted())
+          ) {
+            <span class="field-error">Deve ser >= 1.</span>
+          }
+        </label>
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="savingGame()">
+        {{ savingGame() ? 'Salvando…' : 'Salvar dados do jogo' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Equipes</h2>
+
+    @if (gameState.teams().length) {
+      <ul class="team-list">
+        @for (team of gameState.teams(); track team.id; let i = $index) {
+          <li class="team-row">
+            <span class="dot" [style.background]="teamColor(team.order)"></span>
+            <span class="team-name">{{ team.name }}</span>
+            <span class="muted">{{ team.playersCount }} jogadores</span>
+            <div class="team-actions">
+              <button class="btn btn-ghost" type="button" (click)="moveTeam(team, -1)" [disabled]="i === 0">
+                ↑
+              </button>
+              <button
+                class="btn btn-ghost"
+                type="button"
+                (click)="moveTeam(team, 1)"
+                [disabled]="i === gameState.teams().length - 1"
+              >
+                ↓
+              </button>
+              <button class="btn btn-ghost" type="button" (click)="startEditTeam(team)">Editar</button>
+              <button class="btn btn-ghost btn-danger" type="button" (click)="removeTeam(team.id)">
+                Remover
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">Nenhuma equipe cadastrada ainda.</p>
+    }
+
+    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeam()" novalidate>
+      <label class="field">
+        <span>Nome da equipe *</span>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="Ex: Os Inteligentes"
+          [class.invalid]="teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())"
+        />
+        @if (teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())) {
+          <span class="field-error">Informe o nome da equipe.</span>
+        }
+      </label>
+      <label class="field small">
+        <span>Jogadores</span>
+        <input type="number" formControlName="playersCount" min="0" />
+      </label>
+      <button class="btn btn-primary" type="submit" [disabled]="savingTeam()">
+        {{ editingTeamId() ? 'Salvar equipe' : '+ Adicionar equipe' }}
+      </button>
+      @if (editingTeamId()) {
+        <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
+      }
+    </form>
+  </section>
+
+  <button class="btn btn-primary" type="button" (click)="goToGame()">Concluir configuração</button>
+</div>
+} @else {
+  <p class="loading">Carregando…</p>
+}

@@ -1,0 +1,176 @@
+<div class="score-entry">
+  <header class="head">
+    <div>
+      <p class="eyebrow">RODADA {{ round() }}</p>
+      <h2 [class]="titleColorClass() + ' ' + titlePulseClass()">{{ targetLabel() }}</h2>
+    </div>
+    @if (justRegisteredQuestion(); as done) {
+      <p class="flash">✓ Pontuações da pergunta {{ done }} confirmadas</p>
+    }
+  </header>
+
+  <section class="quick-bar">
+    <span class="quick-label">Pontuação da pergunta</span>
+
+    <div class="quick-controls">
+      <div class="value-boxes">
+        @for (preset of quickValuePresets; track preset) {
+          <button
+            class="value-box"
+            type="button"
+            [class.active]="quickValue() === preset"
+            (click)="selectQuickValue(preset)"
+          >
+            {{ preset }}
+          </button>
+        }
+      </div>
+
+      <button class="btn btn-ghost btn-outline" type="button" (click)="selectAll()">
+        Selecionar todas (A)
+      </button>
+
+      <button
+        class="btn btn-ghost btn-outline"
+        type="button"
+        (click)="clearSelection()"
+        [disabled]="!selectedCount()"
+      >
+        Limpar seleção (ESC)
+      </button>
+
+      <button
+        class="btn btn-primary quick-apply"
+        type="button"
+        (click)="applyQuickValue()"
+        [disabled]="quickValue() === null || !selectedCount()"
+      >
+        Aplicar pontuação
+      </button>
+    </div>
+  </section>
+
+  <ul class="teams">
+    @for (row of rows(); track row.teamId) {
+      <li
+        class="team-row"
+        [class.selected]="row.selected"
+        (click)="toggleSelect(row.teamId)"
+      >
+        <button
+          class="select-toggle"
+          type="button"
+          [style.borderColor]="row.color"
+          [style.background]="row.selected ? row.color : 'transparent'"
+          [attr.aria-pressed]="row.selected"
+        >
+          @if (row.selected) {
+            <span class="check">✓</span>
+          }
+        </button>
+
+        <span class="name">{{ row.name }}</span>
+
+        <label class="mini-field" (click)="$event.stopPropagation()">
+          <span>Base</span>
+          <input
+            type="number"
+            [ngModel]="row.base"
+            (ngModelChange)="setBase(row.teamId, $event)"
+          />
+        </label>
+
+        <label class="mini-field" (click)="$event.stopPropagation()">
+          <span>Bônus</span>
+          <input
+            type="number"
+            [ngModel]="row.bonus"
+            (ngModelChange)="setBonus(row.teamId, $event)"
+          />
+        </label>
+
+        <label class="mini-field" (click)="$event.stopPropagation()">
+          <span>Penal.</span>
+          <input
+            type="number"
+            [ngModel]="row.penalty"
+            (ngModelChange)="setPenalty(row.teamId, $event)"
+          />
+        </label>
+
+        <span class="row-total">{{ finalScore(row) >= 0 ? '+' : '' }}{{ finalScore(row) }}</span>
+      </li>
+    }
+  </ul>
+
+  <footer class="footer">
+    <!-- Total distribuído removido conforme solicitado -->
+
+    @if (correcting()) {
+      <button class="btn btn-ghost" type="button" (click)="cancelCorrection()">
+        Cancelar correção
+      </button>
+    }
+
+    @if (!confirming() && !confirmingNobody()) {
+      <div class="primary-actions">
+        <button
+          class="btn btn-primary btn-xl"
+          type="button"
+          (click)="requestConfirm()"
+          [disabled]="!hasAnyScore() || submitting()"
+        >
+          {{ correcting() ? 'REVISAR CORREÇÃO' : 'REGISTRAR PONTUAÇÕES' }}
+        </button>
+        <button
+          class="btn btn-ghost btn-outline btn-xl"
+          type="button"
+          (click)="requestNobodyGotIt()"
+          [disabled]="submitting()"
+        >
+          Ninguém acertou
+        </button>
+      </div>
+    } @else if (confirmingNobody()) {
+      <div class="confirm-bar">
+        <span>Registrar que ninguém acertou? As pontuações preenchidas serão descartadas.</span>
+        <button class="btn btn-ghost" type="button" (click)="cancelNobodyConfirm()" [disabled]="submitting()">
+          Cancelar
+        </button>
+        <button
+          class="btn btn-primary btn-xl"
+          type="button"
+          (click)="submitNobodyGotIt()"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Registrando…' : 'CONFIRMAR' }}
+        </button>
+      </div>
+    } @else {
+      <div class="confirm-bar">
+        <span>Confirmar pontuações desta pergunta?</span>
+        <button class="btn btn-ghost" type="button" (click)="cancelConfirm()" [disabled]="submitting()">
+          Cancelar
+        </button>
+        <button
+          class="btn btn-primary btn-xl"
+          type="button"
+          (click)="confirmSubmit()"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? 'Registrando…' : 'CONFIRMAR' }}
+        </button>
+      </div>
+    }
+  </footer>
+
+  @if (lastRegistered() && !correcting()) {
+    <button class="btn btn-ghost correction-link" type="button" (click)="startCorrection()">
+      Corrigir última pergunta (P)
+    </button>
+  }
+
+  <p class="shortcuts">
+    0-5 escolhe o valor · Enter/Espaço confirma · A seleciona todas · Esc limpa a seleção · P corrige a última pergunta
+  </p>
+</div>

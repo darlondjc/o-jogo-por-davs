@@ -1,0 +1,57 @@
+@if (loading()) {
+  <p class="loading">Carregando resumo…</p>
+} @else {
+  <div class="page container">
+    <p class="eyebrow">RODADA {{ round }} FINALIZADA</p>
+    @if (winnerName(); as winner) {
+      <h1>🏆 {{ winner }} venceu a rodada</h1>
+    } @else {
+      <h1>Rodada {{ round }} finalizada</h1>
+    }
+
+    <section class="card">
+      <h2>Placar da rodada</h2>
+      <ol class="list">
+        @for (row of roundRows(); track row.teamId) {
+          <li class="row row-round">
+            <span class="dot" [style.background]="row.color"></span>
+            <span class="name">{{ row.teamName }}</span>
+            <span class="total">+{{ row.total }}</span>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Placar geral</h2>
+      <ol class="list">
+        @for (row of rankingRows(); track row.teamId) {
+          <li class="row row-ranked">
+            <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
+            <span class="dot" [style.background]="row.color"></span>
+            <span class="name">{{ row.teamName }}</span>
+            <span class="total">{{ row.total }}</span>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <div class="actions">
+      @if (isLastRound()) {
+        <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'placar']">
+          Ver placar final
+        </a>
+      } @else {
+        <button
+          class="btn btn-primary btn-xl"
+          type="button"
+          (click)="continueGame()"
+          [disabled]="continuing()"
+        >
+          {{ continuing() ? 'Avançando…' : 'CONTINUAR PARA A PRÓXIMA RODADA' }}
+        </button>
+      }
+      <a class="btn btn-ghost" [routerLink]="['/jogo', gameId]">Voltar ao painel</a>
+    </div>
+  </div>
+}

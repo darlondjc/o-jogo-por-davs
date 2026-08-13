@@ -1,0 +1,102 @@
+@if (gameState.game(); as game) {
+  <div class="page container">
+    <a class="back" routerLink="/">← Todos os jogos</a>
+
+    <header class="hero">
+      <div>
+        <p class="eyebrow">O JOGO</p>
+        <h1>{{ game.name }}</h1>
+        <p class="muted">
+          {{ game.date | date: 'dd/MM/yyyy' }} · {{ game.location }}
+        </p>
+        <p class="muted small">
+          {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }} rodadas ·
+          {{ game.questionsPerRound }} perguntas por rodada · {{ gameState.teams().length }} equipes
+        </p>
+      </div>
+      <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
+    </header>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <section class="actions card">
+      @switch (game.status) {
+        @case ('CONFIGURACAO') {
+          <button
+            class="btn btn-primary btn-xl"
+            type="button"
+            (click)="start()"
+            [disabled]="starting() || startBlockers().length > 0"
+          >
+            {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
+          </button>
+          @if (startBlockers().length) {
+            <ul class="blockers">
+              @for (b of startBlockers(); track b) {
+                <li>{{ b }}</li>
+              }
+            </ul>
+          }
+        }
+        @case ('EM_ANDAMENTO') {
+          <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
+            Continuar jogo
+          </a>
+        }
+        @case ('RODADA_FINALIZADA') {
+          <a
+            class="btn btn-primary btn-xl"
+            [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
+          >
+            Ver resumo da rodada
+          </a>
+        }
+        @case ('FINALIZADO') {
+          <p class="finished">🏁 Jogo finalizado</p>
+        }
+      }
+
+      <div class="secondary-actions">
+        @if (game.status !== 'FINALIZADO') {
+          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
+        }
+        <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
+          Ver placar
+        </a>
+        @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
+          <button class="btn btn-ghost btn-danger" type="button" (click)="finish()" [disabled]="finishing()">
+            {{ finishing() ? 'Finalizando…' : 'Finalizar jogo' }}
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Placar geral</h2>
+        <app-scoreboard [scoreboard]="gameState.scoreboard()" [teams]="gameState.teams()" />
+      </div>
+
+      <div class="card share">
+        <h2>Compartilhar placar</h2>
+        <p class="muted small">Escaneie para acompanhar o placar</p>
+        @if (qrDataUrl(); as qr) {
+          <img class="qr" [src]="qr" alt="QR Code do placar público" width="176" height="176" />
+        }
+        <div class="qr-actions">
+          <button class="btn btn-ghost btn-outline" type="button" (click)="copyQrImage()">
+            {{ qrImageCopied() ? 'Imagem copiada!' : 'Copiar imagem' }}
+          </button>
+          <button class="btn btn-ghost btn-outline" type="button" (click)="copyLink()">
+            {{ linkCopied() ? 'Link copiado!' : 'Copiar link' }}
+          </button>
+        </div>
+        <input class="link-input" type="text" readonly [value]="publicUrl()" />
+      </div>
+    </section>
+  </div>
+} @else {
+  <p class="loading">Carregando…</p>
+}

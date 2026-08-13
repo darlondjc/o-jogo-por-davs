@@ -1,0 +1,26 @@
+@if (rows().length) {
+  <ol class="board" [class.compact]="compact()">
+    @for (row of rows(); track row.teamId) {
+      <li
+        #rowEl
+        class="row"
+        [class.leader]="row.position === 1"
+        [class.changed]="changedIds().has(row.teamId)"
+      >
+        <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
+        <span class="dot" [style.background]="row.color"></span>
+        <span class="name">{{ row.teamName }}</span>
+        @if (row.trend === 'up') {
+          <span class="trend trend-up" aria-label="subiu no ranking">↑</span>
+        } @else if (row.trend === 'down') {
+          <span class="trend trend-down" aria-label="desceu no ranking">↓</span>
+        } @else {
+          <span class="trend trend-same" aria-label="manteve a posição">—</span>
+        }
+        <span class="total">{{ row.overallTotal }}</span>
+      </li>
+    }
+  </ol>
+} @else {
+  <p class="empty">Nenhuma pontuação registrada ainda.</p>
+}

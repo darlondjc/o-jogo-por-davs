@@ -1,0 +1,288 @@
+.score-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-size: 0.8rem;
+}
+
+h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  transition: color 0.15s ease;
+}
+
+/* Cicla a cor do título a cada pergunta, para deixar visível que a
+   pergunta avançou. Evita --accent, já usado em botões/badges/eyebrow. */
+.title-color-0 {
+  color: var(--info);
+}
+.title-color-1 {
+  color: var(--positive);
+}
+.title-color-2 {
+  color: #c084fc;
+}
+
+/* "Pop" a cada pergunta. Duas classes com a mesma animação, alternadas via
+   template — trocar de classe reinicia a animação. */
+h2 {
+  transform-origin: left center;
+}
+.title-pulse-a,
+.title-pulse-b {
+  animation: title-pop 0.3s ease;
+}
+
+@keyframes title-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.flash {
+  color: var(--positive);
+  font-weight: 700;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.quick-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.quick-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Todos os controles da barra (presets, selecionar todas, limpar seleção,
+   aplicar) numa única linha, centralizados no eixo cruzado — sem isso, o
+   botão dentro do bloco com o rótulo em cima ficava mais alto que os outros
+   e desalinhava verticalmente com o resto. */
+.quick-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.value-boxes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quick-apply {
+  margin-left: auto;
+}
+
+.value-box {
+  width: 3.2rem;
+  height: 3.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg-elevated-2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    transform 0.08s ease;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+}
+
+.teams {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.team-row {
+  display: grid;
+  grid-template-columns: auto 1fr 5.5rem 5.5rem 5.5rem 4.5rem;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+
+  /* Clicar em qualquer lugar da linha seleciona/desseleciona a equipe (só o
+     círculo era pouco alvo demais); os campos numéricos abaixo cancelam essa
+     propagação pra não brigar com o clique de digitar um valor. */
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &.selected {
+    border-color: var(--accent);
+    background: var(--bg-elevated-2);
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: auto 1fr repeat(3, 4.5rem) 4rem;
+  }
+}
+
+.select-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-ink);
+
+  .check {
+    font-weight: 900;
+  }
+}
+
+.name {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.mini-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: default;
+
+  span {
+    font-size: 0.68rem;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input {
+    width: 100%;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-align: center;
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+.row-total {
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: var(--space-3) 0;
+}
+
+.total {
+  color: var(--text-muted);
+  font-size: 1rem;
+
+  strong {
+    color: var(--text);
+    font-size: 1.3rem;
+  }
+}
+
+.primary-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--bg-elevated-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  animation: fade-in 0.15s ease;
+}
+
+.correction-link {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.shortcuts {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  text-align: center;
+}

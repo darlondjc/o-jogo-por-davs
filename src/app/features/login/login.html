@@ -1,0 +1,32 @@
+<div class="page">
+  <div class="login-card card">
+    <p class="eyebrow">TRIVIA AO VIVO</p>
+    <h1>O Jogo</h1>
+    <p class="subtitle">Entre com a conta Google usada para editar a planilha do jogo.</p>
+
+    @if (auth.checkingSession()) {
+      <p class="muted">Verificando sessão…</p>
+    } @else {
+      <div class="google-button-wrap">
+        @if (!auth.googleClientId()) {
+          <p class="error">
+            Login com Google não configurado. Defina <code>GOOGLE_CLIENT_ID</code> no servidor.
+          </p>
+        } @else {
+          <div #googleButton></div>
+        }
+      </div>
+
+      @if (auth.loggingIn()) {
+        <p class="muted">Entrando…</p>
+      }
+
+      @if (auth.loginError()) {
+        <div class="refusal">
+          <p class="refusal-title">Acesso não liberado</p>
+          <p>{{ auth.loginError() }}</p>
+        </div>
+      }
+    }
+  </div>
+</div>

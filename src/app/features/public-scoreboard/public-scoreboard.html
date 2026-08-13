@@ -1,0 +1,45 @@
+<div class="public-page">
+  <header class="head">
+    <p class="brand">O JOGO</p>
+    @if (scoreboard(); as board) {
+      <p class="progress">RODADA {{ board.currentRound }} · PERGUNTA {{ board.currentQuestion }}</p>
+      @if (board.status !== 'FINALIZADO') {
+        <p class="live-status" [class.stale]="stale()">
+          <span class="live-dot"></span>
+          {{ stale() ? 'Sem conexão · última atualização há ' + secondsSinceUpdate() + 's' : 'Ao vivo' }}
+        </p>
+      }
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="status">Carregando placar…</p>
+  } @else if (error() && !scoreboard()) {
+    <p class="status error">{{ error() }}</p>
+  } @else if (scoreboard(); as board) {
+    <main class="content">
+      <section>
+        <h2>Placar geral</h2>
+        <app-scoreboard [scoreboard]="board" />
+      </section>
+
+      @if (board.currentRound) {
+        <section>
+          <h2>Rodada {{ board.currentRound }}</h2>
+          <ol class="round-list">
+            @for (row of roundRows(); track row.teamId) {
+              <li>
+                <span class="name">{{ row.teamName }}</span>
+                <span class="total">+{{ row.total }}</span>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+
+      @if (board.status === 'FINALIZADO') {
+        <p class="finished">🏁 Jogo finalizado</p>
+      }
+    </main>
+  }
+</div>

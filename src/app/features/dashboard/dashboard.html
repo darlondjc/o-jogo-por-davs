@@ -1,0 +1,42 @@
+<div class="page">
+  <header class="hero container">
+    <div>
+      <p class="eyebrow">TRIVIA AO VIVO</p>
+      <h1>O Jogo</h1>
+    </div>
+    <a class="btn btn-primary" routerLink="/jogo/novo">+ Novo jogo</a>
+  </header>
+
+  <main class="container">
+    @if (loading()) {
+      <p class="muted">Carregando jogos…</p>
+    } @else if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else if (!games().length) {
+      <div class="empty card">
+        <h2>Nenhum jogo cadastrado ainda</h2>
+        <p class="muted">Crie o primeiro jogo para começar a operar a trivia.</p>
+        <a class="btn btn-primary" routerLink="/jogo/novo">+ Novo jogo</a>
+      </div>
+    } @else {
+      <h2 class="section-title">Jogos</h2>
+      <div class="grid">
+        @for (game of games(); track game.id) {
+          <a class="game-card card" [routerLink]="['/jogo', game.id]">
+            <div class="game-card-top">
+              <h3>{{ game.name }}</h3>
+              <span class="badge" [class]="'badge-' + game.status.toLowerCase()">
+                {{ statusLabel(game.status) }}
+              </span>
+            </div>
+            <p class="muted">{{ game.date | date: 'dd/MM/yyyy' }} · {{ game.location }}</p>
+            <p class="muted small">
+              {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }} rodadas ·
+              {{ game.questionsPerRound }} perguntas por rodada
+            </p>
+          </a>
+        }
+      </div>
+    }
+  </main>
+</div>

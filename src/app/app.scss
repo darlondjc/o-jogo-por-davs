@@ -1,0 +1,41 @@
+/* Barra de progresso global (ver app.html) — cor amarela pra ficar visível
+   em cima de qualquer tela do jogo enquanto há requisição HTTP em andamento. */
+:host {
+  --ng-progress-color: #facc15;
+}
+
+/* Indicador de sessão — quem está logado + sair (ver README seção "Login"). */
+.user-bar {
+  position: fixed;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-2);
+  box-shadow: var(--shadow-1);
+}
+
+.user-bar-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.user-bar-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-bar-logout {
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.8rem;
+}

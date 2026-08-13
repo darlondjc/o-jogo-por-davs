@@ -1,0 +1,46 @@
+@if (loading()) {
+  <p class="loading">Carregando…</p>
+} @else if (gameState.game(); as game) {
+  <div class="live-page">
+    <div class="main container">
+      <a class="back" [routerLink]="['/jogo', gameId]">← Painel do jogo</a>
+
+      <div class="progress">
+        <span>Rodada {{ game.currentRound }} de {{ game.rounds }}</span>
+        <span class="sep">·</span>
+        <span>Pergunta {{ game.currentQuestion }} de {{ game.questionsPerRound }}</span>
+      </div>
+
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <app-score-entry
+        [teams]="gameState.teams()"
+        [round]="game.currentRound"
+        [question]="game.currentQuestion"
+        [previousQuestionScores]="gameState.previousQuestionScores()"
+        [lastRegistered]="gameState.lastRegistered()"
+        [submitting]="submitting()"
+        [justRegisteredQuestion]="justRegisteredQuestion()"
+        (scoresSubmitted)="onSubmit($event)"
+      />
+    </div>
+
+    <aside class="side">
+      <h2>Placar geral</h2>
+      <app-scoreboard [scoreboard]="gameState.scoreboard()" [teams]="gameState.teams()" [compact]="true" />
+    </aside>
+
+    @if (submitting()) {
+      <div class="saving-overlay">
+        <div class="saving-box">
+          <div class="saving-spinner"></div>
+          <p>Salvando…</p>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="loading">Jogo não encontrado.</p>
+}

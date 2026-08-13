@@ -106,6 +106,39 @@
         </div>
       </div>
     </section>
+
+    @if (game.status !== 'CONFIGURACAO' && roundBreakdown().length) {
+      <section class="card">
+        <h2>Pontuação por rodada</h2>
+        <div class="round-breakdown-scroll">
+          <table class="round-breakdown">
+            <thead>
+              <tr>
+                <th class="team-col">Equipe</th>
+                @for (r of roundNumbers(); track r) {
+                  <th>Rodada {{ r }}</th>
+                }
+                <th class="total-col">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of roundBreakdown(); track row.teamId) {
+                <tr>
+                  <td class="team-col">
+                    <span class="dot" [style.background]="row.color"></span>
+                    {{ row.teamName }}
+                  </td>
+                  @for (total of row.roundTotals; track $index) {
+                    <td [class.negative]="total < 0">{{ total }}</td>
+                  }
+                  <td class="total-col" [class.negative]="row.overallTotal < 0">{{ row.overallTotal }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
   </div>
 } @else {
   <p class="loading">Carregando…</p>

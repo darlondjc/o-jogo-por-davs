@@ -3,7 +3,16 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
-import { gameTypeLabel, statusLabel } from '../../core/models';
+import { gameTypeLabel, statusLabel, teamColor } from '../../core/models';
+
+interface RoundBreakdownRow {
+  teamId: string;
+  teamName: string;
+  color: string;
+  /** Índice 0 = rodada 1, e assim por diante. */
+  roundTotals: number[];
+  overallTotal: number;
+}
 
 @Component({
   selector: 'app-game-admin',
@@ -27,6 +36,33 @@ export class GameAdmin {
   readonly qrDataUrl = signal<string | null>(null);
   protected readonly statusLabel = statusLabel;
   protected readonly gameTypeLabel = gameTypeLabel;
+
+  readonly roundNumbers = computed<number[]>(() => {
+    const game = this.gameState.game();
+    return game ? Array.from({ length: game.rounds }, (_, i) => i + 1) : [];
+  });
+
+  /** Pontuação de cada equipe, rodada a rodada — não existia nenhuma forma
+   * de ver isso depois de um jogo pronto (melhorias doc: "consigo olhar
+   * como ficou a pontuação de cada rodada das equipes?"). Os totais por
+   * rodada já vinham prontos do back-end (`Scoreboard.roundTotalsByRound`),
+   * só faltava expor numa tabela. */
+  readonly roundBreakdown = computed<RoundBreakdownRow[]>(() => {
+    const board = this.gameState.scoreboard();
+    const game = this.gameState.game();
+    if (!board || !game) return [];
+    return [...board.entries]
+      .sort((a, b) => a.position - b.position)
+      .map((entry) => ({
+        teamId: entry.teamId,
+        teamName: entry.teamName,
+        color: teamColor(entry.order),
+        roundTotals: this.roundNumbers().map(
+          (round) => board.roundTotalsByRound[round]?.find((r) => r.teamId === entry.teamId)?.total ?? 0,
+        ),
+        overallTotal: entry.overallTotal,
+      }));
+  });
 
   readonly startBlockers = computed<string[]>(() => {
     const game = this.gameState.game();

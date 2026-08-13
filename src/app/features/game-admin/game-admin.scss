@@ -185,3 +185,69 @@ h2 {
   padding: var(--space-6);
   color: var(--text-muted);
 }
+
+/* Tabela "Pontuação por rodada" — muitas rodadas rolam horizontalmente em
+   vez de espremer as colunas (melhorias doc: dá pra ver como cada equipe
+   se saiu rodada a rodada, não só o placar geral acumulado). */
+.round-breakdown-scroll {
+  overflow-x: auto;
+}
+
+.round-breakdown {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 var(--space-2);
+  font-family: var(--font-mono);
+
+  th {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: right;
+    padding: 0 var(--space-3);
+    white-space: nowrap;
+  }
+
+  td {
+    background: var(--bg-elevated-2);
+    text-align: right;
+    padding: var(--space-2) var(--space-3);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &:first-child {
+      border-top-left-radius: var(--radius-sm);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+    &:last-child {
+      border-top-right-radius: var(--radius-sm);
+      border-bottom-right-radius: var(--radius-sm);
+    }
+  }
+
+  td.negative {
+    color: var(--negative);
+  }
+}
+
+.team-col {
+  text-align: left !important;
+  font-weight: 700;
+  min-width: 160px;
+
+  .dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: var(--space-2);
+    box-shadow: 0 0 8px -2px currentColor;
+  }
+}
+
+.total-col {
+  font-weight: 800;
+  color: var(--accent);
+}

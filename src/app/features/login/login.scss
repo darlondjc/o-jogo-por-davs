@@ -19,6 +19,16 @@
     0 0 32px -16px var(--arcade-accent);
 }
 
+.logo {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 1px var(--arcade-border),
+    0 0 32px -8px var(--arcade-accent);
+}
+
 h1 {
   font-family: var(--font-pixel);
   font-size: 1.4rem;

@@ -283,12 +283,20 @@ export async function getRoundSummary(gameId: string, round: number): Promise<Ro
 
   const winner = [...roundTotals].sort((a, b) => b.total - a.total)[0] ?? null;
 
+  // Pontuação de cada equipe em cada pergunta desta rodada — pra comparar
+  // lado a lado quem acertou/errou pergunta a pergunta (spec "Melhorias":
+  // serve de "VAR" logo depois da rodada terminar).
+  const questionScores = allScores
+    .filter((s) => s.round === round)
+    .sort((a, b) => a.question - b.question);
+
   return {
     gameId: game.id,
     round,
     roundTotals,
     overallRanking,
     winnerTeamId: winner?.teamId ?? null,
+    questionScores,
   };
 }
 

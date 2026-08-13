@@ -19,6 +19,18 @@ interface RankingRow {
   position: number;
 }
 
+interface TeamColumn {
+  teamId: string;
+  teamName: string;
+  color: string;
+}
+
+interface QuestionRow {
+  question: number;
+  /** Alinhado com `teamColumns()` — mesma ordem, mesmo índice. */
+  scores: number[];
+}
+
 @Component({
   selector: 'app-round-summary',
   imports: [RouterLink],
@@ -68,6 +80,37 @@ export class RoundSummaryPage {
       total: r.total,
       position: r.position,
     }));
+  });
+
+  /** Colunas da tabela pergunta-a-pergunta, na mesma ordem de cadastro das
+   * equipes (não na ordem de pontuação — comparar fica mais fácil quando a
+   * equipe sempre aparece na mesma coluna, pergunta após pergunta). */
+  readonly teamColumns = computed<TeamColumn[]>(() =>
+    [...this.gameState.teams()]
+      .sort((a, b) => a.order - b.order)
+      .map((t) => ({ teamId: t.id, teamName: t.name, color: teamColor(t.order) })),
+  );
+
+  /**
+   * Pontuação de cada equipe em cada pergunta desta rodada, lado a lado —
+   * pra comparar pergunta por pergunta quem acertou/errou (spec
+   * "Melhorias": serve de "VAR" logo depois da rodada terminar).
+   */
+  readonly questionRows = computed<QuestionRow[]>(() => {
+    const summary = this.summary();
+    if (!summary) return [];
+    const columns = this.teamColumns();
+    const byQuestion = new Map<number, Map<string, number>>();
+    for (const s of summary.questionScores) {
+      if (!byQuestion.has(s.question)) byQuestion.set(s.question, new Map());
+      byQuestion.get(s.question)!.set(s.teamId, s.total);
+    }
+    return [...byQuestion.keys()]
+      .sort((a, b) => a - b)
+      .map((question) => ({
+        question,
+        scores: columns.map((c) => byQuestion.get(question)?.get(c.teamId) ?? 0),
+      }));
   });
 
   readonly winnerName = computed(() => {

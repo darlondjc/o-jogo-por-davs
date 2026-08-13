@@ -36,6 +36,38 @@
       </ol>
     </section>
 
+    @if (questionRows().length) {
+      <section class="card card-questions">
+        <h2>Pergunta a pergunta</h2>
+        <p class="muted hint">Compare lado a lado quem acertou (ou não) cada pergunta da rodada.</p>
+        <div class="question-breakdown-scroll">
+          <table class="question-breakdown">
+            <thead>
+              <tr>
+                <th class="question-col">Pergunta</th>
+                @for (col of teamColumns(); track col.teamId) {
+                  <th>
+                    <span class="dot" [style.background]="col.color"></span>
+                    {{ col.teamName }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of questionRows(); track row.question) {
+                <tr>
+                  <td class="question-col">{{ row.question }}</td>
+                  @for (score of row.scores; track $index) {
+                    <td [class.negative]="score < 0" [class.zero]="score === 0">{{ score }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
     <div class="actions">
       @if (isLastRound()) {
         <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">

@@ -105,6 +105,10 @@ export interface RoundSummary {
   roundTotals: TeamRoundTotal[];
   overallRanking: RankingEntry[];
   winnerTeamId: string | null;
+  /** Pontuação de cada equipe em cada pergunta desta rodada — pra comparar
+   * pergunta a pergunta quem acertou/errou (spec "Melhorias": serve de
+   * "VAR" logo depois da rodada terminar). */
+  questionScores: Score[];
 }
 
 export interface ScoreboardEntry {

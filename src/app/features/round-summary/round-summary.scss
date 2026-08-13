@@ -114,6 +114,82 @@ h2 {
   }
 }
 
+.muted {
+  color: var(--text-muted);
+}
+
+.hint {
+  font-size: 0.82rem;
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+}
+
+/* Tabela pergunta-a-pergunta (spec "Melhorias": serve de "VAR" logo depois
+   da rodada terminar — comparar lado a lado quem acertou cada pergunta). */
+.question-breakdown-scroll {
+  overflow-x: auto;
+}
+
+.question-breakdown {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 var(--space-2);
+  font-family: var(--font-mono);
+
+  th {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: right;
+    padding: 0 var(--space-3);
+    white-space: nowrap;
+
+    .dot {
+      margin-right: var(--space-1);
+      vertical-align: middle;
+    }
+  }
+
+  td {
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    padding: var(--space-2) var(--space-3);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+
+    &:first-child {
+      border-left: 1px solid var(--border);
+      border-top-left-radius: var(--radius-sm);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+    &:last-child {
+      border-right: 1px solid var(--border);
+      border-top-right-radius: var(--radius-sm);
+      border-bottom-right-radius: var(--radius-sm);
+    }
+  }
+
+  td.negative {
+    color: var(--negative);
+  }
+
+  td.zero {
+    color: var(--text-faint);
+    font-weight: 400;
+  }
+}
+
+.question-col {
+  text-align: left !important;
+  color: var(--text-muted);
+  font-weight: 700;
+  min-width: 70px;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

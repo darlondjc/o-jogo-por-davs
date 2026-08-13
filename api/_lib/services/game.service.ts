@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions';
 import {
   advanceAfterQuestion,
   computeFinalScore,
@@ -205,7 +206,11 @@ export async function submitQuestionScores(
     : null;
 
   if (result.gameFinished) {
-    await backupFinishedGameToSheets(gameId);
+    // Backup é best-effort e não é o que o operador está esperando ver na
+    // tela — não pode segurar a resposta (o Sheets é bem mais lento que o
+    // Firestore). `waitUntil` mantém a função viva o tempo necessário pra
+    // terminar o backup depois da resposta já ter sido enviada.
+    waitUntil(backupFinishedGameToSheets(gameId));
   }
 
   return {
@@ -249,7 +254,8 @@ export async function continueToNextRound(gameId: string): Promise<Game> {
 export async function finishGame(gameId: string): Promise<Game> {
   await getGameOrThrow(gameId);
   const game = await repos().games.update(gameId, { status: 'FINALIZADO' });
-  await backupFinishedGameToSheets(gameId);
+  // Ver comentário em `submitQuestionScores` — backup não bloqueia a resposta.
+  waitUntil(backupFinishedGameToSheets(gameId));
   return game;
 }
 

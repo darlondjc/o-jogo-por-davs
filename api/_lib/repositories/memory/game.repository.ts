@@ -35,4 +35,15 @@ export class MemoryGameRepository implements GameRepository {
     store.games[index] = updated;
     return updated;
   }
+
+  /** Remove o jogo e tudo que pendurava nele (equipes, perguntas,
+   * pontuações) — mesmo efeito do `recursiveDelete` do Firestore, só que
+   * nos arrays em memória. */
+  async delete(id: string): Promise<void> {
+    const store = getMemoryStore();
+    store.games = store.games.filter((g) => g.id !== id);
+    store.teams = store.teams.filter((t) => t.gameId !== id);
+    store.questions = store.questions.filter((q) => q.gameId !== id);
+    store.scores = store.scores.filter((s) => s.gameId !== id);
+  }
 }

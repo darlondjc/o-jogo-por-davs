@@ -67,13 +67,31 @@ export class GameAdmin {
       }));
   });
 
-  readonly startBlockers = computed<string[]>(() => {
+  /** Usado pra mostrar o aviso "Cadastre ao menos duas equipes." ao lado
+   * do título do card "Placar geral" — mais perto de onde a pessoa
+   * realmente vai cadastrar as equipes do que a lista de bloqueios no
+   * rodapé (ver `configBlockers` abaixo). */
+  readonly needsMoreTeams = computed(() => this.gameState.teams().length < 2);
+
+  /** Bloqueios de configuração do jogo mostrados no rodapé, ao lado do
+   * botão "Iniciar o jogo". O de equipes fica de fora daqui de propósito:
+   * tem aviso próprio junto do card "Placar geral" (`needsMoreTeams`
+   * acima) pra não repetir o mesmo aviso duas vezes na tela. */
+  readonly configBlockers = computed<string[]>(() => {
     const game = this.gameState.game();
-    const teams = this.gameState.teams();
     const blockers: string[] = [];
-    if (!teams.length) blockers.push('Cadastre ao menos uma equipe.');
     if (game && game.rounds <= 0) blockers.push('Defina ao menos uma rodada.');
     if (game && game.questionsPerRound <= 0) blockers.push('Defina ao menos uma pergunta por rodada.');
+    return blockers;
+  });
+
+  /** Todos os bloqueios que impedem iniciar o jogo, equipes incluídas —
+   * usado só pra desabilitar o botão "Iniciar o jogo" (o texto em si é
+   * exibido em dois lugares diferentes, ver `needsMoreTeams` e
+   * `configBlockers`). */
+  readonly startBlockers = computed<string[]>(() => {
+    const blockers = [...this.configBlockers()];
+    if (this.needsMoreTeams()) blockers.unshift('Cadastre ao menos duas equipes.');
     return blockers;
   });
 
@@ -106,11 +124,20 @@ export class GameAdmin {
     }
   }
 
+  /** Ação destrutiva e sem volta (não existe botão nem endpoint pra
+   * reabrir um jogo já finalizado) — pede confirmação antes de seguir, e
+   * ao terminar redireciona pra esta mesma tela (jogo/:id), que passa a
+   * funcionar como o resumo do jogo assim que o status vira FINALIZADO
+   * (placar final + pontuação por rodada, sem mais o rodapé de ações). */
   async finish(): Promise<void> {
+    if (!window.confirm('Finalizar o jogo? Depois de finalizado não será possível registrar mais pontuações.')) {
+      return;
+    }
     this.finishing.set(true);
     this.error.set(null);
     try {
       await this.gameState.finishGame(this.gameId);
+      await this.router.navigate(['/jogo', this.gameId]);
     } catch {
       this.error.set('Não foi possível finalizar o jogo.');
     } finally {

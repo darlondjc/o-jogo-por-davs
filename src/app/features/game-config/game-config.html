@@ -109,8 +109,8 @@
       <label class="field">
         <span>Nome da equipe *</span>
         <input type="text" formControlName="name" placeholder="Ex: Os Inteligentes"
-          [class.invalid]="teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())" />
-        @if (teamForm.controls.name.invalid && (teamForm.controls.name.touched || teamSubmitted())) {
+          [class.invalid]="teamForm.controls.name.invalid && teamSubmitted()" />
+        @if (teamForm.controls.name.invalid && teamSubmitted()) {
         <span class="field-error">Informe o nome da equipe.</span>
         }
       </label>
@@ -207,8 +207,13 @@
 
 <app-page-footer>
   <button class="btn btn-primary btn-xl" type="button" (click)="saveAll()" [disabled]="saving()">
-    {{ saving() ? 'Salvando…' : 'Salvar dados do jogo' }}
+    {{ saving() ? 'Salvando…' : 'Salvar jogo' }}
   </button>
+  @if (canStartOrContinue()) {
+    <button class="btn btn-primary btn-xl" type="button" (click)="startOrContinue()" [disabled]="starting()">
+      {{ starting() ? 'Iniciando…' : startOrContinueLabel() }}
+    </button>
+  }
 </app-page-footer>
 
 @if (saveConfirmationVisible()) {

@@ -13,9 +13,21 @@
       </div>
     } @else {
       <h2 class="section-title">Jogos</h2>
+      @if (deleteError()) {
+        <p class="error">{{ deleteError() }}</p>
+      }
       <div class="grid">
         @for (game of games(); track game.id) {
-          <a class="game-card card" [routerLink]="['/jogo', game.id]">
+          <a
+            class="game-card card"
+            [class.selectable]="selectionMode()"
+            [class.selected]="isSelected(game.id)"
+            [routerLink]="selectionMode() ? null : ['/jogo', game.id]"
+            (click)="onCardClick($event, game.id)"
+          >
+            @if (selectionMode()) {
+              <span class="select-mark" [class.checked]="isSelected(game.id)" aria-hidden="true"></span>
+            }
             <div class="game-card-top">
               <h3>{{ game.name }}</h3>
               <span class="badge" [class]="'badge-' + game.status.toLowerCase()">
@@ -39,5 +51,32 @@
 </div>
 
 <app-page-footer>
-  <a class="btn btn-primary btn-xl" routerLink="/jogo/novo">+ Novo jogo</a>
+  @if (selectionMode()) {
+    <div class="footer-actions">
+      <button class="btn btn-ghost btn-outline" type="button" (click)="cancelSelection()" [disabled]="deleting()">
+        Cancelar
+      </button>
+      <button
+        class="btn btn-danger btn-outline btn-xl"
+        type="button"
+        (click)="confirmDelete()"
+        [disabled]="!selectedIds().size || deleting()"
+      >
+        {{ deleting() ? 'Apagando…' : 'Excluir (' + selectedIds().size + ')' }}
+      </button>
+    </div>
+  } @else {
+    <div class="footer-actions">
+      <a class="btn btn-primary btn-xl" routerLink="/jogo/novo">+ Novo jogo</a>
+      @if (games().length) {
+        <button class="btn btn-ghost btn-danger btn-outline" type="button" (click)="enterSelectionMode()">
+          Apagar jogos
+        </button>
+      }
+    </div>
+  }
 </app-page-footer>
+
+@if (deleteConfirmationVisible()) {
+  <app-snackbar [message]="deleteConfirmationMessage()" />
+}

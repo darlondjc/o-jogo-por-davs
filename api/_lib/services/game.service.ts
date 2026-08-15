@@ -52,6 +52,19 @@ export async function updateGame(id: string, patch: Partial<Game>): Promise<Game
   return repos().games.update(id, patch);
 }
 
+/** Apaga um jogo por completo (usado pelo botão "Apagar jogos" do painel).
+ * `delete` é opcional no `GameRepository` porque o Google Sheets nunca é o
+ * repositório ativo em produção — se for [modo sem Firestore configurado],
+ * recusa com um erro claro em vez de fingir que apagou. */
+export async function deleteGame(id: string): Promise<void> {
+  await getGameOrThrow(id);
+  const repo = repos().games;
+  if (!repo.delete) {
+    throw badRequest('Exclusão de jogos não é suportada nesta configuração de armazenamento.');
+  }
+  await repo.delete(id);
+}
+
 export async function listTeams(gameId: string): Promise<Team[]> {
   await getGameOrThrow(gameId);
   return repos().teams.findByGameId(gameId);
@@ -292,7 +305,13 @@ export async function getRoundSummary(gameId: string, round: number): Promise<Ro
   );
   const overallRanking = computeRanking(overallTotals, previousOverallTotals);
 
-  const winner = [...roundTotals].sort((a, b) => b.total - a.total)[0] ?? null;
+  // `winnerTeamId` só aponta uma equipe quando ela é a única no topo — antes
+  // um `.sort()` pegava a primeira do topo mesmo empatada, anunciando uma
+  // "vencedora" que na verdade dividiu a rodada com outra(s) equipe(s)
+  // (bug real: rodada 3x3 empatada mostrando uma equipe como vencedora).
+  const topTotal = roundTotals.length ? Math.max(...roundTotals.map((r) => r.total)) : null;
+  const topTeams = roundTotals.filter((r) => r.total === topTotal);
+  const winner = topTeams.length === 1 ? topTeams[0] : null;
 
   // Pontuação de cada equipe em cada pergunta desta rodada — pra comparar
   // lado a lado quem acertou/errou pergunta a pergunta (spec "Melhorias":

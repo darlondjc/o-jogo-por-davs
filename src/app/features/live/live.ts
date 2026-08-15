@@ -4,6 +4,7 @@ import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreEntry } from './score-entry/score-entry';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
 import { PageHeader } from '../../core/components/page-header/page-header';
+import { Snackbar } from '../../core/components/snackbar/snackbar';
 import type { Scoreboard, Score, SubmitQuestionScoresRequest } from '../../core/models';
 
 interface CorrectionTarget {
@@ -13,7 +14,7 @@ interface CorrectionTarget {
 
 @Component({
   selector: 'app-live',
-  imports: [ScoreEntry, ScoreboardComponent, PageHeader],
+  imports: [ScoreEntry, ScoreboardComponent, PageHeader, Snackbar],
   templateUrl: './live.html',
   styleUrl: './live.scss',
 })
@@ -26,6 +27,8 @@ export class Live {
   readonly loading = signal(true);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
+  /** Número da pergunta recém-confirmada — alimenta o snackbar de sucesso
+   * depois de registrar as pontuações; some sozinho depois de um tempo. */
   readonly justRegisteredQuestion = signal<number | null>(null);
 
   /** No mobile a sidebar (placar da rodada/geral) vira uma gaveta que desliza

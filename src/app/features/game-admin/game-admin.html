@@ -34,7 +34,12 @@
 
     <section class="grid">
       <div class="card scoreboard-card">
-        <h2>Placar geral</h2>
+        <div class="card-title-row">
+          <h2>Placar geral</h2>
+          @if (needsMoreTeams()) {
+            <span class="title-hint">Cadastre ao menos duas equipes.</span>
+          }
+        </div>
         <app-scoreboard [scoreboard]="gameState.scoreboard()" variant="arcade" />
       </div>
 
@@ -109,9 +114,9 @@
             >
               {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
             </button>
-            @if (startBlockers().length) {
+            @if (configBlockers().length) {
               <ul class="blockers">
-                @for (b of startBlockers(); track b) {
+                @for (b of configBlockers(); track b) {
                   <li>{{ b }}</li>
                 }
               </ul>

@@ -42,7 +42,11 @@ export class ScoreEntry {
   readonly round = input.required<number>();
   readonly question = input.required<number>();
   readonly submitting = input(false);
-  readonly justRegisteredQuestion = input<number | null>(null);
+  /** Modo usado pelo resumo da rodada (spec "Melhorias": deixa corrigir uma
+   * pontuação direto de lá). Nesse modo não existe "pergunta atual" pra
+   * lançar — o componente abre direto no dialog de correção ao montar, e só
+   * mostra a grade de pontuação depois que uma pergunta é escolhida. */
+  readonly correctionOnly = input(false);
 
   /** Perguntas já registradas no jogo (todas as rodadas), pra alimentar o
    * dialog de "corrigir perguntas anteriores". Vazio na primeira pergunta —
@@ -131,6 +135,11 @@ export class ScoreEntry {
    */
   readonly titlePulseClass = computed(() => (this.question() % 2 === 0 ? 'title-pulse-a' : 'title-pulse-b'));
 
+  /** Só abre o dialog de correção sozinho uma vez, ao montar em modo
+   * `correctionOnly` — sem isso o effect abaixo reabriria o dialog toda vez
+   * que ele fosse recomputado (ex: depois de cancelar). */
+  private pickerAutoOpened = false;
+
   constructor() {
     // Recria as linhas sempre que a lista de equipes ou a pergunta corrente mudar.
     effect(() => {
@@ -155,6 +164,21 @@ export class ScoreEntry {
             penalty: 0,
           })),
       );
+    });
+
+    // Modo do resumo da rodada: nada de tela de lançamento normal, começa
+    // direto pedindo qual pergunta corrigir. Espera `pickableQuestions` ter
+    // pelo menos um item — `registeredQuestions` pode chegar depois do
+    // primeiro ciclo, e sem essa espera o dialog nunca abriria sozinho.
+    // Registrado depois do effect acima de propósito: aquele reseta
+    // `pickerOpen` toda vez que roda, e sem essa ordem o auto-open seria
+    // desfeito no mesmo ciclo em que aconteceu.
+    effect(() => {
+      if (this.correctionOnly() && !this.pickerAutoOpened && this.pickableQuestions().length) {
+        this.pickerAutoOpened = true;
+        this.pickerSelection.set(null);
+        this.pickerOpen.set(true);
+      }
     });
 
     // Mantém a barra de confirmação aberta (e desabilitada) enquanto o envio

@@ -5,13 +5,27 @@
   flex-direction: column;
   gap: var(--space-4);
   font-family: var(--font-arcade-body);
+
   /* O rodapé de ações (app-page-footer) é `position: fixed` — esse respiro
-     evita que a última linha de equipes fique escondida atrás dele. */
-  padding-bottom: 6.5rem;
+     evita que a última linha de equipes fique escondida atrás dele. Só se
+     aplica quando o rodapé realmente está em tela (não no estado ocioso do
+     modo `correctionOnly`, que não usa rodapé fixo — ver `.correction-reopen`). */
+  &.has-footer {
+    padding-bottom: 6.5rem;
+  }
 }
 
 .head {
   min-height: 2.75rem;
+}
+
+/* Estado ocioso do modo `correctionOnly` (resumo da rodada), depois de
+   cancelar o dialog de escolha — sem rodapé fixo aqui, então o botão fica
+   no fluxo normal da página. */
+.correction-reopen {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4) 0;
 }
 
 h2 {
@@ -50,15 +64,6 @@ h2 {
     opacity: 1;
     transform: none;
   }
-}
-
-.flash {
-  color: var(--arcade-positive);
-  font-weight: 700;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  margin: 0 0 var(--space-1);
-  animation: fade-in 0.2s ease;
 }
 
 @keyframes fade-in {

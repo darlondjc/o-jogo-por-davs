@@ -50,4 +50,11 @@ export class FirestoreGameRepository implements GameRepository {
     await this.collection.doc(id).set(updated);
     return updated;
   }
+
+  /** `recursiveDelete` apaga o documento do jogo e todas as suas subcoleções
+   * (`teams`, `questions`, `scores`) numa tacada só — sem isso elas ficariam
+   * órfãs no Firestore, sem nenhum jogo pra referenciar. */
+  async delete(id: string): Promise<void> {
+    await getFirestoreDb().recursiveDelete(this.collection.doc(id));
+  }
 }

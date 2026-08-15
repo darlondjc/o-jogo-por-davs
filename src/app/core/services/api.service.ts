@@ -60,6 +60,10 @@ export class ApiService {
     return this.http.put<{ game: Game }>(`${this.base}/${id}`, patch).pipe(map((r) => r.game));
   }
 
+  deleteGame(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
   listTeams(gameId: string): Observable<Team[]> {
     return this.http
       .get<{ teams: Team[] }>(`${this.base}/${gameId}/teams`)

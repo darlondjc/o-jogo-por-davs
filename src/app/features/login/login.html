@@ -15,7 +15,7 @@
           Login com Google não configurado. Defina <code>GOOGLE_CLIENT_ID</code> no servidor.
         </p>
       }
-      <div #googleButton [hidden]="auth.checkingSession() || !auth.googleClientId()"></div>
+      <div #googleButton [hidden]="auth.checkingSession() || !auth.googleClientId() || auth.loggingIn()"></div>
     </div>
 
     @if (!auth.checkingSession() && auth.loggingIn()) {

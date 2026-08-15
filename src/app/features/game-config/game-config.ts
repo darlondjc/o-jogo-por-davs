@@ -1,4 +1,5 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
@@ -70,6 +71,16 @@ export class GameConfig {
     playersCount: [10, [Validators.required, Validators.min(0)]],
   });
 
+  /** `gameForm.dirty`/`.invalid` não são signals — sem escutar `valueChanges`
+   * aqui, `canStartOrContinue` abaixo não reagiria a digitação (só a coisas
+   * que já são signal, como `draftTeams`). Usado só pra forçar reavaliação;
+   * o valor em si não importa, o estado real vem de `gameForm` mesmo. */
+  private readonly gameFormChanges = toSignal(this.gameForm.valueChanges, {
+    initialValue: this.gameForm.getRawValue(),
+  });
+
+  readonly starting = signal(false);
+
   /** Snapshot do que está gravado no servidor — usado só pra comparar
    * contra o rascunho na hora de salvar (`teamDiff`). Não é signal porque
    * só é reatribuído junto com `draftTeams` (que já dispara a reatividade). */
@@ -109,6 +120,25 @@ export class GameConfig {
     const diff = this.teamDiff();
     return diff.creates.length > 0 || diff.updates.length > 0 || diff.deletes.length > 0;
   });
+
+  /** Habilita o botão "Iniciar/Continuar jogo" no rodapé: jogo ainda não
+   * finalizado, ao menos duas equipes, campos obrigatórios do jogo
+   * preenchidos e nada em aberto sem salvar (nem no formulário do jogo, nem
+   * no rascunho de equipes) — só faz sentido levar pra tela ao vivo um jogo
+   * cujo estado na tela bate com o que está gravado no servidor. */
+  readonly canStartOrContinue = computed(() => {
+    const game = this.gameState.game();
+    if (!game || game.status === 'FINALIZADO') return false;
+    if (this.draftTeams().length < 2) return false;
+    if (this.editingKey()) return false;
+    if (this.hasUnsavedTeamChanges()) return false;
+    this.gameFormChanges();
+    return this.gameForm.valid && !this.gameForm.dirty;
+  });
+
+  readonly startOrContinueLabel = computed(() =>
+    this.gameState.game()?.status === 'CONFIGURACAO' ? 'Iniciar jogo' : 'Continuar jogo',
+  );
 
   constructor() {
     this.gameState.loadGame(this.gameId).then(() => {
@@ -182,9 +212,39 @@ export class GameConfig {
       this.savingGame.set(false);
       return;
     }
+    this.gameForm.markAsPristine();
     this.savingGame.set(false);
     const teamsOk = await this.saveTeams();
     if (teamsOk) this.showSaveConfirmation();
+  }
+
+  /** Botão "Iniciar/Continuar jogo" do rodapé (só aparece com
+   * `canStartOrContinue`). Em CONFIGURACAO chama a mesma transição de
+   * status da tela do jogo antes de navegar; nos demais status o jogo já
+   * está rodando, então só leva pra onde ele parou. */
+  async startOrContinue(): Promise<void> {
+    const game = this.gameState.game();
+    if (!game || !this.canStartOrContinue()) return;
+
+    if (game.status === 'CONFIGURACAO') {
+      this.starting.set(true);
+      this.error.set(null);
+      try {
+        await this.gameState.startGame(this.gameId);
+      } catch {
+        this.error.set('Não foi possível iniciar o jogo.');
+        this.starting.set(false);
+        return;
+      }
+      this.starting.set(false);
+    }
+
+    const current = this.gameState.game()!;
+    if (current.status === 'RODADA_FINALIZADA') {
+      await this.router.navigate(['/jogo', this.gameId, 'rodada', current.currentRound - 1 || current.currentRound]);
+    } else {
+      await this.router.navigate(['/jogo', this.gameId, 'ao-vivo']);
+    }
   }
 
   private showSaveConfirmation(): void {
@@ -209,7 +269,6 @@ export class GameConfig {
   submitTeamDraft(): void {
     this.teamSubmitted.set(true);
     if (this.teamForm.invalid) {
-      this.teamForm.markAllAsTouched();
       this.error.set('Preencha os campos obrigatórios da equipe.');
       return;
     }

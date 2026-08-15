@@ -181,7 +181,7 @@ h1 {
   margin: 0;
   padding-left: 1.2em;
   /* `.footer-actions` é uma linha (ver acima) — sem isso a lista de
-     bloqueios ("Adicione pelo menos 2 equipes" etc.) espremeria do lado do
+     bloqueios ("Defina ao menos uma rodada" etc.) espremeria do lado do
      botão "INICIAR O JOGO" em vez de cair numa linha própria embaixo. */
   flex-basis: 100%;
 }
@@ -272,6 +272,30 @@ h2 {
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+/* Título do card "Placar geral" + aviso de "cadastre ao menos duas
+   equipes" (quando aplica) lado a lado — antes esse aviso só existia
+   junto do botão "Iniciar o jogo" no rodapé, longe de onde a pessoa olha
+   pra ver o placar vazio. `wrap` porque o aviso é texto do usuário-alvo
+   (mensagem fixa, mas ainda assim pode não caber ao lado do título num
+   card estreito) — melhor quebrar linha do que estourar o card. */
+.card-title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+
+  h2 {
+    margin-bottom: 0;
+  }
+}
+
+.title-hint {
+  color: var(--negative);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 
 /* "Placar geral" é o único app-scoreboard desta tela — nome do time menor

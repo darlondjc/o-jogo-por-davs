@@ -1,8 +1,11 @@
 .page {
   /* Longhand de propósito: ver comentário equivalente em game-config.scss —
-     shorthand aqui zerava o padding horizontal do `.container` global. */
-  padding-top: var(--space-7);
-  padding-bottom: var(--space-7);
+     shorthand aqui zerava o padding horizontal do `.container` global.
+     `+ var(--page-header-h)`/`+ 5rem` reservam o respiro do cabeçalho e do
+     rodapé fixos (app-page-header/app-page-footer), do mesmo jeito que
+     game-config.scss já faz. */
+  padding-top: calc(var(--page-header-h) + var(--space-6));
+  padding-bottom: calc(var(--space-7) + 5rem);
   max-width: 800px;
   display: flex;
   flex-direction: column;
@@ -192,9 +195,21 @@ h2 {
   color: var(--text-muted);
 }
 
+.error {
+  color: var(--negative);
+  margin-bottom: var(--space-3);
+  font-family: var(--font-mono);
+}
+
 .hint {
   font-size: 0.82rem;
   margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+}
+
+.hint-round {
+  color: var(--text);
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* Tabela pergunta-a-pergunta (spec "Melhorias": serve de "VAR" logo depois
@@ -281,6 +296,46 @@ h2 {
     color: var(--text-faint);
     font-weight: 400;
   }
+
+  /* Padding menor que o das células normais — o input já traz o próprio
+     respiro interno (ver `.score-input` abaixo), então manter o padding
+     cheio da célula deixava a linha visivelmente mais alta só nas colunas
+     em edição. */
+  td.score-cell.editing {
+    padding: var(--space-1) var(--space-2);
+  }
+}
+
+.score-input {
+  width: 100%;
+  min-width: 3.4rem;
+  max-width: 4.6rem;
+  text-align: right;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+
+  /* Remove as setinhas nativas de number input — sobravam espaço à direita
+     e destoavam do resto da tabela, toda alinhada à direita sem esse tipo
+     de controle. */
+  -moz-appearance: textfield;
+  appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--info);
+    box-shadow: 0 0 0 2px rgba(78, 161, 255, 0.25);
+  }
 }
 
 .question-col {
@@ -356,32 +411,18 @@ h2 {
   }
 }
 
-.actions {
-  /* Em linha por padrão em qualquer largura — mesmo padrão dos outros pares
-     de botão do app (`.primary-actions` do score-entry, `.secondary-actions`
-     do game-admin etc.). `flex-wrap` sobra como rede de segurança, não pra
-     ser o comportamento normal. */
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-
-  @media (max-width: 480px) {
-    align-items: stretch;
-    gap: var(--space-2);
-
-    button,
-    a {
-      flex: 1 1 0;
-      /* `.btn-xl` (global) tem fonte e padding pensados pra um botão
-         sozinho ocupando a largura toda — dois lado a lado num celular
-         estreito faziam o texto ("RODADA2"/"Placar final", "Ir ao painel")
-         quebrar linha dentro do próprio botão. Encolhe só aqui. */
-      font-size: 0.68rem;
-      padding: var(--space-3) var(--space-2);
-      white-space: nowrap;
-    }
+/* Conteúdo do rodapé fixo (app-page-footer): "RODADA X"/"Placar final" +
+   "Corrigir pontuações" ficam centralizados como grupo único — o `.footer`
+   (page-footer.scss) já centraliza seus filhos projetados, então nenhum
+   wrapper extra é necessário aqui. */
+@media (max-width: 480px) {
+  app-page-footer .btn {
+    /* `.btn-xl` (global) tem fonte e padding pensados pra um botão sozinho
+       ocupando a largura toda — os dois lado a lado num celular estreito
+       faziam o texto ("RODADA 2"/"Placar final", "Corrigir pontuações")
+       quebrar linha dentro do próprio botão. Encolhe só aqui. */
+    font-size: 0.68rem;
+    padding: var(--space-3) var(--space-2);
+    white-space: nowrap;
   }
 }

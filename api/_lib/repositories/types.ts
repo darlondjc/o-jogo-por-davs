@@ -11,6 +11,12 @@ export interface GameRepository {
   findById(id: string): Promise<Game | null>;
   create(game: NewGame): Promise<Game>;
   update(id: string, patch: Partial<Game>): Promise<Game>;
+  /** Opcional: o repositório do Google Sheets não implementa — ele só serve
+   * de cópia de backup write-only de jogos finalizados (nunca é lido de
+   * volta, ver `services/backup.service.ts`) e não é o repositório ativo em
+   * produção. Quando é [modo sem Firestore configurado], `game.service.ts`
+   * recusa a exclusão com um erro claro em vez de simular sucesso. */
+  delete?(id: string): Promise<void>;
 }
 
 export interface TeamRepository {

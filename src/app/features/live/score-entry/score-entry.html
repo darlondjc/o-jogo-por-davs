@@ -1,8 +1,16 @@
-<div class="score-entry">
+<div class="score-entry" [class.has-footer]="!correctionOnly() || correcting()">
+  @if (correctionOnly() && !correcting() && !pickerOpen()) {
+    <!-- Sem "pergunta atual" nesta tela (a rodada já terminou) — só reabre
+         o dialog de escolha, se ele tiver sido cancelado. -->
+    <div class="correction-reopen">
+      <button class="btn btn-ghost btn-outline" type="button" (click)="openPicker()">
+        Escolher pergunta pra corrigir
+      </button>
+    </div>
+  }
+
+  @if (!correctionOnly() || correcting()) {
   <header class="head">
-    @if (justRegisteredQuestion(); as done) {
-      <p class="flash">✓ Pontuações da pergunta {{ done }} confirmadas</p>
-    }
     <h2 [class]="titleColorClass() + ' ' + titlePulseClass()">{{ targetLabel() }}</h2>
   </header>
 
@@ -188,6 +196,7 @@
       </div>
     }
   </app-page-footer>
+  }
 
   @if (pickerOpen()) {
     <div class="picker-overlay" (click)="closePicker()">

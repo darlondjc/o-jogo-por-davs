@@ -1,8 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { teamColor } from '../../core/models';
 import type { RoundSummary, Team } from '../../core/models';
+import { Snackbar } from '../../core/components/snackbar/snackbar';
+import { PageHeader } from '../../core/components/page-header/page-header';
+import { PageFooter } from '../../core/components/page-footer/page-footer';
 
 interface RoundRow {
   teamId: string;
@@ -33,7 +37,7 @@ interface QuestionRow {
 
 @Component({
   selector: 'app-round-summary',
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule, Snackbar, PageHeader, PageFooter],
   templateUrl: './round-summary.html',
   styleUrl: './round-summary.scss',
 })
@@ -52,37 +56,57 @@ export class RoundSummaryPage {
   readonly rankedCardExpanded = signal(true);
   readonly selectedTeamId = signal<string | null>(null);
 
+  /** Correção de pontuação direto na tabela "Pergunta a pergunta" (spec
+   * "Melhorias": equipes podem pedir correção ao conferir os pontos aqui) —
+   * ao entrar em edição, cada célula (exceto a coluna "Pergunta") vira um
+   * input; "Salvar alterações" manda só as perguntas realmente alteradas. */
+  readonly editingScores = signal(false);
+  readonly savingCorrections = signal(false);
+  readonly correctionError = signal<string | null>(null);
+  readonly correctionSnackbarVisible = signal(false);
+  private correctionSnackbarTimeout?: ReturnType<typeof setTimeout>;
+  /** Rascunho local dos valores em edição: pergunta → equipe → pontuação.
+   * Populado a partir de `questionRows()` ao entrar em edição — fora do
+   * modo de edição a tabela lê direto de `questionRows()`. */
+  private readonly editedScores = signal<Map<number, Map<string, number>>>(new Map());
+
   private readonly teamsById = computed(() => {
     const map = new Map<string, Team>();
     for (const t of this.gameState.teams()) map.set(t.id, t);
     return map;
   });
 
+  /** Empate quebrado por ordem alfabética do nome — sem isso a ordem seguia
+   * a ordem "de chegada" das pontuações no banco (bug real: "Placar da
+   * rodada" e "Placar geral" mostrando empates em ordens diferentes um do
+   * outro, sem nenhum critério visível). Mesmo critério nas duas listas. */
   readonly roundRows = computed<RoundRow[]>(() => {
     const summary = this.summary();
     if (!summary) return [];
     const teams = this.teamsById();
-    return [...summary.roundTotals]
-      .sort((a, b) => b.total - a.total)
+    return summary.roundTotals
       .map((r) => ({
         teamId: r.teamId,
         teamName: teams.get(r.teamId)?.name ?? '—',
         color: teamColor(teams.get(r.teamId)?.order ?? 1),
         total: r.total,
-      }));
+      }))
+      .sort((a, b) => b.total - a.total || a.teamName.localeCompare(b.teamName));
   });
 
   readonly rankingRows = computed<RankingRow[]>(() => {
     const summary = this.summary();
     if (!summary) return [];
     const teams = this.teamsById();
-    return summary.overallRanking.map((r) => ({
-      teamId: r.teamId,
-      teamName: teams.get(r.teamId)?.name ?? '—',
-      color: teamColor(teams.get(r.teamId)?.order ?? 1),
-      total: r.total,
-      position: r.position,
-    }));
+    return summary.overallRanking
+      .map((r) => ({
+        teamId: r.teamId,
+        teamName: teams.get(r.teamId)?.name ?? '—',
+        color: teamColor(teams.get(r.teamId)?.order ?? 1),
+        total: r.total,
+        position: r.position,
+      }))
+      .sort((a, b) => a.position - b.position || a.teamName.localeCompare(b.teamName));
   });
 
   /** Colunas da tabela pergunta-a-pergunta, na mesma ordem de cadastro das
@@ -116,10 +140,15 @@ export class RoundSummaryPage {
       }));
   });
 
-  readonly winnerName = computed(() => {
-    const summary = this.summary();
-    if (!summary?.winnerTeamId) return null;
-    return this.teamsById().get(summary.winnerTeamId)?.name ?? null;
+  /** Equipe(s) no topo do placar da rodada — derivado do `roundRows` já
+   * ordenado (não do `winnerTeamId` da API) pra garantir que "quem venceu"
+   * e a ordem exibida na lista nunca se contradigam. Mais de uma equipe
+   * aqui significa empate na liderança da rodada. */
+  readonly roundWinners = computed<RoundRow[]>(() => {
+    const rows = this.roundRows();
+    if (!rows.length) return [];
+    const topTotal = rows[0].total;
+    return rows.filter((r) => r.total === topTotal);
   });
 
   readonly isLastRound = computed(() => {
@@ -142,7 +171,11 @@ export class RoundSummaryPage {
   }
 
   constructor() {
-    this.gameState.loadGame(this.gameId).then(async () => {
+    // `loadLive` em vez de `loadGame`: mesmo game+teams de antes, sem
+    // necessidade real de `registeredQuestions` aqui (a correção agora é
+    // direto na tabela desta rodada, sem picker de pergunta), mas mantido
+    // por já trazer tudo que a tela precisa numa única chamada.
+    this.gameState.loadLive(this.gameId).then(async () => {
       if (this.gameState.notFound()) {
         await this.router.navigate(['/404']);
         return;
@@ -153,6 +186,93 @@ export class RoundSummaryPage {
         this.loading.set(false);
       }
     });
+  }
+
+  /** Entra em modo de edição: clona `questionRows()` pro rascunho local que
+   * os inputs da tabela passam a ler/escrever. */
+  startEditingScores(): void {
+    if (!this.questionRows().length) return;
+    const columns = this.teamColumns();
+    const draft = new Map<number, Map<string, number>>();
+    for (const row of this.questionRows()) {
+      draft.set(row.question, new Map(columns.map((c, i) => [c.teamId, row.scores[i]])));
+    }
+    this.editedScores.set(draft);
+    this.correctionError.set(null);
+    this.editingScores.set(true);
+  }
+
+  cancelEditingScores(): void {
+    this.editingScores.set(false);
+    this.correctionError.set(null);
+  }
+
+  cellValue(question: number, teamId: string): number {
+    return this.editedScores().get(question)?.get(teamId) ?? 0;
+  }
+
+  setCellValue(question: number, teamId: string, value: number): void {
+    this.editedScores.update((draft) => {
+      const next = new Map(draft);
+      const inner = new Map(next.get(question));
+      inner.set(teamId, Number.isFinite(value) ? value : 0);
+      next.set(question, inner);
+      return next;
+    });
+  }
+
+  /** Manda pro servidor só as perguntas cuja pontuação de alguma equipe
+   * mudou — cada envio leva a rodada inteira daquela pergunta (todas as
+   * equipes), já que é assim que `submitQuestionScores` espera o payload;
+   * a edição aqui é só o total por célula, então base = total editado e
+   * bônus/penalidade zerados (a tabela não guarda mais essa divisão). */
+  async saveCorrections(): Promise<void> {
+    if (this.savingCorrections()) return;
+    const columns = this.teamColumns();
+    const original = new Map(this.questionRows().map((r) => [r.question, r]));
+    const draft = this.editedScores();
+    const changedQuestions = [...draft.entries()].filter(([question, teamValues]) => {
+      const originalRow = original.get(question);
+      if (!originalRow) return false;
+      return columns.some((c, i) => (teamValues.get(c.teamId) ?? 0) !== originalRow.scores[i]);
+    });
+
+    if (!changedQuestions.length) {
+      this.editingScores.set(false);
+      return;
+    }
+
+    this.savingCorrections.set(true);
+    this.correctionError.set(null);
+    try {
+      await Promise.all(
+        changedQuestions.map(([question, teamValues]) =>
+          this.gameState.submitQuestionScores(this.gameId, {
+            round: this.round,
+            question,
+            scores: columns.map((c) => ({
+              teamId: c.teamId,
+              baseScore: teamValues.get(c.teamId) ?? 0,
+              bonus: 0,
+              penalty: 0,
+            })),
+          }),
+        ),
+      );
+      this.summary.set(await this.gameState.getRoundSummary(this.gameId, this.round));
+      this.editingScores.set(false);
+      this.showCorrectionSnackbar();
+    } catch {
+      this.correctionError.set('Não foi possível salvar as pontuações corrigidas. Tente novamente.');
+    } finally {
+      this.savingCorrections.set(false);
+    }
+  }
+
+  private showCorrectionSnackbar(): void {
+    clearTimeout(this.correctionSnackbarTimeout);
+    this.correctionSnackbarVisible.set(true);
+    this.correctionSnackbarTimeout = setTimeout(() => this.correctionSnackbarVisible.set(false), 2500);
   }
 
   medal(position: number): string | null {

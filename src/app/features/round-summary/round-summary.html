@@ -1,10 +1,20 @@
 @if (loading()) {
   <p class="loading">Carregando resumo…</p>
 } @else {
+  <app-page-header backLabel="← Ir ao painel" [backLink]="['/jogo', gameId]"/>
+
   <div class="page container">
     <p class="eyebrow">RODADA {{ round }} FINALIZADA</p>
-    @if (winnerName(); as winner) {
-      <h1>🏆 {{ winner }} venceu a rodada</h1>
+    @if (roundWinners().length === 1) {
+      <h1>🏆 {{ roundWinners()[0].teamName }} venceu a rodada</h1>
+    } @else if (roundWinners().length > 1) {
+      <h1>
+        @if (isLastRound()) {
+          O jogo terminou empatado com {{ roundWinners().length }} equipes
+        } @else {
+          A rodada terminou empatada entre {{ roundWinners().length }} equipes
+        }
+      </h1>
     } @else {
       <h1>Rodada {{ round }} finalizada</h1>
     }
@@ -49,7 +59,18 @@
     @if (questionRows().length) {
       <section class="card card-questions">
         <h2>Pergunta a pergunta</h2>
-        <p class="muted hint">Compare lado a lado quem acertou (ou não) cada pergunta da rodada.</p>
+        @if (editingScores()) {
+          <p class="muted hint">
+            Ajuste a pontuação de qualquer equipe em qualquer pergunta e confirme em "Salvar alterações".
+          </p>
+        } @else {
+          <p class="muted hint">
+            Compare lado a lado quem acertou (ou não) cada pergunta da <strong class="hint-round">rodada {{ round }}</strong>.
+          </p>
+        }
+        @if (correctionError()) {
+          <p class="error">{{ correctionError() }}</p>
+        }
         <div class="question-breakdown-scroll">
           <table class="question-breakdown">
             <thead>
@@ -75,12 +96,22 @@
                   @for (col of teamColumns(); track col.teamId; let scoreIndex = $index) {
                     <td
                       class="score-cell"
+                      [class.editing]="editingScores()"
                       [attr.data-team-id]="col.teamId"
                       [class.negative]="row.scores[scoreIndex] < 0"
                       [class.zero]="row.scores[scoreIndex] === 0"
                       [class.selected]="selectedTeamId() === col.teamId"
                     >
-                      {{ row.scores[scoreIndex] }}
+                      @if (editingScores()) {
+                        <input
+                          type="number"
+                          class="score-input"
+                          [ngModel]="cellValue(row.question, col.teamId)"
+                          (ngModelChange)="setCellValue(row.question, col.teamId, $event)"
+                        />
+                      } @else {
+                        {{ row.scores[scoreIndex] }}
+                      }
                     </td>
                   }
                 </tr>
@@ -91,7 +122,30 @@
       </section>
     }
 
-    <div class="actions">
+    @if (correctionSnackbarVisible()) {
+      <app-snackbar message="Pontuação corrigida com sucesso!" />
+    }
+  </div>
+
+  <app-page-footer>
+    @if (editingScores()) {
+      <button
+        class="btn btn-ghost btn-outline btn-xl"
+        type="button"
+        (click)="cancelEditingScores()"
+        [disabled]="savingCorrections()"
+      >
+        Cancelar
+      </button>
+      <button
+        class="btn btn-primary btn-xl"
+        type="button"
+        (click)="saveCorrections()"
+        [disabled]="savingCorrections()"
+      >
+        {{ savingCorrections() ? 'Salvando…' : 'Salvar alterações' }}
+      </button>
+    } @else {
       @if (isLastRound()) {
         <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
           Placar final
@@ -103,12 +157,17 @@
           (click)="continueGame()"
           [disabled]="continuing()"
         >
-          {{ continuing() ? 'Avançando…' : 'RODADA' + (round + 1) }}
+          {{ continuing() ? 'Avançando…' : 'RODADA ' + (round + 1) }}
         </button>
       }
-      <button class="btn btn-ghost btn-outline btn-xl" type="button" [routerLink]="['/jogo', gameId]">
-        <span>Ir ao painel</span>
+      <button
+        class="btn btn-ghost btn-outline btn-xl"
+        type="button"
+        (click)="startEditingScores()"
+        [disabled]="!questionRows().length"
+      >
+        Corrigir pontuações
       </button>
-    </div>
-  </div>
+    }
+  </app-page-footer>
 }

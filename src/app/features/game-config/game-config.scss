@@ -1,3 +1,11 @@
+/* O rodapé (app-page-footer, "Salvar jogo"/"Iniciar jogo") fica visível o
+   tempo todo nesta tela, inclusive quando o snackbar "Dados do jogo
+   salvos!" aparece por cima dele (ver `snackbar.scss`) — levanta o
+   snackbar acima da altura do rodapé com uma folga de respiro. */
+:host {
+  --snackbar-bottom: 6.5rem;
+}
+
 .page {
   /* Longhand de propósito: um shorthand `padding: topo 0 base` aqui zera
      também o padding horizontal do `.container` global (mesmo elemento,
@@ -246,8 +254,17 @@ h2 {
        quebrando o alinhamento da linha. */
     .btn-primary {
       flex: 1;
+      /* Mesmo motivo do `min-width: 0` do .field.small acima: um item flex
+         não encolhe abaixo do seu conteúdo (o texto "Adicionar") a não ser
+         que a gente derrube esse mínimo explicitamente. Sem isso, em telas
+         bem estreitas o botão ignorava o `flex: 1` e estourava pra fora do
+         card (bug real, ~300px de largura). O padding horizontal reduzido
+         dá uma folga a mais pro texto continuar legível nessa largura. */
+      min-width: 0;
       padding-top: var(--space-2);
       padding-bottom: var(--space-2);
+      padding-left: var(--space-3);
+      padding-right: var(--space-3);
       font-size: 1rem;
       border: 1px solid transparent;
     }

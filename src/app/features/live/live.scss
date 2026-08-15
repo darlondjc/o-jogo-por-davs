@@ -1,5 +1,16 @@
 $side-w: 550px;
 
+/* O rodapé fixo de ações (app-page-footer, dentro de app-score-entry) fica
+   visível o tempo todo nesta tela, inclusive quando o snackbar de "pergunta
+   confirmada" aparece por cima dele (ver `snackbar.scss`) — levanta o
+   snackbar acima da altura do rodapé. Mesmo valor reservado pelo próprio
+   `.score-entry.has-footer` (ver `score-entry.scss`), que já cobre o caso
+   dele virar 2 linhas no mobile ("Corrigir perguntas anteriores" cai pra
+   linha de baixo). */
+:host {
+  --snackbar-bottom: 6.5rem;
+}
+
 .live-page {
   display: grid;
   grid-template-columns: 1fr $side-w;

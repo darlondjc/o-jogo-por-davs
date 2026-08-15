@@ -1,15 +1,20 @@
 /* Acima de tudo (cabeçalho fixo é 60, modal de live.scss chega a 100) —
-   a confirmação precisa aparecer por cima de qualquer coisa em tela. */
+   a confirmação precisa aparecer por cima de qualquer coisa em tela.
+   `--snackbar-bottom` deixa cada tela levantar a posição quando o snackbar
+   convive com um `app-page-footer` fixo (ex: dashboard, game-config) — sem
+   isso ele nasce exatamente atrás dos botões do rodapé. Quem não define a
+   variável (ex: round-summary, onde o rodapé já está escondido no momento
+   em que o snackbar aparece) mantém a posição padrão de sempre. */
 :host {
   position: fixed;
   left: 50%;
-  bottom: var(--space-6);
+  bottom: var(--snackbar-bottom, var(--space-6));
   z-index: 500;
   transform: translateX(-50%);
   pointer-events: none;
 
   @media (max-width: 480px) {
-    bottom: var(--space-5);
+    bottom: var(--snackbar-bottom, var(--space-5));
     left: var(--space-4);
     right: var(--space-4);
     transform: none;

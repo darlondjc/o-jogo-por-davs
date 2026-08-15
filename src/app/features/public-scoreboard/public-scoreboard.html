@@ -1,25 +1,31 @@
 <div class="public-page">
-  <header class="head">
-    <p class="brand">O JOGO</p>
-    @if (scoreboard(); as board) {
-      @if (board.status === 'CONFIGURACAO') {
-        <p class="waiting-status">Aguardando início do jogo…</p>
-      } @else {
-        <p class="progress">RODADA {{ board.currentRound }} · PERGUNTA {{ board.currentQuestion }}</p>
-        @if (board.status !== 'FINALIZADO') {
-          <p class="live-status" [class.stale]="stale()">
-            <span class="live-dot"></span>
-            {{ stale() ? 'Sem conexão · última atualização há ' + secondsSinceUpdate() + 's' : 'Ao vivo' }}
+  <app-page-header backLabel="← Voltar" backLink="/" />
+
+  @if (scoreboard(); as board) {
+    @if (board.status !== 'CONFIGURACAO') {
+      <div class="container">
+        <div class="progress-bar">
+          <p class="progress">
+            @if (board.status === 'FINALIZADO') {
+              JOGO FINALIZADO
+            } @else if (board.status === 'EM_ANDAMENTO') {
+              RODADA {{ board.currentRound }} - PERGUNTA {{ board.currentQuestion }}
+            } @else {
+              PÓS-RODADA {{ board.currentRound }}
+            }
           </p>
-        }
-      }
+        </div>
+      </div>
     }
-  </header>
+  }
 
   @if (loading()) {
     <p class="status">Carregando placar…</p>
   } @else if (error() && !scoreboard()) {
-    <p class="status error">{{ error() }}</p>
+    <div class="status error">
+      <p>{{ error() }}</p>
+      <button type="button" class="btn btn-outline" (click)="refresh()">Tentar novamente</button>
+    </div>
   } @else if (scoreboard(); as board) {
     <main class="content">
       <section class="collapsible" [class.collapsed]="boardCollapsed()">
@@ -51,10 +57,30 @@
           </ol>
         </section>
       }
-
-      @if (board.status === 'FINALIZADO') {
-        <p class="finished">🏁 Jogo finalizado</p>
-      }
     </main>
+
+    <app-page-footer>
+      <div class="footer-actions">
+        @if (auth.user()) {
+          <button type="button" class="btn btn-outline" [routerLink]="['/jogo', gameId]">
+            Ir ao painel
+          </button>
+        }
+        @if (board.status !== 'FINALIZADO') {
+          <button type="button" class="btn btn-outline" (click)="refresh()" [disabled]="!canRefresh()">
+            @if (refreshing()) {
+              Atualizando…
+            } @else if (canRefresh()) {
+              ↻ Atualizar
+            } @else {
+              ↻ Atualizar ({{ cooldownSeconds() }}s)
+            }
+          </button>
+        }
+        @if (refreshError()) {
+          <p class="refresh-error">{{ refreshError() }}</p>
+        }
+      </div>
+    </app-page-footer>
   }
 </div>

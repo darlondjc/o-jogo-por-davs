@@ -17,10 +17,14 @@ export class App {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  /** A tela ao vivo (live.html) já embute o `app-user-chip` no próprio
+  /** As telas que usam `app-page-header` (home, painel do jogo, registro de
+   * pontuações, configuração) já embutem o `app-user-chip` no próprio
    * cabeçalho fixo — mostrar também o chip flutuante global duplicaria a
    * informação (spec "Tela de registro de pontuações": cabeçalho com o chip
-   * do lado direito). */
+   * do lado direito). Casa `/`, `/jogo/:id`, `/jogo/:id/ao-vivo` e
+   * `/jogo/:id/configuracao`, não as outras sub-rotas de jogo (rodada,
+   * placar público), que continuam com o chip flutuante. */
+  private static readonly PAGE_HEADER_ROUTE = /^\/$|^\/jogo\/[^/]+(\/ao-vivo|\/configuracao)?$/;
   private readonly currentUrl = signal(this.router.url);
   protected readonly showFloatingUserChip = signal(true);
 
@@ -34,7 +38,7 @@ export class App {
       )
       .subscribe(() => {
         this.currentUrl.set(this.router.url);
-        this.showFloatingUserChip.set(!this.currentUrl().includes('/ao-vivo'));
+        this.showFloatingUserChip.set(!App.PAGE_HEADER_ROUTE.test(this.currentUrl()));
       });
   }
 }

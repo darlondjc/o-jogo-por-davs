@@ -24,6 +24,7 @@ export interface Game {
   status: GameStatus;
   currentRound: number;
   currentQuestion: number;
+  teamsCount?: number;
   createdAt: string;
   updatedAt: string;
 }

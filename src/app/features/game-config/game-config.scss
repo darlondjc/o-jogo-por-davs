@@ -4,28 +4,24 @@
      `class="page container"`), grudando o conteúdo nas bordas da tela em
      qualquer largura menor que o max-width — bug real reportado em
      mobile. Só topo/base são responsabilidade desta regra. */
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-7);
+  /* `+ var(--page-header-h)` reserva o respiro do cabeçalho fixo
+     (app-page-header). */
+  padding-top: calc(var(--page-header-h) + var(--space-6));
+  padding-bottom: calc(var(--space-7) + 5rem);
   max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+
+  @media (max-width: 480px) {
+    padding-top: calc(var(--page-header-h) + var(--space-5));
+    padding-bottom: calc(var(--space-6) + 6rem);
+  }
 }
 
 .loading {
   padding: var(--space-6);
   color: var(--text-muted);
-}
-
-.back {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-
-  &:hover {
-    color: var(--text);
-  }
 }
 
 h1 {
@@ -44,10 +40,6 @@ h2 {
   color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-.field.small {
-  flex: 0 0 120px;
 }
 
 .error {
@@ -180,9 +172,84 @@ h2 {
   }
 }
 
+/* Nome, nº de jogadores e o(s) botão(ões) (Adicionar/Salvar e, durante
+   edição, Cancelar) numa única linha no desktop — evita 3-4 blocos
+   empilhados ocupando altura à toa quando a tela é larga o bastante pra
+   caber tudo lado a lado. */
 .team-form {
   flex-direction: row;
   align-items: flex-end;
   flex-wrap: wrap;
-  padding-bottom: var(--space-5);
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+
+  /* `min-width: 0` derruba o mínimo automático que o <input> impõe ao
+     flex item — sem isso ele não encolhe abaixo da largura "natural"
+     (~200px) mesmo com `flex-shrink`, e o nome estoura a linha em telas
+     mais estreitas. */
+  .field {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  /* Abaixo disso o nome não cabe mais ao lado dos outros campos sem
+     apertar demais — melhor ele sozinho numa linha e jogadores + botão
+     principal juntos na linha seguinte do que voltar a empilhar tudo
+     separado (4 blocos de altura total viravam 2, ou 3 durante edição). */
+  @media (max-width: 480px) {
+    gap: var(--space-2);
+    padding-bottom: var(--space-3);
+
+    .field:not(.small) {
+      flex-basis: 100%;
+    }
+
+    /* Cancelar (só existe durante edição) fica full-width numa linha
+       própria abaixo do grupo jogadores+botão — ação secundária, não
+       compete por espaço com a principal, e some por completo fora da
+       edição. */
+    > .btn-ghost {
+      flex-basis: 100%;
+    }
+  }
+}
+
+/* Agrupa "jogadores" com o botão principal (Adicionar/Salvar) num flex
+   próprio, sem wrap — assim os dois ficam sempre lado a lado, com ou sem
+   o Cancelar por perto, em vez de depender da quebra de linha do form
+   inteiro decidir isso (o que os deixava juntos só às vezes). */
+.team-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+
+  /* `min-width: 0` derruba o mínimo automático que o <input> impõe ao
+     flex item (o tamanho "natural" dele, ~200px, vence um `flex-basis`
+     menor mesmo com grow/shrink zerados) — sem isso o campo ignorava a
+     largura fixa e estourava a linha. */
+  .field.small {
+    flex: 0 0 84px;
+    min-width: 0;
+  }
+
+  @media (max-width: 480px) {
+    flex-basis: 100%;
+    gap: var(--space-2);
+
+    .field.small {
+      flex: 0 0 76px;
+    }
+
+    /* Padding vertical, fonte e borda (transparente) iguais ao input —
+       em vez do padding padrão de botão (maior) — sem isso o botão
+       ficava visivelmente mais alto que o campo "jogadores" ao lado,
+       quebrando o alinhamento da linha. */
+    .btn-primary {
+      flex: 1;
+      padding-top: var(--space-2);
+      padding-bottom: var(--space-2);
+      font-size: 1rem;
+      border: 1px solid transparent;
+    }
+  }
 }

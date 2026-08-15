@@ -1,12 +1,6 @@
-<div class="page">
-  <header class="hero container">
-    <div class="hero-title">
-      <p class="eyebrow">Trivia ao vivo</p>
-      <h1>O Jogo</h1>
-    </div>
-    <a class="btn btn-primary" routerLink="/jogo/novo">+ Novo jogo</a>
-  </header>
+<app-page-header />
 
+<div class="page">
   <main class="container">
     @if (loading()) {
       <p class="muted">Carregando jogos…</p>
@@ -16,7 +10,6 @@
       <div class="empty card">
         <h2>Nenhum jogo cadastrado ainda</h2>
         <p class="muted">Crie o primeiro jogo para começar a operar a trivia.</p>
-        <a class="btn btn-primary" routerLink="/jogo/novo">+ Novo jogo</a>
       </div>
     } @else {
       <h2 class="section-title">Jogos</h2>
@@ -34,6 +27,9 @@
               {{ gameTypeLabel(game.gameType) }} · {{ game.rounds }}
               {{ pluralize(game.rounds, 'rodada', 'rodadas') }} ·
               {{ game.questionsPerRound }} {{ pluralize(game.questionsPerRound, 'pergunta', 'perguntas') }} por rodada
+              @if (game.teamsCount) {
+                · {{ game.teamsCount }} {{ pluralize(game.teamsCount, 'equipe', 'equipes') }}
+              }
             </p>
           </a>
         }
@@ -41,3 +37,7 @@
     }
   </main>
 </div>
+
+<app-page-footer>
+  <a class="btn btn-primary btn-xl" routerLink="/jogo/novo">+ Novo jogo</a>
+</app-page-footer>

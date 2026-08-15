@@ -4,15 +4,22 @@
      `class="page container"`), grudando o conteúdo nas bordas da tela em
      qualquer largura menor que o max-width — bug real reportado em mobile
      (afetava também game-config, game-form e round-summary, mesma causa). */
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-7);
+  /* `+ var(--page-header-h)` reserva o respiro do cabeçalho fixo
+     (app-page-header), que agora cobre esta tela também. */
+  padding-top: calc(var(--page-header-h) + var(--space-6));
+  /* Reserva o respiro do rodapé fixo (app-page-footer, ver `.footer-actions`
+     abaixo) — sem isso a última seção da página nasceria escondida atrás
+     dele. O valor é generoso de propósito: no mobile o rodapé pode ter até
+     duas linhas (CTA principal + "Configurar"/"Finalizar jogo" lado a
+     lado). */
+  padding-bottom: calc(var(--space-7) + 5rem);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 
   @media (max-width: 480px) {
-    padding-top: var(--space-5);
-    padding-bottom: var(--space-6);
+    padding-top: calc(var(--page-header-h) + var(--space-5));
+    padding-bottom: calc(var(--space-6) + 6rem);
   }
 
   /* Container global reserva 24px de cada lado; num celular de 360px isso
@@ -32,57 +39,10 @@
   }
 }
 
-.back {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-family: var(--font-mono);
-
-  &:hover {
-    color: var(--text);
-  }
-}
-
 .hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-5);
-  flex-wrap: wrap;
-
-  /* Abaixo de 720px o hero-main e o hero-actions já quebram linha (flex-wrap),
-     mas cada um só ocupa a largura do próprio conteúdo. Empilhar de verdade
-     (coluna, esticado) deixa o card organizado em vez de sobrar respiro à
-     direita. */
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-/* Ações principais (iniciar/continuar, configurar, finalizar) agora vivem
-   aqui, lado direito do card de cima, em vez de um card "actions" próprio
-   abaixo — economiza espaço vertical (melhorias doc "Tela principal do
-   jogo"). */
-.hero-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-3);
-  flex-shrink: 0;
-
-  @media (max-width: 720px) {
-    align-items: flex-start;
-  }
-
-  /* Botão principal e ações secundárias esticados de ponta a ponta: em
-     celular é mais fácil tocar num botão largo do que num botão pequeno
-     alinhado à esquerda. O badge sai desse esticamento (ver `.hero .badge`
-     abaixo), senão vira uma pílula esquisita ocupando a tela toda. */
-  @media (max-width: 480px) {
-    align-items: stretch;
-    width: 100%;
-  }
+  /* Ancora o badge de status (ver `.hero .badge` abaixo), que flutua no
+     canto superior direito do card em qualquer tamanho de tela. */
+  position: relative;
 }
 
 .hero-main {
@@ -142,13 +102,25 @@ h1 {
   white-space: nowrap;
 }
 
+/* Flutua no canto superior direito do card, ao lado do "O JOGO" — as ações
+   (iniciar/continuar, configurar, finalizar) agora vivem no rodapé fixo
+   (ver `.footer-actions` abaixo), então o badge não disputa espaço com
+   nenhum botão. Compacto de propósito: mais alto que isso avançaria por
+   cima da primeira linha do título em jogos com nome comprido, já que ele
+   sai do fluxo normal e passa a flutuar sobre o card inteiro (ver
+   `position: relative` em `.hero`). `top`/`right` acompanham o padding do
+   próprio card (`.card`/`.page .card`, que encolhe no mobile) pra ficar
+   alinhado com o resto do conteúdo, não grudado na borda. */
 .hero .badge {
-  flex-shrink: 0;
-  font-size: 0.8rem;
-  padding: var(--space-2) var(--space-4);
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  padding: 3px var(--space-2);
+  font-size: 0.6rem;
 
   @media (max-width: 480px) {
-    align-self: flex-start;
+    top: var(--space-4);
+    right: var(--space-4);
   }
 }
 
@@ -170,12 +142,48 @@ h1 {
   color: var(--accent);
 }
 
+/* Ações principais do jogo (iniciar/continuar, configurar, finalizar) —
+   conteúdo do rodapé fixo compartilhado com a tela de registro de
+   pontuações (app-page-footer). */
+.footer-actions {
+  /* Em linha (não empilhado): botão principal e "Configurar"/"Finalizar
+     jogo" (dentro de `.secondary-actions`, já uma linha própria) ficam lado
+     a lado no desktop, não em duas fileiras. `flex-wrap` sobra como rede de
+     segurança pra larguras intermediárias onde não cabem os três — spec
+     "Tela principal do jogo". */
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+
+  /* No mobile todos os três botões ficam lado a lado numa linha — o botão
+     principal com fonte reduzida ("Continuar") para caber junto com
+     "Configurar" e "Finalizar". */
+  @media (max-width: 480px) {
+    align-items: stretch;
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+
+    > .btn {
+      flex: 1;
+      font-size: 0.75rem;
+      padding: var(--space-2) var(--space-2);
+    }
+  }
+}
+
 .blockers {
   color: var(--negative);
   font-family: var(--font-mono);
   font-size: 0.85rem;
   margin: 0;
   padding-left: 1.2em;
+  /* `.footer-actions` é uma linha (ver acima) — sem isso a lista de
+     bloqueios ("Adicione pelo menos 2 equipes" etc.) espremeria do lado do
+     botão "INICIAR O JOGO" em vez de cair numa linha própria embaixo. */
+  flex-basis: 100%;
 }
 
 .secondary-actions {
@@ -183,10 +191,37 @@ h1 {
   gap: var(--space-2);
   flex-wrap: wrap;
 
-  /* Coluna, esticado: "Configurar" e "Finalizar jogo" viram dois botões
-     largos empilhados em vez de dois botões pequenos lado a lado. */
+  /* Lado a lado mesmo no mobile (não empilhados): num rodapé fixo, espaço
+     vertical é mais precioso que numa card de ações solta — os dois botões
+     dividem a linha em partes iguais em vez de virar duas linhas cheias. */
   @media (max-width: 480px) {
-    flex-direction: column;
+    gap: var(--space-2);
+    
+    .btn {
+      flex: 1;
+      font-size: 0.75rem;
+      padding: var(--space-3) var(--space-2);
+    }
+  }
+}
+
+/* Rótulo curto de "Continuar jogo"/"Finalizar jogo", só usado no mobile
+   (ver media query abaixo) — com os botões divididos em partes iguais
+   (`.secondary-actions .btn` acima), o texto completo não cabe nos dois
+   lado a lado numa tela estreita (spec "rodapé... tem que ter os nomes
+   Continuar, Configurar, Finalizar"). "Configurar" já é curto o bastante e
+   não precisa de variante. */
+.label-short {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .label-full {
+    display: none;
+  }
+
+  .label-short {
+    display: inline;
   }
 }
 
@@ -194,10 +229,38 @@ h1 {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: var(--space-4);
-  align-items: start;
+  /* `stretch` (o padrão do grid) — antes era `start`, que deixava cada
+     card com a altura do próprio conteúdo. "Placar geral" costuma ter
+     poucas equipes e fica bem mais baixo que "Acompanhar jogo ao vivo" (QR
+     code + botões), sobrando um buraco desalinhado ao lado. Esticar os dois
+     pra altura da linha do grid alinha as bordas de baixo. */
+  align-items: stretch;
 
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Trava a altura de "Placar geral" no tamanho natural do card vizinho
+   ("Acompanhar jogo ao vivo") em vez de deixar `align-items: stretch`
+   (acima) arrastar os dois pra cima quando há muitas equipes — a lista
+   rola dentro do card em vez de esticar tudo (spec "Tela principal do
+   jogo"). O valor é generoso o bastante pra não cortar a lista antes do
+   card vizinho terminar seu próprio conteúdo (QR code + botões); só entra
+   em ação de verdade com bastante gente cadastrada. Só no layout lado a
+   lado — empilhado (ver `.grid` acima) não tem card vizinho pra igualar. */
+.scoreboard-card {
+  @media (min-width: 721px) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: 26rem;
+
+    app-scoreboard {
+      display: block;
+      min-height: 0;
+      overflow-y: auto;
+    }
   }
 }
 

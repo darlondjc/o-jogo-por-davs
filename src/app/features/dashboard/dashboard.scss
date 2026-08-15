@@ -1,47 +1,26 @@
 .page {
-  padding: var(--space-6) 0 var(--space-7);
+  /* Longhand de propósito: um shorthand `padding: topo 0 base` aqui zera
+     também o padding horizontal do `.container` global (mesmo elemento
+     via `main class="container"`), grudando o conteúdo nas bordas da tela
+     em qualquer largura menor que o max-width — mesmo bug real já visto em
+     game-admin/game-config/game-form/round-summary. */
+  /* `+ var(--page-header-h)` reserva o respiro do cabeçalho fixo
+     (app-page-header), que agora cobre esta tela também. */
+  padding-top: calc(var(--page-header-h) + var(--space-6));
+  /* Reserva o respiro do rodapé fixo (app-page-footer, só o CTA "+ Novo
+     jogo" — uma linha só, por isso o valor é mais enxuto que em telas com
+     ações secundárias no rodapé, ex: game-admin). */
+  padding-bottom: calc(var(--space-7) + 4rem);
+
+  @media (max-width: 480px) {
+    padding-top: calc(var(--page-header-h) + var(--space-5));
+    padding-bottom: calc(var(--space-6) + 4.5rem);
+  }
 }
 
 @media (max-width: 400px) {
   .container {
     padding: 0 var(--space-4);
-  }
-}
-
-.hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: var(--space-6);
-  gap: var(--space-4);
-  flex-wrap: wrap;
-
-  @media (max-width: 720px) {
-    flex-direction: column;
-    align-items: stretch;
-
-    .btn {
-      width: 100%;
-    }
-  }
-}
-
-.hero-title {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-h1 {
-  font-family: var(--font-pixel);
-  font-size: 1.6rem;
-  color: var(--accent);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  text-shadow: 0 0 20px rgba(255, 204, 51, 0.35);
-
-  @media (max-width: 720px) {
-    font-size: 1.35rem;
   }
 }
 
@@ -89,7 +68,12 @@ h1 {
   gap: var(--space-4);
 
   @media (max-width: 720px) {
-    grid-template-columns: 1fr;
+    /* `1fr` puro, sem o `minmax(0, ...)`, herda o min-width automático do
+       grid (= o min-content do card) — com o título em `white-space:
+       nowrap` isso é a largura do nome do jogo inteiro numa linha só, que
+       no card mais comprido estourava a viewport inteira (bug real medido
+       em telas ~360px de largura). */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -99,6 +83,10 @@ h1 {
   gap: var(--space-2);
   text-decoration: none;
   color: var(--text);
+  /* Mesma lógica do `.grid` acima: sem isso o card (item do grid) não
+     encolhe abaixo do conteúdo interno, novamente por causa do nome do
+     jogo em `nowrap`. */
+  min-width: 0;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -120,6 +108,14 @@ h1 {
   justify-content: space-between;
   gap: var(--space-3);
 
+  /* Nome do jogo truncado numa linha só + badge do lado só cabem lado a
+     lado em telas largas. No mobile o nome fica ilegível (2-3 letras antes
+     do "…") pra abrir espaço pro badge — melhor deixar o badge cair pra
+     uma segunda linha e o nome quebrar normalmente. */
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+  }
+
   h3 {
     font-family: var(--font-arcade-body);
     font-size: 1.15rem;
@@ -128,5 +124,25 @@ h1 {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    @media (max-width: 480px) {
+      flex: 1 1 auto;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+  }
+
+  /* Item de flex atômico: ou cabe inteiro ao lado do nome, ou desce
+     inteiro pra própria linha — nunca quebra a palavra no meio (era o que
+     acontecia sem isso: "RODADA" numa linha e "FINALIZADA" na outra,
+     dentro do próprio badge). `margin-left: auto` é o que mantém o badge
+     encostado na direita quando ele cai sozinho pra segunda linha —
+     sem isso `space-between` com um único item na linha manda ele pra
+     esquerda (bug real: badge "grudado" embaixo do título em vez de
+     alinhado à direita do card). */
+  .badge {
+    flex-shrink: 0;
+    margin-left: auto;
   }
 }

@@ -2,11 +2,7 @@
   <p class="loading">Carregando…</p>
 } @else if (gameState.game(); as game) {
   <div class="live-page">
-    <header class="page-header">
-      <a class="back" [routerLink]="['/jogo', gameId]">← Painel do jogo</a>
-      <span class="brand">O JOGO</span>
-      <app-user-chip class="page-header-user" />
-    </header>
+    <app-page-header [backLink]="['/jogo', gameId]" backLabel="← Painel do jogo" />
 
     <div class="main container">
       <div class="progress">

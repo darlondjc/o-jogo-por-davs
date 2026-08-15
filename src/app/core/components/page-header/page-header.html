@@ -1,0 +1,16 @@
+<header class="page-header">
+  @if (backLabel(); as label) {
+    @if (backLink(); as link) {
+      <a class="back" [routerLink]="link" (click)="backClick.emit($event)">{{ label }}</a>
+    } @else {
+      <a class="back" href="#" (click)="backClick.emit($event)">{{ label }}</a>
+    }
+  }
+
+  <div class="brand">
+    <img class="avatar brand-logo" src="/logo.png" alt="O JOGO" />
+    <span class="brand-text">O JOGO</span>
+  </div>
+
+  <app-user-chip class="page-header-user" />
+</header>

@@ -49,6 +49,11 @@
   --space-6: 32px;
   --space-7: 48px;
 
+  /* Altura do cabeçalho fixo (app-page-header) — telas "cheias" do jogo
+     (registro de pontuações, painel do jogo) reservam esse respiro no
+     próprio layout pra nada ficar escondido atrás dele. */
+  --page-header-h: 3.75rem;
+
   --font-display: var(--font-arcade-body);
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
@@ -104,6 +109,13 @@ a {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 var(--space-5);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .btn {

@@ -3,7 +3,7 @@
     @if (user.picture) {
       <img class="avatar" [src]="user.picture" [alt]="user.name" />
     }
-    <span class="email">{{ firstName }}</span>
+    <span class="email name">{{ firstName }}</span>
     <button type="button" class="btn btn-ghost btn-outline logout" (click)="logout()">Sair</button>
   </div>
 }

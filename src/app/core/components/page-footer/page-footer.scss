@@ -1,0 +1,43 @@
+/* O host (`<app-page-footer>`) não pode gerar caixa própria: seu único
+   filho (`.footer` logo abaixo) já é `position: fixed`. Mesmo raciocínio
+   do `app-page-header` (ver `page-header.scss`) — sem isso, o host em
+   fluxo normal vira um item "vazio" em qualquer grid/flex que o use como
+   filho direto, disputando espaço com o conteúdo de verdade. Hoje isso só
+   quebra visivelmente dentro do grid de `.live-page`, mas o host não deve
+   contar como conteúdo em fluxo em lugar nenhum. */
+:host {
+  display: contents;
+}
+
+/* Fixo na base da PÁGINA (não só do conteúdo rolável) — rolar a tela não
+   pode afastar as ações principais da mão de quem está operando (spec
+   "coloque ela fixa no rodapé da página, pra rolagem não afetá-la", tela de
+   registro de pontuações). Por ser `fixed`, o rodapé por padrão ocupa a
+   largura toda da viewport — correto para telas cujo conteúdo já é um
+   container centralizado (ex: game-admin), onde o centro da viewport
+   coincide com o centro do conteúdo. Telas com uma coluna lateral fixa ao
+   lado do conteúdo (ex: live, com o placar) definem `--footer-inset-right`
+   no ancestral pra encolher o rodapé até a borda dessa coluna; sem isso os
+   botões centralizam na viewport toda (incluindo a lateral) e ficam
+   visualmente deslocados do conteúdo acima deles (bug real reportado:
+   rodapé "quebrado" no desktop). */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  position: fixed;
+  left: 0;
+  right: var(--footer-inset-right, 0);
+  bottom: 0;
+  z-index: 40;
+  background: var(--arcade-bg-elevated);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--arcade-border);
+  box-shadow: 0 -8px 24px -8px rgba(0, 0, 0, 0.4);
+
+  @media (max-width: 480px) {
+    padding: var(--space-3) var(--space-4);
+  }
+}

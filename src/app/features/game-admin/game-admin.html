@@ -1,8 +1,10 @@
 @if (gameState.game(); as game) {
-  <div class="page container">
-    <a class="back" routerLink="/">← Todos os jogos</a>
+  <app-page-header backLink="/" backLabel="← Todos os jogos" />
 
+  <div class="page container">
     <header class="hero card">
+      <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
+
       <div class="hero-main">
         <p class="eyebrow">O JOGO</p>
         <h1>{{ game.name }}</h1>
@@ -24,61 +26,6 @@
           </li>
         </ul>
       </div>
-
-      <!-- Ações principais no card de cima, lado direito — economiza o
-           espaço vertical que o card "actions" separado ocupava (melhorias
-           doc "Tela principal do jogo"). "Ver placar" foi pro card
-           "Acompanhar jogo ao vivo", que já é sobre a mesma coisa. -->
-      <div class="hero-actions">
-        <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
-
-        @switch (game.status) {
-          @case ('CONFIGURACAO') {
-            <button
-              class="btn btn-primary btn-xl"
-              type="button"
-              (click)="start()"
-              [disabled]="starting() || startBlockers().length > 0"
-            >
-              {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
-            </button>
-            @if (startBlockers().length) {
-              <ul class="blockers">
-                @for (b of startBlockers(); track b) {
-                  <li>{{ b }}</li>
-                }
-              </ul>
-            }
-          }
-          @case ('EM_ANDAMENTO') {
-            <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
-              Continuar jogo
-            </a>
-          }
-          @case ('RODADA_FINALIZADA') {
-            <a
-              class="btn btn-primary btn-xl"
-              [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
-            >
-              Ver resumo da rodada
-            </a>
-          }
-          @case ('FINALIZADO') {
-            <p class="finished">🏁 Jogo finalizado</p>
-          }
-        }
-
-        <div class="secondary-actions">
-          @if (game.status !== 'FINALIZADO') {
-            <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
-          }
-          @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
-            <button class="btn btn-ghost btn-danger" type="button" (click)="finish()" [disabled]="finishing()">
-              {{ finishing() ? 'Finalizando…' : 'Finalizar jogo' }}
-            </button>
-          }
-        </div>
-      </div>
     </header>
 
     @if (error()) {
@@ -86,14 +33,13 @@
     }
 
     <section class="grid">
-      <div class="card">
+      <div class="card scoreboard-card">
         <h2>Placar geral</h2>
         <app-scoreboard [scoreboard]="gameState.scoreboard()" variant="arcade" />
       </div>
 
       <div class="card share">
         <h2>Acompanhar Jogo ao vivo</h2>
-        <p class="muted small">Escaneie para acompanhar o jogo</p>
         @if (qrDataUrl(); as qr) {
           <img class="qr" [src]="qr" alt="QR Code do placar público" width="176" height="176" />
         }
@@ -144,6 +90,65 @@
       </section>
     }
   </div>
+
+  <!-- Mesmo rodapé fixo (app-page-footer) da tela de registro de
+       pontuações — as ações principais do jogo ficam sempre alcançáveis
+       mesmo com o conteúdo acima rolando. Some por completo quando o jogo
+       já terminou: nenhum botão daqui se aplica mais (spec "Tela principal
+       do jogo"). -->
+  @if (game.status !== 'FINALIZADO') {
+    <app-page-footer>
+      <div class="footer-actions">
+        @switch (game.status) {
+          @case ('CONFIGURACAO') {
+            <button
+              class="btn btn-primary btn-xl"
+              type="button"
+              (click)="start()"
+              [disabled]="starting() || startBlockers().length > 0"
+            >
+              {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
+            </button>
+            @if (startBlockers().length) {
+              <ul class="blockers">
+                @for (b of startBlockers(); track b) {
+                  <li>{{ b }}</li>
+                }
+              </ul>
+            }
+          }
+          @case ('EM_ANDAMENTO') {
+            <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
+              <span class="label-full">Continuar jogo</span>
+              <span class="label-short">Continuar</span>
+            </a>
+          }
+          @case ('RODADA_FINALIZADA') {
+            <a
+              class="btn btn-primary btn-xl"
+              [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
+            >
+              Resumo da rodada
+            </a>
+          }
+        }
+
+        <div class="secondary-actions">
+          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
+          @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
+            <button class="btn btn-ghost btn-danger btn-outline" type="button" (click)="finish()" [disabled]="finishing()">
+              @if (finishing()) {
+                Finalizando…
+              } @else {
+                <span class="label-full">Finalizar jogo</span>
+                <span class="label-short">Finalizar</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+    </app-page-footer>
+  }
 } @else {
   <p class="loading">Carregando…</p>
 }

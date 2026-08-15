@@ -23,6 +23,13 @@ h1 {
   margin-bottom: var(--space-2);
   color: var(--text);
   text-shadow: 0 0 24px rgba(255, 204, 51, 0.25);
+
+  /* Nome do time vencedor entra na mesma linha do troféu e do texto "venceu
+     a rodada" — em 1.7rem isso quebra em 2-3 linhas apertadas num celular
+     estreito. Mesma proporção de redução usada no h1 do game-admin. */
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
 }
 
 h2 {
@@ -66,6 +73,10 @@ h2 {
 .position {
   text-align: center;
   color: var(--text-muted);
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 }
 
 .dot {
@@ -77,6 +88,13 @@ h2 {
 
 .name {
   font-weight: 700;
+
+  /* Sem tamanho próprio, herda o 1rem padrão do body — nas linhas apertadas
+     dos cards de placar isso lê como grande demais no celular (mesmo ajuste
+     já feito no app-scoreboard via --scoreboard-name-size, ver game-admin). */
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 }
 
 .total {
@@ -88,10 +106,18 @@ h2 {
   &.negative {
     color: var(--negative);
   }
+
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+  }
 }
 
 .row-ranked .total {
   font-size: 1rem;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 }
 
 /* Diferencia as duas seções usando as mesmas cores que o resto do app já
@@ -197,8 +223,16 @@ h2 {
       margin-right: var(--space-1);
       vertical-align: middle;
     }
+
+    @media (max-width: 480px) {
+      font-size: 0.62rem;
+    }
   }
 
+  /* Sem tamanho próprio, cada célula herda o 1rem padrão do body — numa
+     tabela com uma coluna por time isso força a rolagem horizontal cedo
+     demais no celular. Reduz só a fonte (não o padding), pra não deixar os
+     números apertados demais de tocar/selecionar. */
   td {
     background: var(--bg-elevated);
     border-top: 1px solid var(--border);
@@ -208,6 +242,10 @@ h2 {
     font-variant-numeric: tabular-nums;
     font-weight: 700;
     white-space: nowrap;
+
+    @media (max-width: 480px) {
+      font-size: 0.85rem;
+    }
 
     &:first-child {
       border-left: 1px solid var(--border);
@@ -319,9 +357,31 @@ h2 {
 }
 
 .actions {
+  /* Em linha por padrão em qualquer largura — mesmo padrão dos outros pares
+     de botão do app (`.primary-actions` do score-entry, `.secondary-actions`
+     do game-admin etc.). `flex-wrap` sobra como rede de segurança, não pra
+     ser o comportamento normal. */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-3);
-  align-items: flex-start;
   margin-top: var(--space-3);
+
+  @media (max-width: 480px) {
+    align-items: stretch;
+    gap: var(--space-2);
+
+    button,
+    a {
+      flex: 1 1 0;
+      /* `.btn-xl` (global) tem fonte e padding pensados pra um botão
+         sozinho ocupando a largura toda — dois lado a lado num celular
+         estreito faziam o texto ("RODADA2"/"Placar final", "Ir ao painel")
+         quebrar linha dentro do próprio botão. Encolhe só aqui. */
+      font-size: 0.68rem;
+      padding: var(--space-3) var(--space-2);
+      white-space: nowrap;
+    }
+  }
 }

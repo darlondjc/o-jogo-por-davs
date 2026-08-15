@@ -1,6 +1,7 @@
 @if (gameState.game()) {
+<app-page-header backLabel="← Voltar ao jogo" (backClick)="onBackClick($event)" />
+
 <div class="page container">
-  <a class="back" href="#" (click)="onBackClick($event)">← Voltar ao jogo</a>
   <h1>Configuração</h1>
 
   @if (error()) {
@@ -9,7 +10,7 @@
 
   <section class="card">
     <h2>Dados do jogo</h2>
-    <form class="form" [formGroup]="gameForm" (ngSubmit)="saveGame()" novalidate>
+    <form class="form" [formGroup]="gameForm" (ngSubmit)="saveAll()" novalidate>
       <div class="field-row">
         <label class="field">
           <span>Nome do jogo *</span>
@@ -99,10 +100,6 @@
           }
         </label>
       </div>
-
-      <button class="btn btn-primary" type="submit" [disabled]="savingGame()">
-        {{ savingGame() ? 'Salvando…' : 'Salvar dados do jogo' }}
-      </button>
     </form>
   </section>
 
@@ -117,13 +114,15 @@
         <span class="field-error">Informe o nome da equipe.</span>
         }
       </label>
-      <label class="field small">
-        <span>Jogadores</span>
-        <input type="number" formControlName="playersCount" min="0" />
-      </label>
-      <button class="btn btn-primary" type="submit">
-        {{ editingKey() ? 'Salvar equipe' : '+ Adicionar equipe' }}
-      </button>
+      <div class="team-form-row">
+        <label class="field small">
+          <span>Jogadores</span>
+          <input type="number" formControlName="playersCount" min="0" />
+        </label>
+        <button class="btn btn-primary" type="submit">
+          {{ editingKey() ? 'Salvar' : 'Adicionar' }}
+        </button>
+      </div>
       @if (editingKey()) {
       <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
       }
@@ -204,11 +203,17 @@
       <p class="muted">Nenhuma equipe cadastrada ainda.</p>
     }
   </section>
-
-  <button class="btn btn-primary" type="button" (click)="goToGame()" [disabled]="savingTeams()">
-    {{ savingTeams() ? 'Salvando equipes…' : 'Concluir configuração' }}
-  </button>
 </div>
+
+<app-page-footer>
+  <button class="btn btn-primary btn-xl" type="button" (click)="saveAll()" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : 'Salvar dados do jogo' }}
+  </button>
+</app-page-footer>
+
+@if (saveConfirmationVisible()) {
+  <app-snackbar message="Dados do jogo salvos!" />
+}
 } @else {
   <p class="loading">Carregando…</p>
 }

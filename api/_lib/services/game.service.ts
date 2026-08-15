@@ -27,7 +27,14 @@ function repos() {
 }
 
 export async function listGames(): Promise<Game[]> {
-  return repos().games.findAll();
+  const games = await repos().games.findAll();
+  const gamesWithTeamCount = await Promise.all(
+    games.map(async (game) => {
+      const teams = await repos().teams.findByGameId(game.id);
+      return { ...game, teamsCount: teams.length };
+    }),
+  );
+  return gamesWithTeamCount;
 }
 
 export async function getGameOrThrow(id: string): Promise<Game> {

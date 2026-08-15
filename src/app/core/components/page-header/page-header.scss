@@ -1,0 +1,97 @@
+/* O host (`<app-page-header>`) não pode gerar caixa própria: seu único
+   filho (`.page-header` logo abaixo) já é `position: fixed`, então o
+   elemento em si não deveria contar como conteúdo em fluxo normal em
+   lugar nenhum que o use. Sem isso, quem usa este componente dentro de um
+   container `display: grid` (ex: `.live-page` em `live.scss`) ganha um
+   item de grid extra e "vazio" bem no início — ele ocupa uma célula da
+   grade sozinho e empurra os itens de verdade (conteúdo principal, barra
+   lateral) uma célula adiante, quebrando o layout inteiro (bug real:
+   tela de registro de pontuações com o conteúdo espremido num canto).
+   `display: contents` remove a caixa do host e deixa só o filho fixed,
+   que já não participa da grade/flex de qualquer forma. */
+:host {
+  display: contents;
+}
+
+/* Altura do cabeçalho fixo — exposta como var(--page-header-h) (ver
+   styles.scss) pra quem usa este componente reservar o mesmo respiro
+   (padding-top, sticky top etc.) sem precisar repetir o valor. */
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: var(--page-header-h);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--arcade-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--arcade-bg);
+}
+
+.back {
+  grid-column: 1;
+  justify-self: start;
+  color: var(--arcade-text-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--arcade-text);
+  }
+}
+
+/* Marca do jogo: logo à esquerda do texto no desktop, só a logo no mobile
+   (sem espaço pras duas coisas lado a lado numa tela estreita) — spec
+   "logo aparece tanto no mobile quanto no desktop". */
+.brand {
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+
+  .brand-logo {
+    display: block;
+    height: 36px;
+    width: auto;
+    max-width: 36px;
+    object-fit: contain;
+  }
+
+  .brand-text {
+    font-family: var(--font-pixel);
+    font-size: 0.8rem;
+    color: var(--arcade-gold);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 0 var(--space-1);
+
+    .brand-logo {
+      height: auto;
+      width: 100%;
+      max-width: 140px;
+      max-height: 45px;
+    }
+
+    .brand-text {
+      display: none;
+    }
+  }
+}
+
+.page-header-user {
+  grid-column: 3;
+  justify-self: end;
+  min-width: 0;
+}

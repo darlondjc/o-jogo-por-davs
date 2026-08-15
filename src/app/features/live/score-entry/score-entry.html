@@ -112,7 +112,7 @@
     }
   </ul>
 
-  <footer class="footer">
+  <app-page-footer>
     @if (correcting()) {
       <button class="btn btn-ghost" type="button" (click)="cancelCorrection()">
         Cancelar correção
@@ -187,7 +187,7 @@
         </button>
       </div>
     }
-  </footer>
+  </app-page-footer>
 
   @if (pickerOpen()) {
     <div class="picker-overlay" (click)="closePicker()">
@@ -204,8 +204,10 @@
                 class="picker-item"
                 [class.selected]="isPickerItemSelected(q)"
                 [attr.aria-pressed]="isPickerItemSelected(q)"
+                [style.borderLeftColor]="roundColor(q.round)"
                 (click)="selectPickerItem(q)"
               >
+                <span class="picker-dot" [style.background]="roundColor(q.round)"></span>
                 Rodada {{ q.round }} · Pergunta {{ q.question }}
               </button>
             </li>

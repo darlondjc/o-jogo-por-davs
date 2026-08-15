@@ -4,7 +4,7 @@
  * espalhar o caminho `@shared/...` pelos componentes.
  */
 export * from '@shared/domain/types';
-import type { GameStatus, GameType } from '@shared/domain/types';
+import type { Game, GameStatus, GameType } from '@shared/domain/types';
 
 /** Cores de identificação visual por equipe (spec seção 3: "equipes visualmente diferenciadas"). */
 export const TEAM_COLORS = [
@@ -31,6 +31,25 @@ const STATUS_LABELS: Record<GameStatus, string> = {
 
 export function statusLabel(status: GameStatus): string {
   return STATUS_LABELS[status];
+}
+
+/** Ordem dos grupos de status na lista de jogos da home: em andamento/no
+ * intervalo primeiro (o que precisa de atenção agora), depois os a
+ * iniciar, e por último os já finalizados. */
+const STATUS_GROUP_RANK: Record<GameStatus, number> = {
+  EM_ANDAMENTO: 0,
+  RODADA_FINALIZADA: 0,
+  CONFIGURACAO: 1,
+  FINALIZADO: 2,
+};
+
+/** Comparador da lista de jogos da home (spec "home/dashboard"): agrupa por
+ * status (em andamento/no intervalo → a iniciar → finalizados) e, dentro de
+ * cada grupo, ordena por data decrescente. */
+export function compareGamesForDashboard(a: Game, b: Game): number {
+  const rankDiff = STATUS_GROUP_RANK[a.status] - STATUS_GROUP_RANK[b.status];
+  if (rankDiff !== 0) return rankDiff;
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
 }
 
 export const GAME_TYPE_OPTIONS: { value: GameType; label: string }[] = [

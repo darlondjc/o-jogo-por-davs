@@ -3,6 +3,8 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
+import { PageHeader } from '../../core/components/page-header/page-header';
+import { PageFooter } from '../../core/components/page-footer/page-footer';
 import { gameTypeLabel, pluralize, statusLabel, teamColor } from '../../core/models';
 
 interface RoundBreakdownRow {
@@ -16,7 +18,7 @@ interface RoundBreakdownRow {
 
 @Component({
   selector: 'app-game-admin',
-  imports: [RouterLink, DatePipe, ScoreboardComponent],
+  imports: [RouterLink, DatePipe, ScoreboardComponent, PageHeader, PageFooter],
   templateUrl: './game-admin.html',
   styleUrl: './game-admin.scss',
 })

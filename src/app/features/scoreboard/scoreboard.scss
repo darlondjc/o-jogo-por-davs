@@ -15,7 +15,7 @@
      tendência (auto, ao lado) centraliza verticalmente bem no meio desse
      bloco alto, dando a impressão de estar embaralhada com o texto (bug
      real reportado em mobile). */
-  grid-template-columns: 2.4rem 10px minmax(0, 1fr) auto auto;
+  grid-template-columns: 2.4rem minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -90,11 +90,6 @@
   font-size: 0.85rem;
 }
 
-.board.compact .dot {
-  width: 8px;
-  height: 8px;
-}
-
 .board.compact .name {
   font-size: 0.85rem;
 }
@@ -118,12 +113,6 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
 }
 
 .name {
@@ -166,8 +155,9 @@
    enorme à esquerda dele — o "traço ...... placar" reportado no mobile. */
 @media (max-width: 480px) {
   .row {
-    /* Sem a coluna de tendência (ver `.trend` abaixo) — só 4 colunas. */
-    grid-template-columns: 1.6rem 8px minmax(0, 1fr) auto;
+    /* Sem a coluna de tendência (ver `.trend` abaixo, sai do grid via
+       `display: none`) — só 3 colunas: posição, nome, placar. */
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
   }

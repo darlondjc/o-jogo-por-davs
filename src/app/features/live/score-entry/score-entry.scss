@@ -5,8 +5,8 @@
   flex-direction: column;
   gap: var(--space-4);
   font-family: var(--font-arcade-body);
-  /* O rodapé de ações é `position: fixed` (ver `.footer` abaixo) — esse
-     respiro evita que a última linha de equipes fique escondida atrás dele. */
+  /* O rodapé de ações (app-page-footer) é `position: fixed` — esse respiro
+     evita que a última linha de equipes fique escondida atrás dele. */
   padding-bottom: 6.5rem;
 }
 
@@ -203,6 +203,11 @@ h2 {
        "Todas"/"Limpar"/"Aplicar" na mesma linha do flex-wrap de
        `.quick-controls`, disputando espaço com o resto dos controles. */
     flex-basis: 100%;
+    /* Sem isso os 6 botões ficam grudados na borda esquerda (herdam o
+       `justify-content` padrão do flex, `flex-start`) — no mobile, sozinhos
+       numa linha inteira, ficam mais fáceis de escanear/alcançar com o
+       polegar centralizados. */
+    justify-content: center;
   }
 
   /* "Selecionar todas"/"Limpar seleção"/"Aplicar" precisam caber numa linha
@@ -222,6 +227,15 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  /* Rede de segurança: mesmo depois de encolher tudo que dá (ver
+     `.team-row`/`.mini-field` abaixo), as 3 colunas numéricas fixas (Base/
+     Bônus/Penal.) + total ainda não cabem lado a lado num celular bem
+     estreito (< ~360px). Sem isso a linha estoura a largura da PÁGINA
+     inteira (não só do card) e arrasta a tela toda pra rolagem horizontal
+     — o que dá a impressão de que até o rodapé fixo de botões "sai" pela
+     direita (bug real reportado no score-entry). Rolar só a lista contém o
+     estouro aqui dentro. */
+  overflow-x: auto;
 }
 
 .team-row {
@@ -253,6 +267,18 @@ h2 {
   @media (max-width: 860px) {
     grid-template-columns: auto 1fr repeat(3, 4.5rem) 4rem;
   }
+
+  /* Mais um degrau de encolhimento pro celular — os campos numéricos (ver
+     `.mini-field input`/`span` abaixo, também menores aqui) permitem
+     colunas mais estreitas, gap e padding também apertam (o toque ainda
+     funciona na linha inteira, não só nesses respiros), tudo pra sobrar
+     mais espaço real pro nome da equipe antes de precisar da rolagem
+     horizontal acima. */
+  @media (max-width: 480px) {
+    grid-template-columns: auto minmax(72px, 1fr) repeat(3, 3rem) 2.6rem;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-2);
+  }
 }
 
 .select-toggle {
@@ -271,6 +297,21 @@ h2 {
     font-family: var(--font-pixel);
     font-size: 0.68rem;
   }
+
+  /* Bem menor no mobile: o nome da equipe é a informação que precisa de
+     espaço de verdade aqui (ver `.name` abaixo). Não é o alvo de toque —
+     a linha inteira já seleciona/desseleciona (ver comentário em
+     `.team-row`) — então esse círculo pode encolher bastante e continuar
+     só como indicador visual da cor do time. */
+  @media (max-width: 480px) {
+    width: 18px;
+    height: 18px;
+    border-width: 1.5px;
+
+    .check {
+      font-size: 0.42rem;
+    }
+  }
 }
 
 .name {
@@ -281,6 +322,16 @@ h2 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  /* Some da fonte grande do desktop pra sobrar caractere: o nome é a única
+     coluna flexível da linha (ver `.team-row` grid) e é o que a pessoa
+     operando precisa ler primeiro pra saber de qual time está falando —
+     antes cortava cedo demais (ex: "Lambid…") porque cada caractere em
+     1rem competia com o círculo de seleção e as 4 colunas fixas de
+     números. */
+  @media (max-width: 480px) {
+    font-size: 0.86rem;
+  }
 }
 
 .mini-field {
@@ -295,6 +346,14 @@ h2 {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-family: var(--font-mono);
+
+    /* Acompanha a coluna mais estreita do `.team-row` no mobile — em
+       0.63rem com o letter-spacing padrão, "BÔNUS"/"PENAL." quase não
+       cabiam nos 3rem da coluna. */
+    @media (max-width: 480px) {
+      font-size: 0.58rem;
+      letter-spacing: 0.01em;
+    }
   }
 
   input {
@@ -308,6 +367,15 @@ h2 {
     border: 1px solid var(--arcade-border);
     border-radius: 6px;
     color: var(--arcade-text);
+
+    /* Acompanha a coluna mais estreita do `.team-row` no mobile (ver media
+       query lá) — o input só precisa caber 1-2 dígitos, não os 64px de
+       antes. */
+    @media (max-width: 480px) {
+      width: 100%;
+      font-size: 0.82rem;
+      padding: var(--space-1);
+    }
   }
 
   &.field-base input {
@@ -330,6 +398,12 @@ h2 {
   font-variant-numeric: tabular-nums;
   color: var(--arcade-text-faint);
 
+  /* Fonte pixel é larga por caractere — acompanha o resto da linha
+     encolhendo na coluna final (2.6rem) do mobile, ver `.team-row`. */
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+  }
+
   &.positive {
     color: var(--arcade-positive);
   }
@@ -337,28 +411,6 @@ h2 {
   &.negative {
     color: var(--arcade-negative);
   }
-}
-
-/* Fixo na base da PÁGINA (não só do container de score-entry) — rolar a
-   lista de equipes não pode afastar essas ações da mão do operador (spec
-   "coloque ela fixa no rodapé da página, pra rolagem não afetá-la"). Por
-   ser `fixed`, o footer já ocupa a largura toda da viewport independente da
-   coluna onde o componente está encaixado (grid de `.live-page`). */
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  background: var(--arcade-bg-elevated);
-  padding: var(--space-3) var(--space-5);
-  border-top: 1px solid var(--arcade-border);
-  box-shadow: 0 -8px 24px -8px rgba(0, 0, 0, 0.4);
 }
 
 .primary-actions {
@@ -408,6 +460,12 @@ h2 {
 .confirm-bar {
   display: flex;
   align-items: center;
+  /* `flex-wrap` incondicional (não só <= 480px): antes só quebrava linha no
+     mobile estreito; entre isso e ~650px a frase de confirmação (ainda mais
+     a variante longa de "ninguém acertou") disputa espaço com os botões sem
+     nenhuma folga. Reforço defensivo — usa a mesma quebra em qualquer
+     largura em vez de confiar só no encolhimento natural do texto. */
+  flex-wrap: wrap;
   gap: var(--space-3);
   background: var(--arcade-bg-elevated-2);
   border: 1px solid var(--arcade-accent);
@@ -416,6 +474,15 @@ h2 {
   animation: fade-in 0.15s ease;
   font-family: var(--font-mono);
   font-size: 0.85rem;
+
+  /* A frase é o item mais largo da barra — sem `min-width: 0` um item flex
+     não encolhe abaixo do próprio conteúdo, então mesmo com `flex-wrap` ele
+     seguraria a largura toda da linha em vez de quebrar texto/ceder lugar
+     aos botões. */
+  > span {
+    min-width: 0;
+    flex: 1 1 220px;
+  }
 }
 
 .correction-trigger {
@@ -431,10 +498,6 @@ h2 {
 }
 
 @media (max-width: 480px) {
-  .footer {
-    padding: var(--space-3) var(--space-4);
-  }
-
   .primary-actions {
     width: 100%;
     gap: var(--space-2);
@@ -468,7 +531,6 @@ h2 {
      `.btn-xl` ao lado) diminuem o padding — junto com o texto curto, cabe
      numa linha só em telas estreitas. */
   .confirm-bar {
-    flex-wrap: wrap;
     gap: var(--space-2);
     padding: var(--space-3);
     font-size: 0.78rem;
@@ -531,6 +593,8 @@ h2 {
 
 .picker-item {
   width: 100%;
+  display: flex;
+  align-items: center;
   text-align: left;
   font-family: var(--font-mono);
   font-weight: 700;
@@ -538,6 +602,12 @@ h2 {
   color: var(--arcade-text);
   background: var(--arcade-bg-elevated-2);
   border: 1px solid var(--arcade-border);
+  /* Sobrescrita só da largura — a cor vem inline por item (`roundColor`,
+     ver template), uma por rodada. Como é inline, continua por cima mesmo
+     nos estados abaixo (:hover/.selected mudam a cor dos outros 3 lados via
+     `border-color`, que não teria como vencer um estilo inline de qualquer
+     forma) — a faixa da rodada não some quando o item ganha foco. */
+  border-left-width: 3px;
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   cursor: pointer;
@@ -552,6 +622,18 @@ h2 {
     background: var(--arcade-bg-elevated);
     box-shadow: inset 0 0 0 1px var(--arcade-accent);
   }
+}
+
+/* Reforça a mesma cor da faixa da borda (ver `.picker-item` acima) num
+   segundo ponto do item — cor sozinha numa borda fina de 3px pode passar
+   despercebida; a bolinha, do mesmo tamanho já usado nos "dots" de time em
+   outras telas, deixa o agrupamento por rodada mais fácil de notar. */
+.picker-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--space-3);
 }
 
 .picker-actions {

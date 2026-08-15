@@ -4,6 +4,7 @@ import { computeFinalScore } from '@shared/scoring';
 import { teamColor } from '../../../core/models';
 import type { Score, SubmitQuestionScoresRequest, Team, TeamScoreInput } from '../../../core/models';
 import type { RegisteredQuestion } from '../../../core/services/api.service';
+import { PageFooter } from '../../../core/components/page-footer/page-footer';
 
 interface CorrectionTarget {
   round: number;
@@ -32,7 +33,7 @@ interface TeamRow {
  */
 @Component({
   selector: 'app-score-entry',
-  imports: [FormsModule],
+  imports: [FormsModule, PageFooter],
   templateUrl: './score-entry.html',
   styleUrl: './score-entry.scss',
 })
@@ -83,6 +84,13 @@ export class ScoreEntry {
   /** Lista pro dialog, mais recente primeiro — é assim que o operador
    * costuma pensar ("a de agora pouco", não "a primeira"). */
   readonly pickableQuestions = computed(() => [...this.registeredQuestions()].reverse());
+
+  /** Colore cada item do dialog "corrigir pergunta anterior" pela rodada —
+   * mesma rodada, mesma cor, pra agrupar visualmente as perguntas de uma
+   * mesma rodada numa lista longa e plana. Reaproveita a paleta de cores das
+   * equipes (já cicla por número) em vez de criar uma paleta nova só pra
+   * isso. */
+  protected readonly roundColor = teamColor;
 
   /** Combo do visual arcade: quantas confirmações seguidas tiveram pelo
    * menos uma equipe com pontuação final positiva. Zera assim que uma

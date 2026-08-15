@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreEntry } from './score-entry/score-entry';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
-import { UserChip } from '../../core/components/user-chip/user-chip';
+import { PageHeader } from '../../core/components/page-header/page-header';
 import type { Scoreboard, Score, SubmitQuestionScoresRequest } from '../../core/models';
 
 interface CorrectionTarget {
@@ -13,7 +13,7 @@ interface CorrectionTarget {
 
 @Component({
   selector: 'app-live',
-  imports: [RouterLink, ScoreEntry, ScoreboardComponent, UserChip],
+  imports: [ScoreEntry, ScoreboardComponent, PageHeader],
   templateUrl: './live.html',
   styleUrl: './live.scss',
 })

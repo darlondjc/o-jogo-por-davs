@@ -94,7 +94,7 @@
     <div class="actions">
       @if (isLastRound()) {
         <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
-          Ver placar final
+          Placar final
         </a>
       } @else {
         <button
@@ -103,10 +103,12 @@
           (click)="continueGame()"
           [disabled]="continuing()"
         >
-          {{ continuing() ? 'Avançando…' : 'CONTINUAR PARA A PRÓXIMA RODADA' }}
+          {{ continuing() ? 'Avançando…' : 'RODADA' + (round + 1) }}
         </button>
       }
-      <a class="btn btn-ghost" [routerLink]="['/jogo', gameId]">Voltar ao painel</a>
+      <button class="btn btn-ghost btn-outline btn-xl" type="button" [routerLink]="['/jogo', gameId]">
+        <span>Ir ao painel</span>
+      </button>
     </div>
   </div>
 }

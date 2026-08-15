@@ -4,6 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameStateService } from '../../core/services/game-state.service';
 import { GAME_TYPE_OPTIONS, teamColor } from '../../core/models';
 import type { GameType, NewTeam, Team } from '../../core/models';
+import { PageHeader } from '../../core/components/page-header/page-header';
+import { PageFooter } from '../../core/components/page-footer/page-footer';
+import { Snackbar } from '../../core/components/snackbar/snackbar';
 
 /** Equipe em edição na tela, ainda não necessariamente gravada. `id: null`
  * = equipe nova, só existe no rascunho local. */
@@ -22,7 +25,7 @@ interface TeamDiff {
 
 @Component({
   selector: 'app-game-config',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PageHeader, PageFooter, Snackbar],
   templateUrl: './game-config.html',
   styleUrl: './game-config.scss',
 })
@@ -38,6 +41,14 @@ export class GameConfig {
    * fica só em memória, sem round-trip por equipe — só grava tudo quando
    * confirma). */
   readonly savingTeams = signal(false);
+  /** Dados do jogo e equipes agora saem num só botão ("Salvar dados do
+   * jogo") — este flag cobre as duas gravações pra mostrar um único estado
+   * de carregamento. */
+  readonly saving = computed(() => this.savingGame() || this.savingTeams());
+  /** Snackbar de confirmação depois de "Salvar dados do jogo" (só some
+   * sozinha depois de um tempo, sem interação nenhuma). */
+  readonly saveConfirmationVisible = signal(false);
+  private saveConfirmationTimeout?: ReturnType<typeof setTimeout>;
   readonly error = signal<string | null>(null);
   readonly editingKey = signal<string | null>(null);
   readonly gameTypeOptions = GAME_TYPE_OPTIONS;
@@ -122,8 +133,8 @@ export class GameConfig {
   }
 
   /** Fecha a aba/recarrega com equipes ainda não salvas — evita perder
-   * cadastro sem querer, já que agora nada vai pro servidor até "Concluir
-   * configuração". */
+   * cadastro sem querer, já que agora nada vai pro servidor até clicar em
+   * "Salvar dados do jogo". */
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.hasUnsavedTeamChanges()) {
@@ -143,7 +154,10 @@ export class GameConfig {
     return teamColor(index + 1);
   }
 
-  async saveGame(): Promise<void> {
+  /** Único botão da tela: grava os dados do jogo e, na sequência, o
+   * rascunho de equipes (spec "só um botão 'Salvar dados do jogo'" tanto
+   * pra jogo novo quanto pra jogo já existente). */
+  async saveAll(): Promise<void> {
     this.gameSubmitted.set(true);
     if (this.gameForm.invalid) {
       this.gameForm.markAllAsTouched();
@@ -165,9 +179,18 @@ export class GameConfig {
       });
     } catch {
       this.error.set('Não foi possível salvar as configurações.');
-    } finally {
       this.savingGame.set(false);
+      return;
     }
+    this.savingGame.set(false);
+    const teamsOk = await this.saveTeams();
+    if (teamsOk) this.showSaveConfirmation();
+  }
+
+  private showSaveConfirmation(): void {
+    clearTimeout(this.saveConfirmationTimeout);
+    this.saveConfirmationVisible.set(true);
+    this.saveConfirmationTimeout = setTimeout(() => this.saveConfirmationVisible.set(false), 2500);
   }
 
   startEditTeam(team: DraftTeam): void {
@@ -260,11 +283,5 @@ export class GameConfig {
     if (this.confirmLeaveIfUnsaved()) {
       await this.router.navigate(['/jogo', this.gameId]);
     }
-  }
-
-  async goToGame(): Promise<void> {
-    const ok = await this.saveTeams();
-    if (!ok) return;
-    await this.router.navigate(['/jogo', this.gameId]);
   }
 }

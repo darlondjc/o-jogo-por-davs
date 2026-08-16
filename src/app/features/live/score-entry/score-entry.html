@@ -90,6 +90,7 @@
             type="number"
             [ngModel]="row.base"
             (ngModelChange)="setBase(row.teamId, $event)"
+            (focus)="selectInputText($event)"
           />
         </label>
 
@@ -99,6 +100,7 @@
             type="number"
             [ngModel]="row.bonus"
             (ngModelChange)="setBonus(row.teamId, $event)"
+            (focus)="selectInputText($event)"
           />
         </label>
 
@@ -108,6 +110,7 @@
             type="number"
             [ngModel]="row.penalty"
             (ngModelChange)="setPenalty(row.teamId, $event)"
+            (focus)="selectInputText($event)"
           />
         </label>
 

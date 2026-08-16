@@ -251,6 +251,13 @@ export class ScoreEntry {
     return computeFinalScore({ baseScore: row.base, bonus: row.bonus, penalty: row.penalty });
   }
 
+  /** Seleciona o valor inteiro ao focar um campo de base/bônus/penalidade —
+   * digitar um número novo já sobrescreve, sem precisar apagar antes. */
+  selectInputText(event: FocusEvent): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) target.select();
+  }
+
   openPicker(): void {
     if (this.submitting() || this.confirming() || !this.pickableQuestions().length) return;
     this.pickerSelection.set(null);

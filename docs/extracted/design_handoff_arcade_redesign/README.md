@@ -54,7 +54,7 @@ Um overlay de scanlines de CRT cobrindo as duas telas:
 Aplicar essa classe no elemento raiz de `live.html` (`.live-page`) e de `public-scoreboard.html` (`.public-page`) com `position: relative` no host.
 
 ## Tela 1 — Lançamento ao vivo (`live` + `score-entry`)
-**Layout**: mantém o grid 2 colunas (`1fr 420px`) de `live.scss`, mas sem `overflow: hidden` no host — o conteúdo cresce mais que 100vh (rolagem normal). Header fixo no topo do grid com "O JOGO" (font-pixel, dourado) à esquerda e "TRIVIA · AO VIVO" (JetBrains Mono, cinza) à direita.
+**Layout**: mantém o grid 2 colunas (`1fr 420px`) de `live.scss`, mas sem `overflow: hidden` no host — o conteúdo cresce mais que 100vh (rolagem normal). Header fixo no topo do grid com "O JOGO" (font-pixel, dourado) à esquerda e "O Jogo · AO VIVO" (JetBrains Mono, cinza) à direita.
 
 **Progress chips**: "RODADA X/Y" e "PERGUNTA X/Y" viram pastilhas HUD — fundo `--arcade-bg-elevated-2`, borda `--arcade-border`, `border-radius: 4px`, texto JetBrains Mono 13px bold, com glow (`box-shadow: 0 0 12px -4px` na cor do texto — azul para rodada, dourado para pergunta).
 

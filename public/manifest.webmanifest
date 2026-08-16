@@ -1,7 +1,7 @@
 {
-  "name": "O Jogo — Trivia ao Vivo",
+  "name": "O Jogo — ao vivo",
   "short_name": "OJogo",
-  "description": "Sistema para administrar e transmitir ao vivo um jogo de trivia entre equipes.",
+  "description": "Sistema para administrar e transmitir ao vivo um jogo perguntas entre equipes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

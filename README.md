@@ -1,6 +1,6 @@
-# O Jogo — Trivia ao Vivo
+# O Jogo — ao vivo
 
-Sistema para administrar e transmitir ao vivo um jogo de trivia entre várias
+Sistema para administrar e transmitir ao vivo um jogo de perguntas entre várias
 equipes. Feito em **Angular 20** (standalone, signals) com uma **API
 serverless** (compatível com Vercel Functions). Durante o jogo, os dados
 ficam no **Firestore** (rápido, para o ritmo de lançar pontuação em

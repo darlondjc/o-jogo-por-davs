@@ -21,7 +21,7 @@ function buildSeed(): MemoryStore {
 
   const game: Game = {
     id: gameId,
-    name: 'O Jogo — Trivia Demo',
+    name: 'O Jogo — Demo',
     date: new Date().toISOString().slice(0, 10),
     location: 'Bar XYZ',
     description: 'Dados de demonstração para desenvolvimento local.',

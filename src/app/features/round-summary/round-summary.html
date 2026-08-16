@@ -1,10 +1,10 @@
 @if (loading()) {
   <p class="loading">Carregando resumo…</p>
 } @else {
-  <app-page-header backLabel="← Ir ao painel" [backLink]="['/jogo', gameId]"/>
+  <app-page-header backLabel="← Ir ao painel" [backLink]="['/jogo', gameId()]" />
 
   <div class="page container">
-    <p class="eyebrow">RODADA {{ round }} FINALIZADA</p>
+    <p class="eyebrow">RODADA {{ round() }} FINALIZADA</p>
     @if (roundWinners().length === 1) {
       <h1>🏆 {{ roundWinners()[0].teamName }} venceu a rodada</h1>
     } @else if (roundWinners().length > 1) {
@@ -16,25 +16,25 @@
         }
       </h1>
     } @else {
-      <h1>Rodada {{ round }} finalizada</h1>
+      <h1>Rodada {{ round() }} finalizada</h1>
     }
-    
+
     <section class="card card-ranked">
       <button class="card-header" type="button" (click)="toggleRankedCard()">
         <h2>Placar geral</h2>
         <span class="chevron" [class.expanded]="rankedCardExpanded()">▼</span>
       </button>
       @if (rankedCardExpanded()) {
-      <ol class="list">
-        @for (row of rankingRows(); track row.teamId) {
-        <li class="row row-ranked">
-          <span class="position">{{ medal(row.position) ?? (row.position + 'º') }}</span>
-          <span class="dot" [style.background]="row.color"></span>
-          <span class="name">{{ row.teamName }}</span>
-          <span class="total" [style.color]="row.color">{{ row.total }}</span>
-        </li>
-        }
-      </ol>
+        <ol class="list">
+          @for (row of rankingRows(); track row.teamId) {
+            <li class="row row-ranked">
+              <span class="position">{{ medal(row.position) ?? row.position + 'º' }}</span>
+              <span class="dot" [style.background]="row.color"></span>
+              <span class="name">{{ row.teamName }}</span>
+              <span class="total" [style.color]="row.color">{{ row.total }}</span>
+            </li>
+          }
+        </ol>
       }
     </section>
 
@@ -61,11 +61,14 @@
         <h2>Pergunta a pergunta</h2>
         @if (editingScores()) {
           <p class="muted hint">
-            Ajuste a pontuação de qualquer equipe em qualquer pergunta e confirme em "Salvar alterações".
+            Ajuste a pontuação de qualquer equipe em qualquer pergunta e confirme em "Salvar
+            alterações".
           </p>
         } @else {
           <p class="muted hint">
-            Compare lado a lado quem acertou (ou não) cada pergunta da <strong class="hint-round">rodada {{ round }}</strong>.
+            Compare lado a lado quem acertou (ou não) cada pergunta da
+            <strong class="hint-round">rodada {{ round() }}</strong
+            >.
           </p>
         }
         @if (correctionError()) {
@@ -147,7 +150,11 @@
       </button>
     } @else {
       @if (isLastRound()) {
-        <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
+        <a
+          class="btn btn-primary btn-xl"
+          [routerLink]="['/jogo', gameId(), 'placar']"
+          target="_blank"
+        >
           Placar final
         </a>
       } @else {
@@ -157,7 +164,7 @@
           (click)="continueGame()"
           [disabled]="continuing()"
         >
-          {{ continuing() ? 'Avançando…' : 'RODADA ' + (round + 1) }}
+          {{ continuing() ? 'Avançando…' : 'RODADA ' + (round() + 1) }}
         </button>
       }
       <button

@@ -1,6 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { GameStateService } from '../../core/services/game-state.service';
 import { teamColor } from '../../core/models';
 import type { RoundSummary, Team } from '../../core/models';
@@ -46,8 +48,28 @@ export class RoundSummaryPage {
   private readonly router = inject(Router);
   protected readonly gameState = inject(GameStateService);
 
-  readonly gameId = this.route.snapshot.paramMap.get('id')!;
-  readonly round = Number(this.route.snapshot.paramMap.get('rodada'));
+  /** `:id`/`:rodada` da rota como signals (não só lidos uma vez do
+   * snapshot) — `jogo/:id/rodada/:rodada` é a mesma `Route` pra qualquer
+   * jogo/rodada, então o Angular reaproveita a instância deste componente
+   * ao navegar direto entre duas dessas telas (ex: voltar/avançar do
+   * navegador): o `RouteReuseStrategy` padrão não recria o componente só
+   * porque os parâmetros mudaram. Sem reagir a isso (ver `effect` no
+   * construtor), a tela ficava presa mostrando o resumo da primeira visita
+   * (mesmo bug corrigido em game-config.ts). */
+  readonly gameId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), {
+    initialValue: this.route.snapshot.paramMap.get('id')!,
+  });
+  readonly round = toSignal(
+    this.route.paramMap.pipe(map((params) => Number(params.get('rodada')))),
+    {
+      initialValue: Number(this.route.snapshot.paramMap.get('rodada')),
+    },
+  );
+  /** Última combinação jogo+rodada efetivamente carregada — só pra o
+   * `effect` no construtor saber se `gameId()`/`round()` de fato mudaram
+   * (reaproveitamento) ou é só o primeiro disparo, que já corresponde ao
+   * load feito direto no construtor (ver `loadForRound`). */
+  private loadedKey = `${this.gameId()}/${this.round()}`;
 
   readonly summary = signal<RoundSummary | null>(null);
   readonly loading = signal(true);
@@ -153,7 +175,7 @@ export class RoundSummaryPage {
 
   readonly isLastRound = computed(() => {
     const game = this.gameState.game();
-    return game ? this.round >= game.rounds : false;
+    return game ? this.round() >= game.rounds : false;
   });
 
   toggleRoundCard(): void {
@@ -165,23 +187,44 @@ export class RoundSummaryPage {
   }
 
   selectTeam(teamId: string): void {
-    this.selectedTeamId.set(
-      this.selectedTeamId() === teamId ? null : teamId
-    );
+    this.selectedTeamId.set(this.selectedTeamId() === teamId ? null : teamId);
   }
 
   constructor() {
+    this.loadForRound(this.gameId(), this.round());
+
+    /* Reage a trocas de `:id`/`:rodada` na URL desta mesma instância
+       reaproveitada (ver `gameId`/`round` acima). No primeiro disparo a
+       chave já é igual a `loadedKey`, então o guard abaixo pula — o load
+       inicial já rodou na linha de cima, síncrono, sem esperar o primeiro
+       tick do effect. */
+    effect(() => {
+      const gameId = this.gameId();
+      const round = this.round();
+      const key = `${gameId}/${round}`;
+      if (key === this.loadedKey) return;
+      this.loadedKey = key;
+      this.loadForRound(gameId, round);
+    });
+  }
+
+  /** Carrega jogo + equipes + resumo da rodada pro `gameId`/`round` dados.
+   * Extraído do construtor pra também rodar de novo quando a instância é
+   * reaproveitada com outro `:id`/`:rodada` (ver `effect` acima) — sem
+   * isso a tela ficava presa mostrando o resumo da primeira visita. */
+  private loadForRound(gameId: string, round: number): void {
+    this.loading.set(true);
     // `loadLive` em vez de `loadGame`: mesmo game+teams de antes, sem
     // necessidade real de `registeredQuestions` aqui (a correção agora é
     // direto na tabela desta rodada, sem picker de pergunta), mas mantido
     // por já trazer tudo que a tela precisa numa única chamada.
-    this.gameState.loadLive(this.gameId).then(async () => {
+    this.gameState.loadLive(gameId).then(async () => {
       if (this.gameState.notFound()) {
         await this.router.navigate(['/404']);
         return;
       }
       try {
-        this.summary.set(await this.gameState.getRoundSummary(this.gameId, this.round));
+        this.summary.set(await this.gameState.getRoundSummary(gameId, round));
       } finally {
         this.loading.set(false);
       }
@@ -247,8 +290,8 @@ export class RoundSummaryPage {
     try {
       await Promise.all(
         changedQuestions.map(([question, teamValues]) =>
-          this.gameState.submitQuestionScores(this.gameId, {
-            round: this.round,
+          this.gameState.submitQuestionScores(this.gameId(), {
+            round: this.round(),
             question,
             scores: columns.map((c) => ({
               teamId: c.teamId,
@@ -259,11 +302,13 @@ export class RoundSummaryPage {
           }),
         ),
       );
-      this.summary.set(await this.gameState.getRoundSummary(this.gameId, this.round));
+      this.summary.set(await this.gameState.getRoundSummary(this.gameId(), this.round()));
       this.editingScores.set(false);
       this.showCorrectionSnackbar();
     } catch {
-      this.correctionError.set('Não foi possível salvar as pontuações corrigidas. Tente novamente.');
+      this.correctionError.set(
+        'Não foi possível salvar as pontuações corrigidas. Tente novamente.',
+      );
     } finally {
       this.savingCorrections.set(false);
     }
@@ -272,7 +317,10 @@ export class RoundSummaryPage {
   private showCorrectionSnackbar(): void {
     clearTimeout(this.correctionSnackbarTimeout);
     this.correctionSnackbarVisible.set(true);
-    this.correctionSnackbarTimeout = setTimeout(() => this.correctionSnackbarVisible.set(false), 2500);
+    this.correctionSnackbarTimeout = setTimeout(
+      () => this.correctionSnackbarVisible.set(false),
+      2500,
+    );
   }
 
   medal(position: number): string | null {
@@ -285,8 +333,8 @@ export class RoundSummaryPage {
   async continueGame(): Promise<void> {
     this.continuing.set(true);
     try {
-      await this.gameState.continueToNextRound(this.gameId);
-      await this.router.navigate(['/jogo', this.gameId, 'ao-vivo']);
+      await this.gameState.continueToNextRound(this.gameId());
+      await this.router.navigate(['/jogo', this.gameId(), 'ao-vivo']);
     } finally {
       this.continuing.set(false);
     }

@@ -8,10 +8,23 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- `media="print"` + `onload` tira essa folha de estilo do caminho que
+       bloqueia o primeiro render: o navegador baixa em paralelo, sem
+       segurar a pintura da página esperando o CSS do Google Fonts chegar,
+       e troca pra "all" assim que estiver pronta. O <noscript> cobre quem
+       navega sem JavaScript, onde o onload nunca dispara. -->
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
   >
+  <noscript>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    >
+  </noscript>
 </head>
 <body>
   <app-root></app-root>

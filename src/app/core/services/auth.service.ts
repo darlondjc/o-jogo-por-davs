@@ -50,18 +50,32 @@ export class AuthService {
     return this.user() !== null;
   }
 
+  /** Promise em andamento, reaproveitada por chamadas concorrentes — o App
+   * chama isso no boot e o authGuard chama de novo na sequência (o signal
+   * `user` ainda não foi preenchido nesse instante), então sem isso duas
+   * requisições a `/api/auth/me` saem juntas e a navegação inicial espera a
+   * mais lenta das duas à toa. */
+  private sessionCheck: Promise<AuthUser | null> | null = null;
+
   /** Consultado no boot do app e pelo guard de rota. Resolve sem lançar erro. */
-  async checkSession(): Promise<AuthUser | null> {
+  checkSession(): Promise<AuthUser | null> {
+    if (this.sessionCheck) return this.sessionCheck;
+
     this.checkingSession.set(true);
-    try {
-      const res = await firstValueFrom(
-        this.http.get<{ user: AuthUser }>('/api/auth/me').pipe(catchError(() => of(null))),
-      );
-      this.user.set(res?.user ?? null);
-      return res?.user ?? null;
-    } finally {
-      this.checkingSession.set(false);
-    }
+    this.sessionCheck = firstValueFrom(
+      this.http.get<{ user: AuthUser }>('/api/auth/me').pipe(catchError(() => of(null))),
+    )
+      .then((res) => {
+        this.user.set(res?.user ?? null);
+        return res?.user ?? null;
+      })
+      .finally(() => {
+        this.checkingSession.set(false);
+        // Libera pra uma checagem futura de verdade poder buscar de novo
+        // (ex.: depois de um logout), em vez de ficar presa nesse resultado.
+        this.sessionCheck = null;
+      });
+    return this.sessionCheck;
   }
 
   async loadConfig(): Promise<{ googleClientId: string | null }> {

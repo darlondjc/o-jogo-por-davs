@@ -1,6 +1,8 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PageHeader } from '../../core/components/page-header/page-header';
@@ -53,8 +55,22 @@ export class PublicScoreboard {
    * precisar navegar até lá manualmente (ver `.back-to-panel` no template). */
   protected readonly auth = inject(AuthService);
 
-  readonly gameId = this.route.snapshot.paramMap.get('id')!;
-  private readonly storageKey = `ojogo:public-scoreboard:${this.gameId}`;
+  /** `:id` da rota como signal (não só lido uma vez do snapshot) —
+   * `jogo/:id/placar` é a mesma `Route` pra qualquer jogo, então o Angular
+   * reaproveita a instância deste componente ao navegar direto de um jogo
+   * pro outro nesta tela (ex: voltar/avançar do navegador): o
+   * `RouteReuseStrategy` padrão não recria o componente só porque o
+   * parâmetro mudou. Sem reagir a isso (ver `effect` no construtor), a
+   * tela ficava presa mostrando o placar do jogo carregado na primeira
+   * visita (mesmo bug corrigido em game-config.ts). */
+  readonly gameId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), {
+    initialValue: this.route.snapshot.paramMap.get('id')!,
+  });
+  /** Último id efetivamente carregado — só pra o `effect` no construtor
+   * saber se `gameId()` de fato mudou (reaproveitamento) ou é só o
+   * primeiro disparo, que já corresponde ao load feito direto no
+   * construtor (ver `loadForId`). */
+  private loadedId = this.gameId();
 
   readonly scoreboard = signal<Scoreboard | null>(null);
   /** Só true durante a primeiríssima busca (sem nada em cache ainda pra
@@ -73,7 +89,9 @@ export class PublicScoreboard {
   private readonly cooldownUntil = signal(0);
   private readonly now = signal(Date.now());
 
-  readonly cooldownSeconds = computed(() => Math.max(0, Math.ceil((this.cooldownUntil() - this.now()) / 1000)));
+  readonly cooldownSeconds = computed(() =>
+    Math.max(0, Math.ceil((this.cooldownUntil() - this.now()) / 1000)),
+  );
   readonly canRefresh = computed(() => !this.refreshing() && this.cooldownSeconds() === 0);
 
   readonly roundRows = computed<RoundRow[]>(() => {
@@ -81,7 +99,12 @@ export class PublicScoreboard {
     if (!board) return [];
     return [...board.entries]
       .sort((a, b) => b.roundTotal - a.roundTotal)
-      .map((e, i) => ({ teamId: e.teamId, teamName: e.teamName, total: e.roundTotal, position: i + 1 }));
+      .map((e, i) => ({
+        teamId: e.teamId,
+        teamName: e.teamName,
+        total: e.roundTotal,
+        position: i + 1,
+      }));
   });
 
   /** Seção "Placar geral" pode ser fechada pra dar mais espaço à rodada
@@ -97,7 +120,33 @@ export class PublicScoreboard {
   private clockTimer?: ReturnType<typeof setInterval>;
 
   constructor() {
-    const cached = this.readCache();
+    this.loadForId(this.loadedId);
+
+    /* Reage a trocas de `:id` na URL desta mesma instância reaproveitada
+       (ver `gameId` acima). No primeiro disparo `id` já é igual a
+       `loadedId`, então o guard abaixo pula — o load inicial já rodou na
+       linha de cima, síncrono, sem esperar o primeiro tick do effect. */
+    effect(() => {
+      const id = this.gameId();
+      if (id === this.loadedId) return;
+      this.loadedId = id;
+      this.loadForId(id);
+    });
+
+    // Só pra recalcular os computeds de contagem (`secondsSinceUpdate`,
+    // `cooldownSeconds`) a cada segundo — não dispara nenhuma requisição.
+    this.clockTimer = setInterval(() => this.now.set(Date.now()), 1000);
+    this.destroyRef.onDestroy(() => clearInterval(this.clockTimer));
+  }
+
+  /** Extraído do construtor pra também rodar de novo quando a instância é
+   * reaproveitada com outro `:id` (ver `gameId`/`effect` acima) — sem isso
+   * a tela ficava presa mostrando o placar do jogo carregado na primeira
+   * visita. */
+  private loadForId(gameId: string): void {
+    this.error.set(null);
+    this.refreshError.set(null);
+    const cached = this.readCache(gameId);
     if (cached) {
       // Já tem placar salvo desta visita anterior — mostra ele direto, sem
       // gastar uma requisição só por causa do reload, e mantém o cooldown
@@ -107,13 +156,15 @@ export class PublicScoreboard {
       this.cooldownUntil.set(cached.cooldownUntil);
       this.loading.set(false);
     } else {
-      this.fetch({ isBootstrap: true });
+      // Reaproveitamento pra outro jogo, sem cache próprio: não deixa o
+      // placar nem o cooldown do jogo anterior visíveis enquanto busca o
+      // novo (o cooldown é por jogo, não faz sentido herdar o de outro).
+      this.scoreboard.set(null);
+      this.lastSuccessAt.set(0);
+      this.cooldownUntil.set(0);
+      this.loading.set(true);
+      this.fetch(gameId, { isBootstrap: true });
     }
-
-    // Só pra recalcular os computeds de contagem (`secondsSinceUpdate`,
-    // `cooldownSeconds`) a cada segundo — não dispara nenhuma requisição.
-    this.clockTimer = setInterval(() => this.now.set(Date.now()), 1000);
-    this.destroyRef.onDestroy(() => clearInterval(this.clockTimer));
   }
 
   /** Clique em "Atualizar". O cooldown "de verdade" (os 10s mostrados no
@@ -127,15 +178,19 @@ export class PublicScoreboard {
   refresh(): void {
     if (!this.canRefresh()) return;
     this.cooldownUntil.set(Date.now() + REFRESH_COOLDOWN_MS);
-    this.persist();
-    this.fetch({ isBootstrap: false });
+    this.persist(this.gameId());
+    this.fetch(this.gameId(), { isBootstrap: false });
   }
 
-  private fetch(opts: { isBootstrap: boolean }): void {
+  private fetch(gameId: string, opts: { isBootstrap: boolean }): void {
     this.refreshing.set(true);
     this.refreshError.set(null);
-    this.api.getScoreboard(this.gameId).subscribe({
+    this.api.getScoreboard(gameId).subscribe({
       next: (scoreboard) => {
+        // Resposta de um fetch antigo (id trocado no meio do caminho, ver
+        // `loadForId`/`effect`) chegando atrasada — ignora, senão sobrescreve
+        // o placar do jogo certo com o do jogo errado.
+        if (gameId !== this.gameId()) return;
         this.scoreboard.set(scoreboard);
         this.loading.set(false);
         this.error.set(null);
@@ -146,9 +201,10 @@ export class PublicScoreboard {
         // `refresh()`). Sempre estende pra frente (a requisição sempre leva
         // >0ms), então isso nunca afrouxa o piso defensivo já salvo lá.
         this.cooldownUntil.set(Date.now() + REFRESH_COOLDOWN_MS);
-        this.persist();
+        this.persist(gameId);
       },
       error: (err: unknown) => {
+        if (gameId !== this.gameId()) return;
         this.loading.set(false);
         this.refreshing.set(false);
 
@@ -168,15 +224,15 @@ export class PublicScoreboard {
           // requisição termina, mesmo em erro — sem isso um erro rápido
           // liberava "Atualizar" de novo quase na hora.
           this.cooldownUntil.set(Date.now() + REFRESH_COOLDOWN_MS);
-          this.persist();
+          this.persist(gameId);
         }
       },
     });
   }
 
-  private readCache(): PersistedState | null {
+  private readCache(gameId: string): PersistedState | null {
     try {
-      const raw = localStorage.getItem(this.storageKey);
+      const raw = localStorage.getItem(this.storageKeyFor(gameId));
       if (!raw) return null;
       const parsed = JSON.parse(raw) as Partial<PersistedState> | null;
       if (!parsed?.scoreboard || typeof parsed.lastSuccessAt !== 'number') return null;
@@ -192,7 +248,7 @@ export class PublicScoreboard {
     }
   }
 
-  private persist(): void {
+  private persist(gameId: string): void {
     const board = this.scoreboard();
     if (!board) return;
     try {
@@ -201,9 +257,17 @@ export class PublicScoreboard {
         lastSuccessAt: this.lastSuccessAt(),
         cooldownUntil: this.cooldownUntil(),
       };
-      localStorage.setItem(this.storageKey, JSON.stringify(state));
+      localStorage.setItem(this.storageKeyFor(gameId), JSON.stringify(state));
     } catch {
-  // Só perde a persistência entre recargas — não quebra a tela.
+      // Só perde a persistência entre recargas — não quebra a tela.
     }
+  }
+
+  /** Chave de cache por jogo — era um campo fixo (`storageKey`), mas com
+   * `gameId` agora reativo (ver comentário lá) o cache também precisa ser
+   * por chamada, não por instância, senão um reaproveitamento leria/
+   * escreveria a chave do jogo anterior. */
+  private storageKeyFor(gameId: string): string {
+    return `ojogo:public-scoreboard:${gameId}`;
   }
 }

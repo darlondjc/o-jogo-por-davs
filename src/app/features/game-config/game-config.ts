@@ -1,7 +1,9 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Location } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
 import { GameStateService } from '../../core/services/game-state.service';
 import { GAME_TYPE_OPTIONS, teamColor } from '../../core/models';
 import type { GameType, NewTeam, Team } from '../../core/models';
@@ -24,6 +26,15 @@ interface TeamDiff {
   deletes: string[];
 }
 
+/** Data de hoje em `yyyy-mm-dd`, no fuso local (não UTC) — usado só pra
+ * pré-preencher o campo "Data" de um jogo novo (rota `jogo/novo`, sem
+ * `:id`, ver `isNew` abaixo). */
+function todayIsoDate(): string {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
 @Component({
   selector: 'app-game-config',
   imports: [ReactiveFormsModule, PageHeader, PageFooter, Snackbar],
@@ -34,9 +45,33 @@ export class GameConfig {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
   protected readonly gameState = inject(GameStateService);
 
-  readonly gameId = this.route.snapshot.paramMap.get('id')!;
+  /** `null` = rota `jogo/novo` (sem `:id`) — jogo ainda não existe no
+   * servidor. Deixa de ser `readonly` porque, ao criar o jogo em
+   * `saveAll()`, passa a apontar pro id recém-criado (ver `isNew`
+   * abaixo), e porque `routeId`/o `effect` no construtor também
+   * reatribuem (ver comentário lá). */
+  private gameId = this.route.snapshot.paramMap.get('id');
+  /** Reflete se `gameId` é `null` — signal (não getter) porque a tela
+   * precisa re-renderizar (título, rótulo do botão de voltar etc.) no
+   * instante em que `saveAll()` cria o jogo e vira "modo edição" sem
+   * navegar de verdade (ver comentário em `saveAll`). */
+  readonly isNew = signal(this.gameId === null);
+  /** `:id` da rota, mas via Observable — não só o snapshot lido uma vez
+   * (`gameId` acima). `jogo/:id/configuracao` é a MESMA `Route` pra
+   * qualquer jogo, então o Angular reaproveita a instância deste
+   * componente ao navegar direto de um jogo pro outro nesta tela (ex:
+   * voltar/avançar do navegador) — o `RouteReuseStrategy` padrão não
+   * recria o componente só porque o parâmetro mudou. Sem reagir a isso
+   * (ver `effect` no construtor), a tela ficava presa mostrando os dados
+   * do jogo carregado na primeira visita, mesmo com a URL já apontando
+   * pra outro (bug real reportado: "aparecem os dados de um outro jogo
+   * que eu já tinha visto antes"). */
+  private readonly routeId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), {
+    initialValue: this.gameId,
+  });
   readonly savingGame = signal(false);
   /** Salva TODAS as equipes de uma vez (spec "Melhorias": cadastrar equipe
    * fica só em memória, sem round-trip por equipe — só grava tudo quando
@@ -141,25 +176,63 @@ export class GameConfig {
   );
 
   constructor() {
-    this.gameState.loadGame(this.gameId).then(() => {
-      if (this.gameState.notFound()) {
-        this.router.navigate(['/404']);
-        return;
-      }
-      const game = this.gameState.game();
-      if (game) {
-        this.gameForm.patchValue({
-          name: game.name,
-          date: game.date,
-          location: game.location,
-          description: game.description ?? '',
-          gameType: game.gameType,
-          rounds: game.rounds,
-          questionsPerRound: game.questionsPerRound,
-        });
-      }
-      this.resetDraftFromServer();
+    this.loadForId(this.gameId);
+
+    /* Reage a trocas de `:id` na URL desta mesma instância reaproveitada
+       (ver `routeId` acima). No primeiro disparo `id` já é igual a
+       `this.gameId` (ambos lidos do mesmo snapshot inicial), então o
+       guard abaixo pula — o load inicial já rodou na linha de cima,
+       síncrono, sem esperar o primeiro tick do effect. Também ignora o id
+       que `saveAll` seta manualmente ao criar um jogo (`this.gameId =
+       game.id`), porque esse não passa pelo Router (ver
+       `Location.replaceState` lá) e portanto nunca muda `routeId`. */
+    effect(() => {
+      const id = this.routeId();
+      if (id === this.gameId) return;
+      this.gameId = id;
+      this.isNew.set(id === null);
+      this.loadForId(id);
     });
+  }
+
+  /** Carrega o jogo (ou reseta pro estado de "jogo novo") pro `gameId`
+   * dado. Extraído do construtor pra também rodar de novo quando a
+   * instância é reaproveitada com outro `:id` (ver `routeId`/`effect`
+   * acima) — sem isso a tela ficava presa mostrando o jogo carregado na
+   * primeira visita. */
+  private loadForId(gameId: string | null): void {
+    /* `GameStateService` é singleton (`providedIn: 'root'`): zera aqui
+       antes de carregar, tanto no load inicial quanto num reaproveitamento
+       — sem isso a tela mostraria o jogo anterior (desta ou de outra
+       visita) até o novo terminar de carregar. Zerar também fecha o `@if`
+       do template, que volta a mostrar "Carregando…" nesse intervalo em
+       vez de qualquer dado desatualizado. */
+    this.gameState.game.set(null);
+    this.gameState.teams.set([]);
+
+    if (gameId) {
+      this.gameState.loadGame(gameId).then(() => {
+        if (this.gameState.notFound()) {
+          this.router.navigate(['/404']);
+          return;
+        }
+        const game = this.gameState.game();
+        if (game) {
+          this.gameForm.patchValue({
+            name: game.name,
+            date: game.date,
+            location: game.location,
+            description: game.description ?? '',
+            gameType: game.gameType,
+            rounds: game.rounds,
+            questionsPerRound: game.questionsPerRound,
+          });
+        }
+        this.resetDraftFromServer();
+      });
+    } else {
+      this.gameForm.patchValue({ date: todayIsoDate() });
+    }
   }
 
   /** Fecha a aba/recarrega com equipes ainda não salvas — evita perder
@@ -176,7 +249,12 @@ export class GameConfig {
   private resetDraftFromServer(): void {
     this.originalTeams = [...this.gameState.teams()].sort((a, b) => a.order - b.order);
     this.draftTeams.set(
-      this.originalTeams.map((t) => ({ key: t.id, id: t.id, name: t.name, playersCount: t.playersCount })),
+      this.originalTeams.map((t) => ({
+        key: t.id,
+        id: t.id,
+        name: t.name,
+        playersCount: t.playersCount,
+      })),
     );
   }
 
@@ -186,7 +264,9 @@ export class GameConfig {
 
   /** Único botão da tela: grava os dados do jogo e, na sequência, o
    * rascunho de equipes (spec "só um botão 'Salvar dados do jogo'" tanto
-   * pra jogo novo quanto pra jogo já existente). */
+   * pra jogo novo quanto pra jogo já existente) — em modo criação
+   * (`isNew`), cria o jogo primeiro pra ter um id antes de gravar as
+   * equipes do rascunho. */
   async saveAll(): Promise<void> {
     this.gameSubmitted.set(true);
     if (this.gameForm.invalid) {
@@ -196,19 +276,37 @@ export class GameConfig {
     }
     this.savingGame.set(true);
     this.error.set(null);
+    const value = this.gameForm.getRawValue();
+    const payload = {
+      name: value.name,
+      date: value.date,
+      location: value.location,
+      description: value.description || undefined,
+      gameType: value.gameType,
+      rounds: value.rounds,
+      questionsPerRound: value.questionsPerRound,
+    };
     try {
-      const value = this.gameForm.getRawValue();
-      await this.gameState.updateGame(this.gameId, {
-        name: value.name,
-        date: value.date,
-        location: value.location,
-        description: value.description || undefined,
-        gameType: value.gameType,
-        rounds: value.rounds,
-        questionsPerRound: value.questionsPerRound,
-      });
+      if (this.isNew()) {
+        const game = await this.gameState.createGame(payload);
+        this.gameId = game.id;
+        this.isNew.set(false);
+        /* Troca só a URL pro id recém-criado, sem navegar de verdade —
+           `router.navigate` recriaria o componente (perderia o rascunho
+           de equipes que está prestes a ser salvo, mais um round-trip de
+           `loadGame` à toa já que acabamos de criar o jogo com estes
+           mesmos dados). `replaceState` deixa refresh/voltar do navegador
+           corretos sem nada disso. */
+        this.location.replaceState(`/jogo/${game.id}/configuracao`);
+      } else {
+        await this.gameState.updateGame(this.gameId!, payload);
+      }
     } catch {
-      this.error.set('Não foi possível salvar as configurações.');
+      this.error.set(
+        this.isNew()
+          ? 'Não foi possível criar o jogo. Tente novamente.'
+          : 'Não foi possível salvar as configurações.',
+      );
       this.savingGame.set(false);
       return;
     }
@@ -225,12 +323,16 @@ export class GameConfig {
   async startOrContinue(): Promise<void> {
     const game = this.gameState.game();
     if (!game || !this.canStartOrContinue()) return;
+    // `canStartOrContinue` já exige `gameState.game()` preenchido, que só
+    // acontece depois do jogo existir no servidor (load ou criação em
+    // `saveAll`) — `gameId` sempre está setado neste ponto.
+    const gameId = this.gameId!;
 
     if (game.status === 'CONFIGURACAO') {
       this.starting.set(true);
       this.error.set(null);
       try {
-        await this.gameState.startGame(this.gameId);
+        await this.gameState.startGame(gameId);
       } catch {
         this.error.set('Não foi possível iniciar o jogo.');
         this.starting.set(false);
@@ -241,9 +343,14 @@ export class GameConfig {
 
     const current = this.gameState.game()!;
     if (current.status === 'RODADA_FINALIZADA') {
-      await this.router.navigate(['/jogo', this.gameId, 'rodada', current.currentRound - 1 || current.currentRound]);
+      await this.router.navigate([
+        '/jogo',
+        gameId,
+        'rodada',
+        current.currentRound - 1 || current.currentRound,
+      ]);
     } else {
-      await this.router.navigate(['/jogo', this.gameId, 'ao-vivo']);
+      await this.router.navigate(['/jogo', gameId, 'ao-vivo']);
     }
   }
 
@@ -276,7 +383,9 @@ export class GameConfig {
     const editing = this.editingKey();
     if (editing) {
       this.draftTeams.update((list) =>
-        list.map((t) => (t.key === editing ? { ...t, name: value.name, playersCount: value.playersCount } : t)),
+        list.map((t) =>
+          t.key === editing ? { ...t, name: value.name, playersCount: value.playersCount } : t,
+        ),
       );
     } else {
       const key = `new-${this.nextTempKey++}`;
@@ -312,15 +421,22 @@ export class GameConfig {
     const diff = this.teamDiff();
     if (!diff.creates.length && !diff.updates.length && !diff.deletes.length) return true;
 
+    // Só é chamado depois de `saveAll` garantir que o jogo existe (edição
+    // já tinha `gameId`; criação acabou de setar antes de chegar aqui).
+    const gameId = this.gameId!;
     this.savingTeams.set(true);
     this.error.set(null);
     try {
       await Promise.all([
         ...diff.creates.map(({ draft, order }) =>
-          this.gameState.addTeam(this.gameId, { name: draft.name, playersCount: draft.playersCount, order }),
+          this.gameState.addTeam(gameId, {
+            name: draft.name,
+            playersCount: draft.playersCount,
+            order,
+          }),
         ),
-        ...diff.updates.map(({ id, patch }) => this.gameState.updateTeam(this.gameId, id, patch)),
-        ...diff.deletes.map((id) => this.gameState.deleteTeam(this.gameId, id)),
+        ...diff.updates.map(({ id, patch }) => this.gameState.updateTeam(gameId, id, patch)),
+        ...diff.deletes.map((id) => this.gameState.deleteTeam(gameId, id)),
       ]);
       this.resetDraftFromServer();
       return true;
@@ -340,7 +456,9 @@ export class GameConfig {
   async onBackClick(event: Event): Promise<void> {
     event.preventDefault();
     if (this.confirmLeaveIfUnsaved()) {
-      await this.router.navigate(['/jogo', this.gameId]);
+      // Em modo criação ainda não existe jogo (nem página dele) pra
+      // voltar — volta pro dashboard em vez de `/jogo/null`.
+      await this.router.navigate(this.isNew() ? ['/'] : ['/jogo', this.gameId]);
     }
   }
 }

@@ -12,9 +12,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
+    // Sem `game-form` próprio — `GameConfig` cobre os dois casos (criar e
+    // editar), já que os campos são idênticos e o cadastro de equipes
+    // já era feito em rascunho local até "Salvar" mesmo pra jogo
+    // existente (spec: "game-form não faz sentido, dá pra fazer tudo em
+    // game-config"). Precisa vir antes de `jogo/:id` abaixo, senão
+    // "novo" seria interpretado como um id de jogo.
     path: 'jogo/novo',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/game-form/game-form').then((m) => m.GameForm),
+    loadComponent: () => import('./features/game-config/game-config').then((m) => m.GameConfig),
   },
   {
     path: 'jogo/:id',

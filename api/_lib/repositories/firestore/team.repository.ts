@@ -16,6 +16,14 @@ export class FirestoreTeamRepository implements TeamRepository {
     return snap.docs.map((doc) => doc.data() as Team);
   }
 
+  /** Consulta de agregação: 1 leitura faturada, sem baixar os documentos das
+   * equipes — bem mais barato que `findByGameId(gameId).length` quando só o
+   * número importa (painel de jogos). */
+  async countByGameId(gameId: string): Promise<number> {
+    const snap = await this.teamsCol(gameId).count().get();
+    return snap.data().count;
+  }
+
   async findById(gameId: string, teamId: string): Promise<Team | null> {
     const doc = await this.teamsCol(gameId).doc(teamId).get();
     return doc.exists ? (doc.data() as Team) : null;

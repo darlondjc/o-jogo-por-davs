@@ -302,6 +302,14 @@ textarea {
   flex-direction: column;
   gap: var(--space-1);
   flex: 1;
+  min-width: 0;
+  /* Só surte efeito dentro de `.field-row` (grid de 12 colunas logo
+     abaixo, ao estilo bootstrap col-*) — em qualquer outro lugar onde
+     `.field` aparece (`.form` empilhado, `.team-form-row`) o pai não é
+     grid e a propriedade é ignorada. Sem span explícito (`.field-3`/
+     `.field-6` abaixo) cai em terços iguais, o padrão de quando a linha
+     tem 3 campos do mesmo peso. */
+  grid-column: span 4;
 
   span {
     font-family: var(--font-mono);
@@ -317,10 +325,42 @@ textarea {
   flex: 0 0 120px;
 }
 
+/* Colunas ao estilo bootstrap (col-3/col-6) — só usadas dentro de
+   `.field-row`. Deixam campos com pesos diferentes (ex: "Nome do jogo"
+   mais largo que "Data") em vez de dividir a linha em partes sempre
+   iguais. */
+.field-3 {
+  grid-column: span 3;
+}
+
+.field-6 {
+  grid-column: span 6;
+}
+
 .field-row {
-  display: flex;
+  /* Grid de 12 colunas, não flex: com `flex: 1` puro os três campos
+     ficavam sempre do mesmo tamanho (bug real reportado: "Data" e "Local"
+     tão largos quanto "Nome do jogo", e nenhum deles com espaço de sobra
+     pra abrir mão em telas estreitas sem ficar ilegível). O grid deixa
+     cada campo pedir a largura que faz sentido pro próprio conteúdo via
+     `.field-3`/`.field-6` nos templates. */
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
   gap: var(--space-4);
-  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Empilha: cada campo do `.field-row` vira uma linha inteira em vez de
+     dividir 12 colunas — 3 (ou até 2) campos lado a lado numa tela de
+     ~320px ficavam ilegíveis (texto cortado, spinner de data sem espaço),
+     mesmo já sem estourar a viewport (ver min-width acima). */
+  .field-row .field {
+    grid-column: span 12;
+  }
 }
 
 .field input.invalid,

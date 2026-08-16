@@ -3,7 +3,9 @@
 
   <div class="page container">
     <header class="hero card">
-      <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{ statusLabel(game.status) }}</span>
+      <span class="badge" [class]="'badge-' + game.status.toLowerCase()">{{
+        statusLabel(game.status)
+      }}</span>
 
       <div class="hero-main">
         <p class="eyebrow">O JOGO</p>
@@ -19,10 +21,12 @@
           <li class="chip">{{ gameTypeLabel(game.gameType) }}</li>
           <li class="chip">{{ game.rounds }} {{ pluralize(game.rounds, 'rodada', 'rodadas') }}</li>
           <li class="chip">
-            {{ game.questionsPerRound }} {{ pluralize(game.questionsPerRound, 'pergunta', 'perguntas') }} por rodada
+            {{ game.questionsPerRound }}
+            {{ pluralize(game.questionsPerRound, 'pergunta', 'perguntas') }} por rodada
           </li>
           <li class="chip">
-            {{ gameState.teams().length }} {{ pluralize(gameState.teams().length, 'equipe', 'equipes') }}
+            {{ gameState.teams().length }}
+            {{ pluralize(gameState.teams().length, 'equipe', 'equipes') }}
           </li>
         </ul>
       </div>
@@ -55,7 +59,11 @@
           <button class="btn btn-ghost btn-outline" type="button" (click)="copyLink()">
             {{ linkCopied() ? 'Link copiado!' : 'Copiar link' }}
           </button>
-          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'placar']" target="_blank">
+          <a
+            class="btn btn-ghost btn-outline"
+            [routerLink]="['/jogo', gameId(), 'placar']"
+            target="_blank"
+          >
             Ver placar
           </a>
         </div>
@@ -86,7 +94,9 @@
                   @for (total of row.roundTotals; track $index) {
                     <td [class.negative]="total < 0">{{ total }}</td>
                   }
-                  <td class="total-col" [class.negative]="row.overallTotal < 0">{{ row.overallTotal }}</td>
+                  <td class="total-col" [class.negative]="row.overallTotal < 0">
+                    {{ row.overallTotal }}
+                  </td>
                 </tr>
               }
             </tbody>
@@ -112,7 +122,7 @@
               (click)="start()"
               [disabled]="starting() || startBlockers().length > 0"
             >
-              {{ starting() ? 'Iniciando…' : 'INICIAR O JOGO' }}
+              {{ starting() ? 'Iniciando…' : 'INICIAR JOGO' }}
             </button>
             @if (configBlockers().length) {
               <ul class="blockers">
@@ -123,7 +133,7 @@
             }
           }
           @case ('EM_ANDAMENTO') {
-            <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId, 'ao-vivo']">
+            <a class="btn btn-primary btn-xl" [routerLink]="['/jogo', gameId(), 'ao-vivo']">
               <span class="label-full">Continuar jogo</span>
               <span class="label-short">Continuar</span>
             </a>
@@ -131,7 +141,12 @@
           @case ('RODADA_FINALIZADA') {
             <a
               class="btn btn-primary btn-xl"
-              [routerLink]="['/jogo', gameId, 'rodada', game.currentRound - 1 || game.currentRound]"
+              [routerLink]="[
+                '/jogo',
+                gameId(),
+                'rodada',
+                game.currentRound - 1 || game.currentRound,
+              ]"
             >
               Resumo da rodada
             </a>
@@ -139,9 +154,16 @@
         }
 
         <div class="secondary-actions">
-          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId, 'configuracao']">Configurar</a>
+          <a class="btn btn-ghost btn-outline" [routerLink]="['/jogo', gameId(), 'configuracao']"
+            >Configurar</a
+          >
           @if (game.status === 'EM_ANDAMENTO' || game.status === 'RODADA_FINALIZADA') {
-            <button class="btn btn-ghost btn-danger btn-outline" type="button" (click)="finish()" [disabled]="finishing()">
+            <button
+              class="btn btn-ghost btn-danger btn-outline"
+              type="button"
+              (click)="finish()"
+              [disabled]="finishing()"
+            >
               @if (finishing()) {
                 Finalizando…
               } @else {

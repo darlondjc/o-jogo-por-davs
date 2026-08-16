@@ -62,12 +62,17 @@
     <app-page-footer>
       <div class="footer-actions">
         @if (auth.user()) {
-          <button type="button" class="btn btn-outline" [routerLink]="['/jogo', gameId]">
+          <button type="button" class="btn btn-outline" [routerLink]="['/jogo', gameId()]">
             Ir ao painel
           </button>
         }
         @if (board.status !== 'FINALIZADO') {
-          <button type="button" class="btn btn-outline" (click)="refresh()" [disabled]="!canRefresh()">
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="refresh()"
+            [disabled]="!canRefresh()"
+          >
             @if (refreshing()) {
               Atualizando…
             } @else if (canRefresh()) {

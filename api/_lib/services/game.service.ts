@@ -19,37 +19,45 @@ import type {
   Team,
 } from '../../../shared/domain/types';
 import { getRepositories } from '../repositories';
+import type { Repositories } from '../repositories/types';
 import { badRequest, notFound } from '../http/respond';
 import { backupFinishedGameToSheets } from './backup.service';
 
-function repos() {
+/** `getRepositories()` é assíncrona (import dinâmico do Google Sheets só
+ * quando ele é de fato o repositório ativo — ver comentário lá). Esse
+ * wrapper existe só pra manter o nome curto nas funções abaixo. */
+function repos(): Promise<Repositories> {
   return getRepositories();
 }
 
 export async function listGames(): Promise<Game[]> {
-  const games = await repos().games.findAll();
+  const r = await repos();
+  const games = await r.games.findAll();
   const gamesWithTeamCount = await Promise.all(
     games.map(async (game) => {
-      const teams = await repos().teams.findByGameId(game.id);
-      return { ...game, teamsCount: teams.length };
+      const teamsCount = await r.teams.countByGameId(game.id);
+      return { ...game, teamsCount };
     }),
   );
   return gamesWithTeamCount;
 }
 
 export async function getGameOrThrow(id: string): Promise<Game> {
-  const game = await repos().games.findById(id);
+  const r = await repos();
+  const game = await r.games.findById(id);
   if (!game) throw notFound(`Jogo não encontrado: ${id}`);
   return game;
 }
 
 export async function createGame(payload: NewGame): Promise<Game> {
-  return repos().games.create(payload);
+  const r = await repos();
+  return r.games.create(payload);
 }
 
 export async function updateGame(id: string, patch: Partial<Game>): Promise<Game> {
   await getGameOrThrow(id);
-  return repos().games.update(id, patch);
+  const r = await repos();
+  return r.games.update(id, patch);
 }
 
 /** Apaga um jogo por completo (usado pelo botão "Apagar jogos" do painel).
@@ -58,7 +66,8 @@ export async function updateGame(id: string, patch: Partial<Game>): Promise<Game
  * recusa com um erro claro em vez de fingir que apagou. */
 export async function deleteGame(id: string): Promise<void> {
   await getGameOrThrow(id);
-  const repo = repos().games;
+  const r = await repos();
+  const repo = r.games;
   if (!repo.delete) {
     throw badRequest('Exclusão de jogos não é suportada nesta configuração de armazenamento.');
   }
@@ -67,12 +76,14 @@ export async function deleteGame(id: string): Promise<void> {
 
 export async function listTeams(gameId: string): Promise<Team[]> {
   await getGameOrThrow(gameId);
-  return repos().teams.findByGameId(gameId);
+  const r = await repos();
+  return r.teams.findByGameId(gameId);
 }
 
 export async function addTeam(gameId: string, payload: NewTeam): Promise<Team> {
   await getGameOrThrow(gameId);
-  return repos().teams.create(gameId, payload);
+  const r = await repos();
+  return r.teams.create(gameId, payload);
 }
 
 export async function updateTeam(
@@ -81,18 +92,21 @@ export async function updateTeam(
   patch: Partial<Team>,
 ): Promise<Team> {
   await getGameOrThrow(gameId);
-  return repos().teams.update(gameId, teamId, patch);
+  const r = await repos();
+  return r.teams.update(gameId, teamId, patch);
 }
 
 export async function deleteTeam(gameId: string, teamId: string): Promise<void> {
   await getGameOrThrow(gameId);
-  await repos().teams.delete(gameId, teamId);
+  const r = await repos();
+  await r.teams.delete(gameId, teamId);
 }
 
 /** Valida os pré-requisitos da seção 8 antes de permitir iniciar o jogo. */
 export async function startGame(gameId: string): Promise<Game> {
   const game = await getGameOrThrow(gameId);
-  const teams = await repos().teams.findByGameId(gameId);
+  const r = await repos();
+  const teams = await r.teams.findByGameId(gameId);
 
   if (!teams.length) throw badRequest('É necessário cadastrar ao menos uma equipe.');
   if (game.rounds <= 0) throw badRequest('Quantidade de rodadas deve ser maior que zero.');
@@ -103,7 +117,7 @@ export async function startGame(gameId: string): Promise<Game> {
     return game; // já iniciado — idempotente
   }
 
-  return repos().games.update(gameId, {
+  return r.games.update(gameId, {
     status: 'EM_ANDAMENTO',
     currentRound: 1,
     currentQuestion: 1,
@@ -127,14 +141,27 @@ export interface LiveState {
 }
 
 export async function getLiveState(gameId: string): Promise<LiveState> {
-  const game = await getGameOrThrow(gameId);
-  const teams = await repos().teams.findByGameId(gameId);
-  const scoreboard = await getScoreboard(gameId);
-  const lastRegistered = await repos().scores.findLastRegisteredQuestion(gameId);
+  const r = await repos();
+  // As cinco leituras abaixo não dependem umas das outras — rodar em série
+  // (como era antes) soma cinco round-trips ao Firestore só pra montar a
+  // tela ao vivo, e pior: `getScoreboard(gameId)` refazia sozinha as
+  // consultas de `game` e `teams` que já tínhamos acabado de buscar aqui.
+  // Uma leitura de verdade dependente da outra (as pontuações da última
+  // pergunta registrada, abaixo) continua esperando o resultado que
+  // depende dela.
+  const [game, teams, allScores, lastRegistered, questions] = await Promise.all([
+    getGameOrThrow(gameId),
+    r.teams.findByGameId(gameId),
+    r.scores.findByGameId(gameId),
+    r.scores.findLastRegisteredQuestion(gameId),
+    r.questions.findByGameId(gameId),
+  ]);
+
+  const scoreboard = buildScoreboard(game, teams, allScores);
   const previousQuestionScores = lastRegistered
-    ? await repos().scores.findByQuestion(gameId, lastRegistered.round, lastRegistered.question)
+    ? await r.scores.findByQuestion(gameId, lastRegistered.round, lastRegistered.question)
     : [];
-  const registeredQuestions = (await repos().questions.findByGameId(gameId))
+  const registeredQuestions = questions
     .map((q) => ({ round: q.round, question: q.number }))
     .sort((a, b) => a.round - b.round || a.question - b.question);
 
@@ -150,7 +177,8 @@ export async function getQuestionScores(
   question: number,
 ): Promise<Score[]> {
   await getGameOrThrow(gameId);
-  return repos().scores.findByQuestion(gameId, round, question);
+  const r = await repos();
+  return r.scores.findByQuestion(gameId, round, question);
 }
 
 export interface SubmitScoresResult {
@@ -169,12 +197,11 @@ export async function submitQuestionScores(
   gameId: string,
   payload: SubmitQuestionScoresRequest,
 ): Promise<SubmitScoresResult> {
+  const r = await repos();
+
   // Duas leituras independentes — rodar em paralelo em vez de sequencial
   // economiza um round-trip inteiro ao Firestore.
-  const [game, teams] = await Promise.all([
-    getGameOrThrow(gameId),
-    repos().teams.findByGameId(gameId),
-  ]);
+  const [game, teams] = await Promise.all([getGameOrThrow(gameId), r.teams.findByGameId(gameId)]);
 
   const errors = validateQuestionScores({
     round: payload.round,
@@ -198,8 +225,8 @@ export async function submitQuestionScores(
   // escritas independentes (coleções diferentes) — não precisam esperar
   // uma pela outra.
   const [scores] = await Promise.all([
-    repos().scores.upsertMany(gameId, payload.round, payload.question, entries),
-    repos().questions.upsertRegistered(gameId, payload.round, payload.question),
+    r.scores.upsertMany(gameId, payload.round, payload.question, entries),
+    r.questions.upsertRegistered(gameId, payload.round, payload.question),
   ]);
 
   // Só avança o ponteiro do jogo quando a pergunta registrada é a "atual" —
@@ -224,7 +251,7 @@ export async function submitQuestionScores(
       ? 'RODADA_FINALIZADA'
       : 'EM_ANDAMENTO';
 
-  const updatedGame = await repos().games.update(gameId, {
+  const updatedGame = await r.games.update(gameId, {
     currentRound: result.round,
     currentQuestion: result.question,
     status: newStatus,
@@ -257,11 +284,12 @@ export async function correctScore(
   scoreId: string,
   patch: { baseScore: number; bonus: number; penalty: number },
 ): Promise<Score> {
-  const allScores = await repos().scores.findByGameId(gameId);
+  const r = await repos();
+  const allScores = await r.scores.findByGameId(gameId);
   const existing = allScores.find((s) => s.id === scoreId);
   if (!existing) throw notFound(`Pontuação não encontrada: ${scoreId}`);
 
-  const updated = await repos().scores.upsertMany(gameId, existing.round, existing.question, [
+  const updated = await r.scores.upsertMany(gameId, existing.round, existing.question, [
     {
       teamId: existing.teamId,
       baseScore: patch.baseScore,
@@ -277,21 +305,27 @@ export async function correctScore(
 export async function continueToNextRound(gameId: string): Promise<Game> {
   const game = await getGameOrThrow(gameId);
   if (game.status !== 'RODADA_FINALIZADA') return game;
-  return repos().games.update(gameId, { status: 'EM_ANDAMENTO' });
+  const r = await repos();
+  return r.games.update(gameId, { status: 'EM_ANDAMENTO' });
 }
 
 export async function finishGame(gameId: string): Promise<Game> {
   await getGameOrThrow(gameId);
-  const game = await repos().games.update(gameId, { status: 'FINALIZADO' });
+  const r = await repos();
+  const game = await r.games.update(gameId, { status: 'FINALIZADO' });
   // Ver comentário em `submitQuestionScores` — backup não bloqueia a resposta.
   waitUntil(backupFinishedGameToSheets(gameId));
   return game;
 }
 
 export async function getRoundSummary(gameId: string, round: number): Promise<RoundSummary> {
-  const game = await getGameOrThrow(gameId);
-  const teams = await repos().teams.findByGameId(gameId);
-  const allScores = await repos().scores.findByGameId(gameId);
+  const r = await repos();
+  // As três leituras são independentes — mesma ideia do `getLiveState`.
+  const [game, teams, allScores] = await Promise.all([
+    getGameOrThrow(gameId),
+    r.teams.findByGameId(gameId),
+    r.scores.findByGameId(gameId),
+  ]);
   const teamIds = teams.map((t) => t.id);
 
   const roundTotals = computeRoundTotals(allScores, round);
@@ -309,8 +343,8 @@ export async function getRoundSummary(gameId: string, round: number): Promise<Ro
   // um `.sort()` pegava a primeira do topo mesmo empatada, anunciando uma
   // "vencedora" que na verdade dividiu a rodada com outra(s) equipe(s)
   // (bug real: rodada 3x3 empatada mostrando uma equipe como vencedora).
-  const topTotal = roundTotals.length ? Math.max(...roundTotals.map((r) => r.total)) : null;
-  const topTeams = roundTotals.filter((r) => r.total === topTotal);
+  const topTotal = roundTotals.length ? Math.max(...roundTotals.map((rt) => rt.total)) : null;
+  const topTeams = roundTotals.filter((rt) => rt.total === topTotal);
   const winner = topTeams.length === 1 ? topTeams[0] : null;
 
   // Pontuação de cada equipe em cada pergunta desta rodada — pra comparar
@@ -330,11 +364,12 @@ export async function getRoundSummary(gameId: string, round: number): Promise<Ro
   };
 }
 
-export async function getScoreboard(gameId: string): Promise<Scoreboard> {
-  const game = await getGameOrThrow(gameId);
-  const teams = await repos().teams.findByGameId(gameId);
-  const allScores = await repos().scores.findByGameId(gameId);
-
+/** Parte pura do cálculo do placar, separada da leitura no banco — o
+ * `getLiveState` já busca `game`/`teams`/`allScores` pro resto da tela e
+ * reaproveita esses mesmos dados aqui, em vez de mandar `getScoreboard`
+ * buscar tudo de novo (eram duas leituras a mais, e desnecessárias, em
+ * toda carga da tela ao vivo). */
+function buildScoreboard(game: Game, teams: Team[], allScores: Score[]): Scoreboard {
   const teamIds = teams.map((t) => t.id);
   const overallTotals = computeOverallTotals(allScores, teamIds);
   const previousOverallTotals = computeOverallTotals(
@@ -377,4 +412,14 @@ export async function getScoreboard(gameId: string): Promise<Scoreboard> {
     entries,
     roundTotalsByRound,
   };
+}
+
+export async function getScoreboard(gameId: string): Promise<Scoreboard> {
+  const r = await repos();
+  const [game, teams, allScores] = await Promise.all([
+    getGameOrThrow(gameId),
+    r.teams.findByGameId(gameId),
+    r.scores.findByGameId(gameId),
+  ]);
+  return buildScoreboard(game, teams, allScores);
 }

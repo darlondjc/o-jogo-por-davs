@@ -1,6 +1,8 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { GameStateService } from '../../core/services/game-state.service';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
 import { PageHeader } from '../../core/components/page-header/page-header';
@@ -27,14 +29,30 @@ export class GameAdmin {
   private readonly router = inject(Router);
   protected readonly gameState = inject(GameStateService);
 
-  readonly gameId = this.route.snapshot.paramMap.get('id')!;
+  /** `:id` da rota como signal (não só lido uma vez do snapshot) —
+   * `jogo/:id` é a mesma `Route` pra qualquer jogo, então o Angular
+   * reaproveita a instância deste componente ao navegar direto de um jogo
+   * pro outro nesta tela (ex: voltar/avançar do navegador): o
+   * `RouteReuseStrategy` padrão não recria o componente só porque o
+   * parâmetro mudou. Sem reagir a isso (ver `effect` no construtor), a
+   * tela ficava presa mostrando os dados do jogo carregado na primeira
+   * visita, mesmo com a URL já apontando pra outro (mesmo bug corrigido em
+   * game-config.ts). */
+  readonly gameId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id')!)), {
+    initialValue: this.route.snapshot.paramMap.get('id')!,
+  });
+  /** Último id efetivamente carregado — só pra o `effect` no construtor
+   * saber se `gameId()` de fato mudou (reaproveitamento) ou é só o
+   * primeiro disparo, que já corresponde ao load feito direto no
+   * construtor (ver `loadForId`). */
+  private loadedId = this.gameId();
   readonly starting = signal(false);
   readonly finishing = signal(false);
   readonly error = signal<string | null>(null);
   readonly linkCopied = signal(false);
   readonly qrImageCopied = signal(false);
 
-  readonly publicUrl = computed(() => `${location.origin}/jogo/${this.gameId}/placar`);
+  readonly publicUrl = computed(() => `${location.origin}/jogo/${this.gameId()}/placar`);
   readonly qrDataUrl = signal<string | null>(null);
   protected readonly statusLabel = statusLabel;
   protected readonly gameTypeLabel = gameTypeLabel;
@@ -61,7 +79,8 @@ export class GameAdmin {
         teamName: entry.teamName,
         color: teamColor(entry.order),
         roundTotals: this.roundNumbers().map(
-          (round) => board.roundTotalsByRound[round]?.find((r) => r.teamId === entry.teamId)?.total ?? 0,
+          (round) =>
+            board.roundTotalsByRound[round]?.find((r) => r.teamId === entry.teamId)?.total ?? 0,
         ),
         overallTotal: entry.overallTotal,
       }));
@@ -81,7 +100,8 @@ export class GameAdmin {
     const game = this.gameState.game();
     const blockers: string[] = [];
     if (game && game.rounds <= 0) blockers.push('Defina ao menos uma rodada.');
-    if (game && game.questionsPerRound <= 0) blockers.push('Defina ao menos uma pergunta por rodada.');
+    if (game && game.questionsPerRound <= 0)
+      blockers.push('Defina ao menos uma pergunta por rodada.');
     return blockers;
   });
 
@@ -96,18 +116,57 @@ export class GameAdmin {
   });
 
   constructor() {
-    this.gameState.loadGame(this.gameId).then(() => {
+    this.loadForId(this.loadedId);
+
+    /* Reage a trocas de `:id` na URL desta mesma instância reaproveitada
+       (ver `gameId` acima). No primeiro disparo `id` já é igual a
+       `loadedId`, então o guard abaixo pula — o load inicial já rodou na
+       linha de cima, síncrono, sem esperar o primeiro tick do effect. */
+    effect(() => {
+      const id = this.gameId();
+      if (id === this.loadedId) return;
+      this.loadedId = id;
+      this.loadForId(id);
+    });
+  }
+
+  /** Carrega o jogo (+ placar + QR code) pro id dado. Extraído do
+   * construtor pra também rodar de novo quando a instância é reaproveitada
+   * com outro `:id` (ver `gameId`/`effect` acima) — sem isso a tela ficava
+   * presa mostrando o jogo carregado na primeira visita. */
+  private loadForId(gameId: string): void {
+    /* `GameStateService` é singleton: zera aqui antes de carregar, tanto
+       no load inicial quanto num reaproveitamento — sem isso a tela
+       mostraria o jogo anterior até o novo terminar de carregar. Zerar
+       também fecha o `@if` do template, que volta a mostrar
+       "Carregando…" nesse intervalo. */
+    this.gameState.game.set(null);
+    this.gameState.teams.set([]);
+    this.gameState.scoreboard.set(null);
+    this.qrDataUrl.set(null);
+
+    // `loadScoreboard` não depende do resultado de `loadGame` — dispara os
+    // dois juntos em vez de esperar o jogo carregar pra só então pedir o
+    // placar, que dobrava o tempo de carga desta tela à toa. No raro caso de
+    // jogo inexistente, o placar também falha (ou fica ignorado) e a tela já
+    // navegou pra /404 de qualquer forma.
+    this.gameState.loadGame(gameId).then(() => {
       if (this.gameState.notFound()) {
         this.router.navigate(['/404']);
-        return;
       }
-      this.gameState.loadScoreboard(this.gameId);
     });
-    import('qrcode').then((QRCode) =>
-      QRCode.toDataURL(this.publicUrl(), { margin: 1, width: 176 }).then((url) =>
-        this.qrDataUrl.set(url),
-      ),
-    );
+    this.gameState.loadScoreboard(gameId);
+    /* `{ default: QRCode }`, não o namespace inteiro — no `ng serve` (Vite)
+       o import de um pacote CommonJS espalha as propriedades no próprio
+       namespace, então `QRCode.toDataURL` "funciona" mesmo pegando o
+       namespace direto. No build de produção (esbuild) só a chave
+       `default` existe; pegar o namespace inteiro deixa `toDataURL`
+       undefined e quebra o QR Code silenciosamente só em produção (sem
+       `.catch`, a promise rejeitada nunca aparece em lugar nenhum). */
+    import('qrcode')
+      .then(({ default: QRCode }) => QRCode.toDataURL(this.publicUrl(), { margin: 1, width: 176 }))
+      .then((url) => this.qrDataUrl.set(url))
+      .catch(() => this.qrDataUrl.set(null));
   }
 
   async start(): Promise<void> {
@@ -115,8 +174,8 @@ export class GameAdmin {
     this.starting.set(true);
     this.error.set(null);
     try {
-      await this.gameState.startGame(this.gameId);
-      await this.router.navigate(['/jogo', this.gameId, 'ao-vivo']);
+      await this.gameState.startGame(this.gameId());
+      await this.router.navigate(['/jogo', this.gameId(), 'ao-vivo']);
     } catch {
       this.error.set('Não foi possível iniciar o jogo.');
     } finally {
@@ -130,14 +189,18 @@ export class GameAdmin {
    * funcionar como o resumo do jogo assim que o status vira FINALIZADO
    * (placar final + pontuação por rodada, sem mais o rodapé de ações). */
   async finish(): Promise<void> {
-    if (!window.confirm('Finalizar o jogo? Depois de finalizado não será possível registrar mais pontuações.')) {
+    if (
+      !window.confirm(
+        'Finalizar o jogo? Depois de finalizado não será possível registrar mais pontuações.',
+      )
+    ) {
       return;
     }
     this.finishing.set(true);
     this.error.set(null);
     try {
-      await this.gameState.finishGame(this.gameId);
-      await this.router.navigate(['/jogo', this.gameId]);
+      await this.gameState.finishGame(this.gameId());
+      await this.router.navigate(['/jogo', this.gameId()]);
     } catch {
       this.error.set('Não foi possível finalizar o jogo.');
     } finally {

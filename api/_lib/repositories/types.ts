@@ -25,6 +25,12 @@ export interface TeamRepository {
   create(gameId: string, team: NewTeam): Promise<Team>;
   update(gameId: string, teamId: string, patch: Partial<Team>): Promise<Team>;
   delete(gameId: string, teamId: string): Promise<void>;
+  /** Só a contagem, sem baixar os documentos das equipes — usado pelo painel
+   * (`listGames`), que só precisa do número pra cada jogo da lista. No
+   * Firestore isso vira uma consulta de agregação (1 leitura, sem trazer
+   * documento nenhum); os outros repositórios caem pra `findByGameId(...).length`
+   * porque não têm como contar sem ler mesmo. */
+  countByGameId(gameId: string): Promise<number>;
 }
 
 export interface QuestionRepository {

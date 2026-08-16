@@ -10,6 +10,10 @@ export class MemoryTeamRepository implements TeamRepository {
       .sort((a, b) => a.order - b.order);
   }
 
+  async countByGameId(gameId: string): Promise<number> {
+    return getMemoryStore().teams.filter((t) => t.gameId === gameId).length;
+  }
+
   async findById(gameId: string, teamId: string): Promise<Team | null> {
     return (
       getMemoryStore().teams.find((t) => t.gameId === gameId && t.id === teamId) ?? null

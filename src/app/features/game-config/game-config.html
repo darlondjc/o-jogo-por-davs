@@ -1,224 +1,258 @@
-@if (gameState.game()) {
-<app-page-header backLabel="← Voltar ao jogo" (backClick)="onBackClick($event)" />
+@if (isNew() || gameState.game()) {
+  <app-page-header
+    [backLabel]="isNew() ? '← Voltar' : '← Voltar ao jogo'"
+    (backClick)="onBackClick($event)"
+  />
 
-<div class="page container">
-  <h1>Configuração</h1>
+  <div class="page container">
+    <h1>{{ isNew() ? 'Novo jogo' : 'Configuração' }}</h1>
+    @if (isNew()) {
+      <p class="muted">Preencha os dados básicos. Você poderá ajustar tudo depois.</p>
+    }
 
-  @if (error()) {
-    <p class="error">{{ error() }}</p>
-  }
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
 
-  <section class="card">
-    <h2>Dados do jogo</h2>
-    <form class="form" [formGroup]="gameForm" (ngSubmit)="saveAll()" novalidate>
-      <div class="field-row">
+    <section class="card">
+      <h2>Dados do jogo</h2>
+      <form class="form" [formGroup]="gameForm" (ngSubmit)="saveAll()" novalidate>
+        <div class="field-row">
+          <label class="field field-6">
+            <span>Nome do jogo *</span>
+            <input
+              type="text"
+              formControlName="name"
+              [class.invalid]="
+                gameForm.controls.name.invalid &&
+                (gameForm.controls.name.touched || gameSubmitted())
+              "
+            />
+            @if (
+              gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())
+            ) {
+              <span class="field-error">Informe o nome do jogo.</span>
+            }
+          </label>
+          <label class="field field-3">
+            <span>Data *</span>
+            <input
+              type="date"
+              formControlName="date"
+              [class.invalid]="
+                gameForm.controls.date.invalid &&
+                (gameForm.controls.date.touched || gameSubmitted())
+              "
+            />
+            @if (
+              gameForm.controls.date.invalid && (gameForm.controls.date.touched || gameSubmitted())
+            ) {
+              <span class="field-error">Informe a data.</span>
+            }
+          </label>
+          <label class="field field-3">
+            <span>Local *</span>
+            <input
+              type="text"
+              formControlName="location"
+              [class.invalid]="
+                gameForm.controls.location.invalid &&
+                (gameForm.controls.location.touched || gameSubmitted())
+              "
+            />
+            @if (
+              gameForm.controls.location.invalid &&
+              (gameForm.controls.location.touched || gameSubmitted())
+            ) {
+              <span class="field-error">Informe o local.</span>
+            }
+          </label>
+        </div>
+
         <label class="field">
-          <span>Nome do jogo *</span>
+          <span>Descrição</span>
+          <textarea formControlName="description" rows="2"></textarea>
+        </label>
+
+        <div class="field-row">
+          <label class="field field-6">
+            <span>Tipo de jogo</span>
+            <select formControlName="gameType">
+              @for (option of gameTypeOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="field field-3">
+            <span>Rodadas *</span>
+            <input
+              type="number"
+              formControlName="rounds"
+              min="1"
+              [class.invalid]="
+                gameForm.controls.rounds.invalid &&
+                (gameForm.controls.rounds.touched || gameSubmitted())
+              "
+            />
+            @if (
+              gameForm.controls.rounds.invalid &&
+              (gameForm.controls.rounds.touched || gameSubmitted())
+            ) {
+              <span class="field-error">Deve ser >= 1.</span>
+            }
+          </label>
+          <label class="field field-3">
+            <span>Perguntas por rodada *</span>
+            <input
+              type="number"
+              formControlName="questionsPerRound"
+              min="1"
+              [class.invalid]="
+                gameForm.controls.questionsPerRound.invalid &&
+                (gameForm.controls.questionsPerRound.touched || gameSubmitted())
+              "
+            />
+            @if (
+              gameForm.controls.questionsPerRound.invalid &&
+              (gameForm.controls.questionsPerRound.touched || gameSubmitted())
+            ) {
+              <span class="field-error">Deve ser >= 1.</span>
+            }
+          </label>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Equipes</h2>
+      <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeamDraft()" novalidate>
+        <label class="field">
+          <span>Nome da equipe *</span>
           <input
             type="text"
             formControlName="name"
-            [class.invalid]="gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())"
+            placeholder="Ex: Os Inteligentes"
+            [class.invalid]="teamForm.controls.name.invalid && teamSubmitted()"
           />
-          @if (gameForm.controls.name.invalid && (gameForm.controls.name.touched || gameSubmitted())) {
-            <span class="field-error">Informe o nome do jogo.</span>
+          @if (teamForm.controls.name.invalid && teamSubmitted()) {
+            <span class="field-error">Informe o nome da equipe.</span>
           }
         </label>
-        <label class="field">
-          <span>Data *</span>
-          <input
-            type="date"
-            formControlName="date"
-            [class.invalid]="gameForm.controls.date.invalid && (gameForm.controls.date.touched || gameSubmitted())"
-          />
-          @if (gameForm.controls.date.invalid && (gameForm.controls.date.touched || gameSubmitted())) {
-            <span class="field-error">Informe a data.</span>
-          }
-        </label>
-        <label class="field">
-          <span>Local *</span>
-          <input
-            type="text"
-            formControlName="location"
-            [class.invalid]="
-              gameForm.controls.location.invalid && (gameForm.controls.location.touched || gameSubmitted())
-            "
-          />
-          @if (
-            gameForm.controls.location.invalid && (gameForm.controls.location.touched || gameSubmitted())
-          ) {
-            <span class="field-error">Informe o local.</span>
-          }
-        </label>
-      </div>
-
-      <label class="field">
-        <span>Descrição</span>
-        <textarea formControlName="description" rows="2"></textarea>
-      </label>
-
-      <div class="field-row">
-        <label class="field">
-          <span>Tipo de jogo</span>
-          <select formControlName="gameType">
-            @for (option of gameTypeOptions; track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
-            }
-          </select>
-        </label>
-        <label class="field">
-          <span>Rodadas *</span>
-          <input
-            type="number"
-            formControlName="rounds"
-            min="1"
-            [class.invalid]="
-              gameForm.controls.rounds.invalid && (gameForm.controls.rounds.touched || gameSubmitted())
-            "
-          />
-          @if (
-            gameForm.controls.rounds.invalid && (gameForm.controls.rounds.touched || gameSubmitted())
-          ) {
-            <span class="field-error">Deve ser >= 1.</span>
-          }
-        </label>
-        <label class="field">
-          <span>Perguntas por rodada *</span>
-          <input
-            type="number"
-            formControlName="questionsPerRound"
-            min="1"
-            [class.invalid]="
-              gameForm.controls.questionsPerRound.invalid &&
-              (gameForm.controls.questionsPerRound.touched || gameSubmitted())
-            "
-          />
-          @if (
-            gameForm.controls.questionsPerRound.invalid &&
-            (gameForm.controls.questionsPerRound.touched || gameSubmitted())
-          ) {
-            <span class="field-error">Deve ser >= 1.</span>
-          }
-        </label>
-      </div>
-    </form>
-  </section>
-
-  <section class="card">
-    <h2>Equipes</h2>
-    <form class="form team-form" [formGroup]="teamForm" (ngSubmit)="submitTeamDraft()" novalidate>
-      <label class="field">
-        <span>Nome da equipe *</span>
-        <input type="text" formControlName="name" placeholder="Ex: Os Inteligentes"
-          [class.invalid]="teamForm.controls.name.invalid && teamSubmitted()" />
-        @if (teamForm.controls.name.invalid && teamSubmitted()) {
-        <span class="field-error">Informe o nome da equipe.</span>
+        <div class="team-form-row">
+          <label class="field small">
+            <span>Jogadores</span>
+            <input type="number" formControlName="playersCount" min="0" />
+          </label>
+          <button class="btn btn-primary" type="submit">
+            {{ editingKey() ? 'Salvar' : 'Adicionar' }}
+          </button>
+        </div>
+        @if (editingKey()) {
+          <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
         }
-      </label>
-      <div class="team-form-row">
-        <label class="field small">
-          <span>Jogadores</span>
-          <input type="number" formControlName="playersCount" min="0" />
-        </label>
-        <button class="btn btn-primary" type="submit">
-          {{ editingKey() ? 'Salvar' : 'Adicionar' }}
-        </button>
-      </div>
-      @if (editingKey()) {
-      <button class="btn btn-ghost" type="button" (click)="cancelEditTeam()">Cancelar</button>
-      }
-    </form>
+      </form>
 
-    @if (draftTeams().length) {
-      <ul class="team-list">
-        @for (team of draftTeams(); track team.key; let i = $index) {
-          <li class="team-row">
-            <span class="dot" [style.background]="teamColorAt(i)"></span>
-            <span class="team-name">{{ team.name }}</span>
-            <span class="team-players muted">{{ team.playersCount }} jogadores</span>
-            <div class="team-actions">
-              <div class="reorder-actions">
+      @if (draftTeams().length) {
+        <ul class="team-list">
+          @for (team of draftTeams(); track team.key; let i = $index) {
+            <li class="team-row">
+              <span class="dot" [style.background]="teamColorAt(i)"></span>
+              <span class="team-name">{{ team.name }}</span>
+              <span class="team-players muted">{{ team.playersCount }} jogadores</span>
+              <div class="team-actions">
+                <div class="reorder-actions">
+                  <button
+                    class="btn btn-ghost"
+                    type="button"
+                    (click)="moveTeamDraft(team.key, -1)"
+                    [disabled]="i === 0"
+                    aria-label="Mover equipe para cima"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    class="btn btn-ghost"
+                    type="button"
+                    (click)="moveTeamDraft(team.key, 1)"
+                    [disabled]="i === draftTeams().length - 1"
+                    aria-label="Mover equipe para baixo"
+                  >
+                    ↓
+                  </button>
+                </div>
                 <button
                   class="btn btn-ghost"
                   type="button"
-                  (click)="moveTeamDraft(team.key, -1)"
-                  [disabled]="i === 0"
-                  aria-label="Mover equipe para cima"
+                  (click)="startEditTeam(team)"
+                  aria-label="Editar equipe"
                 >
-                  ↑
+                  <svg
+                    class="action-icon"
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M13.5 3.5l3 3L6 17l-4 1 1-4L13.5 3.5z" />
+                  </svg>
+                  <span class="action-text">Editar</span>
                 </button>
                 <button
-                  class="btn btn-ghost"
+                  class="btn btn-ghost btn-danger"
                   type="button"
-                  (click)="moveTeamDraft(team.key, 1)"
-                  [disabled]="i === draftTeams().length - 1"
-                  aria-label="Mover equipe para baixo"
+                  (click)="removeTeamDraft(team.key)"
+                  aria-label="Remover equipe"
                 >
-                  ↓
+                  <svg
+                    class="action-icon"
+                    aria-hidden="true"
+                    viewBox="0 0 20 20"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" />
+                  </svg>
+                  <span class="action-text">Remover</span>
                 </button>
               </div>
-              <button class="btn btn-ghost" type="button" (click)="startEditTeam(team)" aria-label="Editar equipe">
-                <svg
-                  class="action-icon"
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M13.5 3.5l3 3L6 17l-4 1 1-4L13.5 3.5z" />
-                </svg>
-                <span class="action-text">Editar</span>
-              </button>
-              <button
-                class="btn btn-ghost btn-danger"
-                type="button"
-                (click)="removeTeamDraft(team.key)"
-                aria-label="Remover equipe"
-              >
-                <svg
-                  class="action-icon"
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" />
-                </svg>
-                <span class="action-text">Remover</span>
-              </button>
-            </div>
-          </li>
-        }
-      </ul>
-    } @else {
-      <p class="muted">Nenhuma equipe cadastrada ainda.</p>
-    }
-  </section>
-</div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="muted">Nenhuma equipe cadastrada ainda.</p>
+      }
+    </section>
+  </div>
 
-<app-page-footer>
-  <button class="btn btn-primary btn-xl" type="button" (click)="saveAll()" [disabled]="saving()">
-    {{ saving() ? 'Salvando…' : 'Salvar jogo' }}
-  </button>
-  @if (canStartOrContinue()) {
-    <button class="btn btn-primary btn-xl" type="button" (click)="startOrContinue()" [disabled]="starting()">
-      {{ starting() ? 'Iniciando…' : startOrContinueLabel() }}
+  <app-page-footer>
+    <button class="btn btn-primary btn-xl" type="button" (click)="saveAll()" [disabled]="saving()">
+      {{ saving() ? (isNew() ? 'Criando…' : 'Salvando…') : isNew() ? 'Criar jogo' : 'Salvar jogo' }}
     </button>
-  }
-</app-page-footer>
+    @if (canStartOrContinue()) {
+      <button
+        class="btn btn-primary btn-xl"
+        type="button"
+        (click)="startOrContinue()"
+        [disabled]="starting()"
+      >
+        {{ starting() ? 'Iniciando…' : startOrContinueLabel() }}
+      </button>
+    }
+  </app-page-footer>
 
-@if (saveConfirmationVisible()) {
-  <app-snackbar message="Dados do jogo salvos!" />
-}
+  @if (saveConfirmationVisible()) {
+    <app-snackbar message="Dados do jogo salvos!" />
+  }
 } @else {
   <p class="loading">Carregando…</p>
 }

@@ -171,6 +171,15 @@ h1 {
       font-size: 0.75rem;
       padding: var(--space-2) var(--space-2);
     }
+
+    /* `.secondary-actions` (Configurar/Finalizar) não é um `.btn` direto —
+       sem isso ela some com espaço livre pra distribuir e fica só do
+       tamanho do próprio conteúdo, enquanto o botão principal (`flex: 1`
+       acima) engole o resto da linha sozinho. Mesmo `flex: 1` iguala as
+       duas metades da linha. */
+    > .secondary-actions {
+      flex: 1;
+    }
   }
 }
 

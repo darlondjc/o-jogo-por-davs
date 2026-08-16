@@ -2,12 +2,14 @@
   <p class="loading">Carregando…</p>
 } @else if (gameState.game(); as game) {
   <div class="live-page">
-    <app-page-header [backLink]="['/jogo', gameId]" backLabel="← Painel do jogo" />
+    <app-page-header [backLink]="['/jogo', gameId()]" backLabel="← Painel do jogo" />
 
     <div class="main container">
       <div class="progress">
         <span class="chip chip-round">RODADA {{ game.currentRound }}/{{ game.rounds }}</span>
-        <span class="chip chip-question">PERGUNTA {{ game.currentQuestion }}/{{ game.questionsPerRound }}</span>
+        <span class="chip chip-question"
+          >PERGUNTA {{ game.currentQuestion }}/{{ game.questionsPerRound }}</span
+        >
         @if (entry.comboVisible()) {
           <span class="chip chip-combo">COMBO x{{ entry.combo() }}</span>
         }

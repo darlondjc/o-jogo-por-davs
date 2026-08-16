@@ -1,9 +1,4 @@
 import { isFirestoreConfigured } from '../repositories/firestore/client';
-import { isGoogleSheetsConfigured } from '../repositories/google-sheets/client';
-import { GoogleSheetsGameRepository } from '../repositories/google-sheets/game.repository';
-import { GoogleSheetsQuestionRepository } from '../repositories/google-sheets/question.repository';
-import { GoogleSheetsScoreRepository } from '../repositories/google-sheets/score.repository';
-import { GoogleSheetsTeamRepository } from '../repositories/google-sheets/team.repository';
 import { getRepositories } from '../repositories';
 
 /**
@@ -20,10 +15,19 @@ import { getRepositories } from '../repositories';
  * aqui nunca impede o jogo de ser finalizado — só fica registrada no log.
  */
 export async function backupFinishedGameToSheets(gameId: string): Promise<void> {
-  if (!isFirestoreConfigured() || !isGoogleSheetsConfigured()) return;
+  if (!isFirestoreConfigured()) return;
 
   try {
-    const active = getRepositories();
+    // `isGoogleSheetsConfigured` e as classes do repositório do Sheets só
+    // são importadas aqui dentro, dinamicamente — e só depois de já saber
+    // que o Firestore está ativo (o caminho comum em produção). Um import
+    // estático no topo do arquivo, mesmo só da função de checagem, traria
+    // o `googleapis` (o SDK inteiro do Google) pro bundle desta função
+    // mesmo nos jogos em andamento, quando o backup nem chega a rodar.
+    const { isGoogleSheetsConfigured } = await import('../repositories/google-sheets/client');
+    if (!isGoogleSheetsConfigured()) return;
+
+    const active = await getRepositories();
     const [game, teams, questions, scores] = await Promise.all([
       active.games.findById(gameId),
       active.teams.findByGameId(gameId),
@@ -31,6 +35,18 @@ export async function backupFinishedGameToSheets(gameId: string): Promise<void> 
       active.scores.findByGameId(gameId),
     ]);
     if (!game) return;
+
+    const [
+      { GoogleSheetsGameRepository },
+      { GoogleSheetsTeamRepository },
+      { GoogleSheetsQuestionRepository },
+      { GoogleSheetsScoreRepository },
+    ] = await Promise.all([
+      import('../repositories/google-sheets/game.repository'),
+      import('../repositories/google-sheets/team.repository'),
+      import('../repositories/google-sheets/question.repository'),
+      import('../repositories/google-sheets/score.repository'),
+    ]);
 
     const sheetsGames = new GoogleSheetsGameRepository();
     const sheetsTeams = new GoogleSheetsTeamRepository();

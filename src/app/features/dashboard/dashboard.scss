@@ -37,8 +37,20 @@
   @media (max-width: 480px) {
     width: 100%;
 
+    /* `white-space: nowrap` + `font-size` fluido: em vez de deixar o texto
+       do botão ("Apagar jogos", "Excluir (N)"...) quebrar em duas linhas
+       quando a tela é estreita, a fonte encolhe suavemente conforme a
+       viewport diminui e o texto sempre cabe numa linha só. */
     .btn {
       flex: 1;
+      white-space: nowrap;
+      font-size: clamp(0.7rem, 3.5vw, 0.95rem);
+    }
+
+    /* `.btn-xl` usa a fonte pixel (mais larga por caractere) — clamp
+       próprio, um pouco mais conservador que o do `.btn` normal. */
+    .btn-xl {
+      font-size: clamp(0.62rem, 3vw, 0.85rem);
     }
   }
 }
@@ -126,8 +138,14 @@
   }
 
   /* Modo "Apagar jogos": o card não navega mais, só marca/desmarca — troca
-     o hover de "vou entrar aqui" (dourado) pra um indício mais neutro. */
-  &.selectable:hover {
+     o hover de "vou entrar aqui" (dourado) pra um indício mais neutro.
+     `:not(.selected)` é necessário porque `.selectable:hover` (3 classes)
+     tem mais especificidade que `.selected` (2 classes) — sem essa
+     exclusão, passar o mouse sobre um card já selecionado sobrescrevia a
+     borda vermelha de volta pro cinza neutro enquanto o hover durasse (bug
+     real: borda só "acertava" a cor depois que o mouse saía do card, ex.
+     ao clicar no próximo). */
+  &.selectable:hover:not(.selected) {
     border-color: var(--border);
     box-shadow: none;
   }

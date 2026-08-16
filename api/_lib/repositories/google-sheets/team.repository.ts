@@ -60,6 +60,11 @@ export class GoogleSheetsTeamRepository implements TeamRepository {
     return row ? toDomain(row) : null;
   }
 
+  async countByGameId(gameId: string): Promise<number> {
+    const rows = await this.table.readAll();
+    return rows.filter((r) => r.jogoId === gameId).length;
+  }
+
   async create(gameId: string, team: NewTeam): Promise<Team> {
     const existing = await this.findByGameId(gameId);
     const order = team.order ?? existing.length + 1;

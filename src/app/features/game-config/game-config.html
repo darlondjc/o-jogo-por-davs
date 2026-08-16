@@ -238,7 +238,7 @@
 
   <app-page-footer>
     <button class="btn btn-primary btn-xl" type="button" (click)="saveAll()" [disabled]="saving()">
-      {{ saving() ? (isNew() ? 'Criando…' : 'Salvando…') : isNew() ? 'Criar jogo' : 'Salvar jogo' }}
+      {{ saving() ? (isNew() ? 'Criando…' : 'Salvando…') : isNew() ? 'Criar jogo' : 'Salvar' }}
     </button>
     @if (canStartOrContinue()) {
       <button

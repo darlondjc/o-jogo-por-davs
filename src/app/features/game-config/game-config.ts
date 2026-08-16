@@ -173,7 +173,7 @@ export class GameConfig {
   });
 
   readonly startOrContinueLabel = computed(() =>
-    this.gameState.game()?.status === 'CONFIGURACAO' ? 'Iniciar jogo' : 'Continuar jogo',
+    this.gameState.game()?.status === 'CONFIGURACAO' ? 'Iniciar' : 'Continuar',
   );
 
   constructor() {

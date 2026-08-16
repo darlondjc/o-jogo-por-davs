@@ -81,11 +81,63 @@
               ↻ Atualizar ({{ cooldownSeconds() }}s)
             }
           </button>
+        } @else if (champion()) {
+          <button type="button" class="btn btn-outline btn-champion" (click)="openChampionPlaque()">
+            🏆 Placa do campeão
+          </button>
         }
         @if (refreshError()) {
           <p class="refresh-error">{{ refreshError() }}</p>
         }
       </div>
     </app-page-footer>
+
+    @if (championPlaqueOpen()) {
+      @if (champion(); as championEntry) {
+        <div class="plaque-overlay" (click)="closeChampionPlaque()">
+          <div class="plaque-scene" (click)="$event.stopPropagation()">
+            @for (sprite of championSprites; track sprite.id) {
+              <svg
+                class="sprite sprite-{{ sprite.id }}"
+                [attr.viewBox]="sprite.viewBox"
+                aria-hidden="true"
+                focusable="false"
+              >
+                @for (r of sprite.rects; track $index) {
+                  <rect
+                    [attr.x]="r.x"
+                    [attr.y]="r.y"
+                    [attr.width]="r.w"
+                    [attr.height]="r.h"
+                    [attr.fill]="r.fill"
+                  />
+                }
+              </svg>
+            }
+
+            <div class="plaque">
+              <button
+                type="button"
+                class="plaque-close"
+                (click)="closeChampionPlaque()"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+              <p class="plaque-team">{{ championEntry.teamName }}</p>
+              <div class="plaque-body">
+                <p class="plaque-label">Campeão!</p><br/>
+                <p class="plaque-score">
+                  {{ championEntry.overallTotal
+                  }}<span class="plaque-score-unit">{{
+                    pluralize(championEntry.overallTotal, 'ponto', 'pontos')
+                  }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    }
   }
 </div>

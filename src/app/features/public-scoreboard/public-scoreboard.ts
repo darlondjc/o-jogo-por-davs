@@ -1,4 +1,12 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  HostListener,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,6 +16,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { PageHeader } from '../../core/components/page-header/page-header';
 import { PageFooter } from '../../core/components/page-footer/page-footer';
 import { ScoreboardComponent } from '../scoreboard/scoreboard';
+import { pluralize } from '../../core/models';
 import type { Scoreboard } from '../../core/models';
 
 const REFRESH_COOLDOWN_MS = 10000;
@@ -26,6 +35,128 @@ interface PersistedState {
   lastSuccessAt: number;
   cooldownUntil: number;
 }
+
+interface PixelRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fill: string;
+}
+
+interface ChampionSprite {
+  id: string;
+  viewBox: string;
+  rects: PixelRect[];
+}
+
+/** Personagens pixelizados decorativos da "Placa do campeão" — desenhos
+ * originais em pixel art (nenhuma franquia/personagem de terceiros), só o
+ * clima genérico de fliperama 8-bit: fantasminha, invasor, disco voador,
+ * robô, estrela e joystick. Cada sprite é uma lista de retângulos com
+ * run-length (uma sequência de pixels da mesma cor numa linha vira um único
+ * `<rect>` mais largo, em vez de um `<rect>` por pixel) desenhada num grid
+ * pequeno — ver `viewBox`. `fill` aceita `var(--token)` porque atributos de
+ * apresentação de SVG resolvem custom properties normalmente nos
+ * navegadores atuais. */
+const CHAMPION_SPRITES: ChampionSprite[] = [
+  {
+    id: 'ghost',
+    viewBox: '0 0 10 12',
+    rects: [
+      { x: 3, y: 0, w: 4, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 2, y: 1, w: 6, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 1, y: 2, w: 8, h: 6, fill: 'var(--arcade-purple)' },
+      { x: 0, y: 8, w: 10, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 0, y: 9, w: 4, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 6, y: 9, w: 4, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 0, y: 10, w: 3, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 7, y: 10, w: 3, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 0, y: 11, w: 2, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 8, y: 11, w: 2, h: 1, fill: 'var(--arcade-purple)' },
+      { x: 2, y: 4, w: 2, h: 2, fill: '#ffffff' },
+      { x: 6, y: 4, w: 2, h: 2, fill: '#ffffff' },
+      { x: 3, y: 5, w: 1, h: 1, fill: '#1b2440' },
+      { x: 7, y: 5, w: 1, h: 1, fill: '#1b2440' },
+    ],
+  },
+  {
+    id: 'invader',
+    viewBox: '0 0 12 8',
+    rects: [
+      { x: 3, y: 0, w: 6, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 2, y: 1, w: 8, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 1, y: 2, w: 10, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 0, y: 3, w: 12, h: 2, fill: 'var(--arcade-positive)' },
+      { x: 1, y: 5, w: 10, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 1, y: 6, w: 2, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 9, y: 6, w: 2, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 0, y: 7, w: 2, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 10, y: 7, w: 2, h: 1, fill: 'var(--arcade-positive)' },
+      { x: 3, y: 3, w: 2, h: 2, fill: '#0b1a12' },
+      { x: 7, y: 3, w: 2, h: 2, fill: '#0b1a12' },
+    ],
+  },
+  {
+    id: 'ufo',
+    viewBox: '0 0 16 8',
+    rects: [
+      { x: 6, y: 0, w: 4, h: 1, fill: '#eaf6ff' },
+      { x: 5, y: 1, w: 6, h: 1, fill: '#eaf6ff' },
+      { x: 4, y: 2, w: 8, h: 1, fill: '#eaf6ff' },
+      { x: 0, y: 3, w: 16, h: 2, fill: '#9fb0d0' },
+      { x: 1, y: 5, w: 14, h: 1, fill: 'var(--arcade-text-faint)' },
+      { x: 2, y: 3, w: 1, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 6, y: 3, w: 1, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 10, y: 3, w: 1, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 13, y: 3, w: 1, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 5, y: 6, w: 6, h: 1, fill: 'var(--arcade-accent)' },
+    ],
+  },
+  {
+    id: 'robot',
+    viewBox: '0 0 12 14',
+    rects: [
+      { x: 5, y: 0, w: 2, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 5, y: 1, w: 2, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 3, y: 2, w: 6, h: 4, fill: '#b8c2dd' },
+      { x: 4, y: 3, w: 1, h: 2, fill: 'var(--arcade-accent)' },
+      { x: 7, y: 3, w: 1, h: 2, fill: 'var(--arcade-accent)' },
+      { x: 4, y: 6, w: 4, h: 1, fill: 'var(--arcade-text-faint)' },
+      { x: 2, y: 7, w: 8, h: 4, fill: '#b8c2dd' },
+      { x: 5, y: 8, w: 2, h: 2, fill: 'var(--arcade-gold)' },
+      { x: 0, y: 7, w: 2, h: 4, fill: '#b8c2dd' },
+      { x: 10, y: 7, w: 2, h: 4, fill: '#b8c2dd' },
+      { x: 3, y: 11, w: 2, h: 3, fill: '#b8c2dd' },
+      { x: 7, y: 11, w: 2, h: 3, fill: '#b8c2dd' },
+    ],
+  },
+  {
+    id: 'star',
+    viewBox: '0 0 9 9',
+    rects: [
+      { x: 3, y: 3, w: 3, h: 3, fill: 'var(--arcade-gold)' },
+      { x: 4, y: 0, w: 1, h: 3, fill: 'var(--arcade-gold)' },
+      { x: 4, y: 6, w: 1, h: 3, fill: 'var(--arcade-gold)' },
+      { x: 0, y: 4, w: 3, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 6, y: 4, w: 3, h: 1, fill: 'var(--arcade-gold)' },
+      { x: 4, y: 4, w: 1, h: 1, fill: '#ffffff' },
+    ],
+  },
+  {
+    id: 'joystick',
+    viewBox: '0 0 10 13',
+    rects: [
+      { x: 3, y: 0, w: 4, h: 1, fill: 'var(--arcade-negative)' },
+      { x: 2, y: 1, w: 6, h: 1, fill: 'var(--arcade-negative)' },
+      { x: 2, y: 2, w: 6, h: 1, fill: 'var(--arcade-negative)' },
+      { x: 3, y: 3, w: 4, h: 1, fill: 'var(--arcade-negative)' },
+      { x: 4, y: 4, w: 2, h: 6, fill: '#1b2440' },
+      { x: 1, y: 10, w: 8, h: 2, fill: '#8894b8' },
+      { x: 0, y: 12, w: 10, h: 1, fill: 'var(--arcade-text-faint)' },
+    ],
+  },
+];
 
 /**
  * Placar público (spec seção 19). Sem login, mobile-first.
@@ -115,6 +246,37 @@ export class PublicScoreboard {
 
   toggleBoard(): void {
     this.boardCollapsed.update((v) => !v);
+  }
+
+  /** Equipe campeã: só existe quando dá pra apontar uma única vencedora.
+   * Em caso de empate em 1º lugar entre duas ou mais equipes, fica `null`
+   * de propósito — o botão "Placa do campeão" some nesse caso (não faz
+   * sentido uma placa de campeão único com um empate técnico no topo). */
+  readonly champion = computed(() => {
+    const board = this.scoreboard();
+    if (!board || board.status !== 'FINALIZADO') return null;
+    const leaders = board.entries.filter((e) => e.position === 1);
+    return leaders.length === 1 ? leaders[0] : null;
+  });
+
+  /** Placa do campeão (spec: substitui "Atualizar" quando o jogo termina).
+   * Overlay simples controlado por um signal, mesmo padrão do dialog de
+   * correção em score-entry.ts. */
+  readonly championPlaqueOpen = signal(false);
+  protected readonly championSprites = CHAMPION_SPRITES;
+  protected readonly pluralize = pluralize;
+
+  openChampionPlaque(): void {
+    this.championPlaqueOpen.set(true);
+  }
+
+  closeChampionPlaque(): void {
+    this.championPlaqueOpen.set(false);
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    if (this.championPlaqueOpen()) this.closeChampionPlaque();
   }
 
   private clockTimer?: ReturnType<typeof setInterval>;

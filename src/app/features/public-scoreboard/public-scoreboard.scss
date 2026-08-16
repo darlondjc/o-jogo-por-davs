@@ -66,7 +66,6 @@
   border-color: var(--arcade-border);
   color: var(--arcade-text);
 
-
   &:not(:disabled):hover {
     border-color: var(--arcade-accent);
     color: var(--arcade-accent);
@@ -221,4 +220,319 @@ h2 {
   font-size: 1.1rem;
   font-weight: 700;
   font-family: var(--font-arcade-body);
+}
+
+/* Botão "Placa do campeão" (substitui "Atualizar" quando `FINALIZADO`) —
+   mesma base de `.footer-actions button`, com um acento dourado pra se
+   destacar como um convite festivo, não só mais uma ação neutra. Seletor
+   repete `.footer-actions button` na frente só pra igualar (e, com a classe
+   extra, superar) a especificidade das regras base — inclusive a de
+   `:hover` — e vencer no cascade sem `!important`. */
+.footer-actions button.btn-champion {
+  border-color: var(--arcade-gold-shadow);
+  color: var(--arcade-gold);
+
+  &:hover {
+    border-color: var(--arcade-gold);
+    color: var(--arcade-gold);
+  }
+}
+
+/* Placa do campeão --------------------------------------------------- */
+
+@keyframes plaque-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sprite-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.plaque-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 4, 10, 0.82);
+  padding: var(--space-5);
+  animation: fade-in 0.15s ease;
+}
+
+/* Área onde os personagens ficam espalhados ao redor da placa — do
+   tamanho da própria placa mais uma margem, pra cada sprite se posicionar
+   em porcentagem relativa a ela (ver `.sprite` abaixo) em vez de à
+   viewport inteira. */
+.plaque-scene {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+}
+
+.plaque {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, #fbf4e2, #efe2bd);
+  color: #2a2110;
+  border: 3px solid var(--arcade-gold);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 6px #16110450,
+    0 20px 50px rgba(0, 0, 0, 0.5);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  text-align: center;
+  animation: plaque-pop 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.plaque-close {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--arcade-gold-shadow);
+  background: transparent;
+  color: #2a2110;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--arcade-gold-shadow);
+    color: #fbf4e2;
+  }
+}
+
+.plaque-team {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-pixel);
+  font-size: 1rem;
+  line-height: 1.6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  border-bottom: 2px dashed var(--arcade-gold-shadow);
+  padding-bottom: var(--space-4);
+}
+
+.plaque-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.plaque-label {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--arcade-gold-shadow);
+  text-transform: uppercase;
+}
+
+.plaque-score {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 2.6rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 2px 2px 0 var(--arcade-gold);
+}
+
+.plaque-score-unit {
+  margin-left: var(--space-2);
+  font-size: 0.34em;
+  color: var(--arcade-gold-shadow);
+  text-shadow: none;
+  text-transform: uppercase;
+}
+
+/* Personagens pixelizados espalhados ao redor da placa (ver
+   `CHAMPION_SPRITES` no componente) — posicionados em porcentagem relativa
+   a `.plaque-scene`, sem depender do tamanho exato da placa. `crispEdges`
+   mantém os quadrados nítidos mesmo escalados, sem antialiasing borrando
+   os pixels. */
+.sprite {
+  position: absolute;
+  z-index: 0;
+  shape-rendering: crispEdges;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+  animation: sprite-float 2.6s ease-in-out infinite;
+}
+
+.sprite-ghost {
+  top: -9%;
+  left: -11%;
+  width: 44px;
+  height: 52px;
+  animation-delay: 0.1s;
+}
+
+.sprite-invader {
+  top: -12%;
+  right: -8%;
+  width: 52px;
+  height: 36px;
+  animation-delay: 0.6s;
+}
+
+.sprite-ufo {
+  bottom: -8%;
+  left: -13%;
+  width: 60px;
+  height: 30px;
+  animation-delay: 0.3s;
+}
+
+.sprite-robot {
+  bottom: -11%;
+  right: -10%;
+  width: 40px;
+  height: 46px;
+  animation-delay: 0.8s;
+}
+
+.sprite-star {
+  top: 20%;
+  left: -7%;
+  width: 26px;
+  height: 26px;
+  animation-delay: 1.1s;
+}
+
+.sprite-joystick {
+  top: 22%;
+  right: -6%;
+  width: 28px;
+  height: 36px;
+  animation-delay: 1.4s;
+}
+
+/* Sob ~380px a placa já ocupa quase a largura toda da tela — sobra pouca
+   (ou nenhuma) margem pros personagens das laterais sem cortar/sobrepor o
+   conteúdo. Encolhe os que sobram nas quinas (largura/altura, não
+   `transform: scale` — a animação `sprite-float` já anima `transform` em
+   cada sprite, e uma segunda declaração estática do mesmo eixo seria
+   sobrescrita a cada frame) e tira os das laterais (estrela/joystick), que
+   são os mais próximos do centro. */
+@media (max-width: 420px) {
+  .sprite-star,
+  .sprite-joystick {
+    display: none;
+  }
+
+  .sprite-ghost {
+    top: -6%;
+    left: -6%;
+    width: 33px;
+    height: 39px;
+  }
+
+  .sprite-invader {
+    top: -8%;
+    right: -4%;
+    width: 39px;
+    height: 27px;
+  }
+
+  .sprite-ufo {
+    bottom: -5%;
+    left: -8%;
+    width: 45px;
+    height: 22px;
+  }
+
+  .sprite-robot {
+    bottom: -7%;
+    right: -6%;
+    width: 30px;
+    height: 35px;
+  }
+}
+
+/* Desktop: a placa cresce de verdade em vez de só continuar do tamanho
+   pensado pro celular no meio de uma tela grande — mesmo breakpoint
+   (721px) que `game-admin.scss` usa pra ligar o layout "de desktop". As
+   posições dos personagens (`top`/`left`/... em %, ver `.sprite` acima)
+   acompanham esse crescimento sozinhas, por serem relativas ao próprio
+   `.plaque-scene`; só o tamanho de cada um (px) precisa de valores maiores
+   aqui. `.plaque-score-unit` também acompanha sozinho, já que o tamanho
+   dele é `em` (relativo à fonte de `.plaque-score`). */
+@media (min-width: 721px) {
+  .plaque-scene {
+    max-width: 680px;
+  }
+
+  .plaque {
+    border-width: 4px;
+    border-radius: var(--radius-lg);
+    padding: var(--space-7) var(--space-6) var(--space-6);
+    box-shadow:
+      0 0 0 8px #16110450,
+      0 28px 64px rgba(0, 0, 0, 0.5);
+  }
+
+  .plaque-close {
+    width: 36px;
+    height: 36px;
+    font-size: 1.05rem;
+  }
+
+  .plaque-team {
+    font-size: 1.5rem;
+  }
+
+  .plaque-label {
+    font-size: 0.95rem;
+  }
+
+  .plaque-score {
+    font-size: 4.6rem;
+  }
+
+  .sprite-ghost {
+    width: 68px;
+    height: 80px;
+  }
+
+  .sprite-invader {
+    width: 80px;
+    height: 56px;
+  }
+
+  .sprite-ufo {
+    width: 92px;
+    height: 46px;
+  }
+
+  .sprite-robot {
+    width: 62px;
+    height: 72px;
+  }
+
+  .sprite-star {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sprite-joystick {
+    width: 44px;
+    height: 56px;
+  }
 }

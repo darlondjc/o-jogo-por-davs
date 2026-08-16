@@ -88,9 +88,9 @@
           <span>Base</span>
           <input
             type="number"
+            appSelectOnFocus
             [ngModel]="row.base"
             (ngModelChange)="setBase(row.teamId, $event)"
-            (focus)="selectInputText($event)"
           />
         </label>
 
@@ -98,9 +98,9 @@
           <span>Bônus</span>
           <input
             type="number"
+            appSelectOnFocus
             [ngModel]="row.bonus"
             (ngModelChange)="setBonus(row.teamId, $event)"
-            (focus)="selectInputText($event)"
           />
         </label>
 
@@ -108,9 +108,9 @@
           <span>Penal.</span>
           <input
             type="number"
+            appSelectOnFocus
             [ngModel]="row.penalty"
             (ngModelChange)="setPenalty(row.teamId, $event)"
-            (focus)="selectInputText($event)"
           />
         </label>
 

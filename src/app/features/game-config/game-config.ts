@@ -10,6 +10,7 @@ import type { GameType, NewTeam, Team } from '../../core/models';
 import { PageHeader } from '../../core/components/page-header/page-header';
 import { PageFooter } from '../../core/components/page-footer/page-footer';
 import { Snackbar } from '../../core/components/snackbar/snackbar';
+import { SelectOnFocus } from '../../core/directives/select-on-focus.directive';
 
 /** Equipe em edição na tela, ainda não necessariamente gravada. `id: null`
  * = equipe nova, só existe no rascunho local. */
@@ -37,7 +38,7 @@ function todayIsoDate(): string {
 
 @Component({
   selector: 'app-game-config',
-  imports: [ReactiveFormsModule, PageHeader, PageFooter, Snackbar],
+  imports: [ReactiveFormsModule, PageHeader, PageFooter, Snackbar, SelectOnFocus],
   templateUrl: './game-config.html',
   styleUrl: './game-config.scss',
 })

@@ -109,6 +109,7 @@
                         <input
                           type="number"
                           class="score-input"
+                          appSelectOnFocus
                           [ngModel]="cellValue(row.question, col.teamId)"
                           (ngModelChange)="setCellValue(row.question, col.teamId, $event)"
                         />

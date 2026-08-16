@@ -9,6 +9,7 @@ import type { RoundSummary, Team } from '../../core/models';
 import { Snackbar } from '../../core/components/snackbar/snackbar';
 import { PageHeader } from '../../core/components/page-header/page-header';
 import { PageFooter } from '../../core/components/page-footer/page-footer';
+import { SelectOnFocus } from '../../core/directives/select-on-focus.directive';
 
 interface RoundRow {
   teamId: string;
@@ -39,7 +40,7 @@ interface QuestionRow {
 
 @Component({
   selector: 'app-round-summary',
-  imports: [RouterLink, FormsModule, Snackbar, PageHeader, PageFooter],
+  imports: [RouterLink, FormsModule, Snackbar, PageHeader, PageFooter, SelectOnFocus],
   templateUrl: './round-summary.html',
   styleUrl: './round-summary.scss',
 })

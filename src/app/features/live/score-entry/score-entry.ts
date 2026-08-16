@@ -5,6 +5,7 @@ import { teamColor } from '../../../core/models';
 import type { Score, SubmitQuestionScoresRequest, Team, TeamScoreInput } from '../../../core/models';
 import type { RegisteredQuestion } from '../../../core/services/api.service';
 import { PageFooter } from '../../../core/components/page-footer/page-footer';
+import { SelectOnFocus } from '../../../core/directives/select-on-focus.directive';
 
 interface CorrectionTarget {
   round: number;
@@ -33,7 +34,7 @@ interface TeamRow {
  */
 @Component({
   selector: 'app-score-entry',
-  imports: [FormsModule, PageFooter],
+  imports: [FormsModule, PageFooter, SelectOnFocus],
   templateUrl: './score-entry.html',
   styleUrl: './score-entry.scss',
 })
@@ -249,13 +250,6 @@ export class ScoreEntry {
 
   finalScore(row: TeamRow): number {
     return computeFinalScore({ baseScore: row.base, bonus: row.bonus, penalty: row.penalty });
-  }
-
-  /** Seleciona o valor inteiro ao focar um campo de base/bônus/penalidade —
-   * digitar um número novo já sobrescreve, sem precisar apagar antes. */
-  selectInputText(event: FocusEvent): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) target.select();
   }
 
   openPicker(): void {

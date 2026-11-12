@@ -15,7 +15,7 @@ import {
 
 async function main() {
   const game = await createGame({
-    name: 'Trivia Smoke Test',
+    name: 'Smoke Test',
     date: '2026-08-15',
     location: 'Bar XYZ',
     description: 'teste',

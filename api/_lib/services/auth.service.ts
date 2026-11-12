@@ -2,6 +2,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { HttpError } from '../http/respond';
 import { getDriveClient, getSheetId, isGoogleSheetsConfigured } from '../repositories/google-sheets/client';
 import type { SessionUser } from '../http/session';
+import { getFirestoreDb, isFirestoreConfigured } from '../repositories/firestore/client';
 
 /**
  * Login: Google Sign-In (ver seção "login" do README) + checagem de que o
@@ -93,4 +94,34 @@ export async function isSheetEditor(email: string): Promise<boolean> {
       p.emailAddress?.toLowerCase() === normalized &&
       (p.role === 'writer' || p.role === 'owner'),
   );
+}
+
+/**
+ * Quem pode entrar como admin. Com o Firestore configurado, a fonte de
+ * verdade é a coleção `admins`: um documento por pessoa, com o e-mail Google
+ * em minúsculas num campo `email` (ou como ID do documento). Dar acesso é
+ * criar o documento no console do Firebase; tirar é apagar. No modo planilha a planilha lida muda
+ * a cada jogo, então ela não serve mais pra controlar acesso.
+ *
+ * Sem Firestore, cai na regra antiga (editor da planilha GOOGLE_SHEET_ID).
+ */
+export async function isAdmin(email: string): Promise<boolean> {
+  if (!isFirestoreConfigured()) return isSheetEditor(email);
+  const normalized = email.toLowerCase();
+  const admins = getFirestoreDb().collection('admins');
+  // Aceita os dois jeitos de cadastrar no console: e-mail como ID do
+  // documento, ou ID automático com um campo `email`.
+  const [byId, byField] = await Promise.all([
+    admins.doc(normalized).get(),
+    admins.where('email', '==', normalized).limit(1).get(),
+  ]);
+  return byId.exists || !byField.empty;
+}
+
+/** Pra rotas que alteram algo: confere de novo a cada chamada, então tirar
+ * alguém da lista vale na hora, sem esperar a sessão de 12h expirar. */
+export async function requireAdmin(user: SessionUser): Promise<void> {
+  if (!(await isAdmin(user.email))) {
+    throw new HttpError(403, `O e-mail ${user.email} não está na lista de admins.`);
+  }
 }

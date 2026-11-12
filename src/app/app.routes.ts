@@ -7,7 +7,27 @@ export const routes: Routes = [
     loadComponent: () => import('./features/login/login').then((m) => m.Login),
   },
   {
+    // Modo planilha (branch feat/placar-planilha): a home é o placar ao
+    // vivo, que só lê o ranking de uma planilha atualizada por fora.
     path: '',
+    pathMatch: 'full',
+    redirectTo: 'placar',
+  },
+  {
+    path: 'placar',
+    loadComponent: () =>
+      import('./features/sheet-ranking/sheet-ranking').then((m) => m.SheetRanking),
+  },
+  {
+    // Troca a planilha que o placar lê. Mesmo login do resto do app: só
+    // entra quem é editor da planilha principal (GOOGLE_SHEET_ID).
+    path: 'admin',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/sheet-admin/sheet-admin').then((m) => m.SheetAdmin),
+  },
+  {
+    // Lista de jogos do modo completo, fora da home no modo planilha.
+    path: 'painel',
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },

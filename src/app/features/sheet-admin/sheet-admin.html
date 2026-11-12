@@ -1,0 +1,189 @@
+<div class="admin-page">
+  <app-page-header backLabel="← Placar" backLink="/placar" />
+
+  <main class="content">
+    <p class="eyebrow">Planilha do jogo</p>
+
+    @if (loading()) {
+      <p class="muted">Carregando…</p>
+    } @else {
+      @if (current(); as cfg) {
+        <section class="card current">
+          <span class="label">O placar está lendo</span>
+          <a [href]="sheetUrl(cfg.sheetId)" target="_blank" rel="noopener">abrir planilha ↗</a>
+          <span>aba <strong>{{ tab() }}</strong></span>
+          @if (cfg.updatedAt) {
+            <span class="muted small">
+              trocada em {{ cfg.updatedAt | date: 'dd/MM HH:mm' }} por {{ cfg.updatedBy }}
+            </span>
+          }
+        </section>
+
+        <section class="card share">
+          <span class="label">Placar ao vivo</span>
+
+          <div class="live-status" [class.on]="cfg.live" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            {{ cfg.live ? 'Liberado para o público' : 'Oculto para o público' }}
+          </div>
+          <!-- Play (verde) libera o placar pro público, pause (vermelho) oculta. -->
+          @if (cfg.live) {
+            <button
+              type="button"
+              class="btn live-btn pause"
+              (click)="setLive(false)"
+              [disabled]="togglingLive()"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+              {{ togglingLive() ? 'Ocultando…' : 'Ocultar placar' }}
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn live-btn play"
+              (click)="setLive(true)"
+              [disabled]="togglingLive()"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" />
+              </svg>
+              {{ togglingLive() ? 'Liberando…' : 'Liberar placar ao vivo' }}
+            </button>
+          }
+          <!-- Switch: libera as abas de rodada (R1, R2…) no placar público. -->
+          <label class="switch-row">
+            <span class="switch-text">
+              <strong>Placar por rodada</strong>
+              <span>O público escolhe entre o geral e cada rodada da planilha.</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              class="switch"
+              [checked]="cfg.roundsEnabled"
+              [disabled]="togglingRounds()"
+              (change)="setRounds($any($event.target).checked)"
+            />
+          </label>
+
+          @if (error() && !formOpen()) {
+            <p class="error">{{ error() }}</p>
+          }
+
+          @if (qrDataUrl(); as qr) {
+            <img class="qr" [src]="qr" alt="QR Code do placar" width="176" height="176" />
+          }
+          <a class="public-link" [href]="publicUrl" target="_blank" rel="noopener">{{ publicUrl }}</a>
+          <div class="share-actions">
+            <button type="button" class="btn btn-outline" (click)="copyLink()">
+              {{ linkCopied() ? 'Link copiado' : 'Copiar link' }}
+            </button>
+            <button type="button" class="btn btn-outline" (click)="copyQrImage()">
+              {{ qrCopied() ? 'Imagem copiada' : 'Copiar QR' }}
+            </button>
+            <a class="btn btn-outline" routerLink="/placar" target="_blank">Abrir placar</a>
+          </div>
+        </section>
+      }
+
+      <section class="card sheet-data" [class.open]="formOpen()">
+        <button
+          type="button"
+          class="section-toggle"
+          (click)="toggleForm()"
+          [attr.aria-expanded]="formOpen()"
+          aria-controls="sheet-form"
+        >
+          <span class="label">Dados da planilha</span>
+          <span class="chevron" aria-hidden="true">{{ formOpen() ? '▾' : '▸' }}</span>
+        </button>
+        @if (formOpen()) {
+          <div id="sheet-form">
+          <form class="form" (ngSubmit)="save()">
+            <label class="field">
+              <span>Link da planilha</span>
+              <input
+                type="url"
+                name="sheet"
+                [(ngModel)]="sheet"
+                placeholder="https://docs.google.com/spreadsheets/d/…"
+                autocomplete="off"
+              />
+            </label>
+            <label class="field">
+              <span>Nome da aba (fixo)</span>
+              <input type="text" class="locked" [value]="tab()" readonly tabindex="-1" />
+            </label>
+
+            @if (serviceAccountEmail(); as email) {
+              <div class="hint">
+                <p>Compartilhe a planilha com este e-mail (Leitor basta):</p>
+                <button type="button" class="email" (click)="copyEmail()">
+                  {{ email }}
+                  <span class="copy">{{ copied() ? 'copiado' : 'copiar' }}</span>
+                </button>
+              </div>
+            }
+
+            <p class="hint muted small">
+              A planilha precisa ter uma aba chamada <strong>{{ tab() }}</strong> com o
+              cabeçalho na linha 1: <strong>nome da equipe</strong>, <strong>rodada 1</strong>,
+              <strong>rodada 2</strong>… e <strong>total</strong>. O placar geral lê a coluna
+              total; cada coluna "rodada N" vira uma aba no placar por rodada.
+            </p>
+
+            @if (error()) {
+              <p class="error">{{ error() }}</p>
+            }
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="saving() || clearing()">
+                {{ saving() ? 'Lendo a planilha…' : 'Salvar e usar no placar' }}
+              </button>
+              @if (current()) {
+                <button
+                  type="button"
+                  class="btn btn-outline btn-clear"
+                  (click)="clear()"
+                  [disabled]="saving() || clearing()"
+                >
+                  {{ clearing() ? 'Limpando…' : 'Limpar' }}
+                </button>
+              }
+            </div>
+          </form>
+          </div>
+        }
+      </section>
+
+      @if (preview(); as entries) {
+        <section class="card">
+          <p class="ok">
+            @if (current()?.live) {
+              Salvo. O placar já está lendo esta planilha.
+            } @else {
+              Salvo. O placar continua oculto até você liberar.
+            }
+          </p>
+          @if (entries.length) {
+            <ol class="preview">
+              @for (e of entries; track e.name) {
+                <li>
+                  <span class="pos">{{ e.position }}º</span>
+                  <span class="name">{{ e.name }}</span>
+                  <span class="score">{{ e.score }}</span>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="muted">A aba ainda está vazia. Os times aparecem assim que forem preenchidos.</p>
+          }
+          <a class="btn btn-outline" routerLink="/placar">Ver placar</a>
+        </section>
+      }
+    }
+  </main>
+</div>

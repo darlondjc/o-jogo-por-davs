@@ -1,4 +1,13 @@
-import { Component, computed, effect, ElementRef, input, signal, viewChildren } from '@angular/core';
+import {
+  Component,
+  afterRenderEffect,
+  computed,
+  effect,
+  ElementRef,
+  input,
+  signal,
+  viewChildren,
+} from '@angular/core';
 import type { Scoreboard } from '../../core/models';
 import { teamColor } from '../../core/models';
 
@@ -87,7 +96,11 @@ export class ScoreboardComponent {
       }
     });
 
-    effect(() => {
+    // `afterRenderEffect` (não `effect`): a medição precisa ver o DOM já
+    // reordenado. Com `effect` ela rodava antes do Angular mover as linhas,
+    // guardava posições erradas e a atualização seguinte (mesmo com dados
+    // iguais) repetia a animação de ultrapassagem.
+    afterRenderEffect(() => {
       const rows = this.rows();
       const els = this.rowEls();
       if (!els.length || els.length !== rows.length) return;

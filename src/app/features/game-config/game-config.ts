@@ -459,7 +459,7 @@ export class GameConfig {
     if (this.confirmLeaveIfUnsaved()) {
       // Em modo criação ainda não existe jogo (nem página dele) pra
       // voltar — volta pro dashboard em vez de `/jogo/null`.
-      await this.router.navigate(this.isNew() ? ['/'] : ['/jogo', this.gameId]);
+      await this.router.navigate(this.isNew() ? ['/painel'] : ['/jogo', this.gameId]);
     }
   }
 }

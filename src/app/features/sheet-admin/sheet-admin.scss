@@ -1,0 +1,345 @@
+.admin-page {
+  min-height: 100dvh;
+  padding: calc(var(--page-header-h) + var(--space-4)) var(--space-4) var(--space-6);
+  max-width: 560px;
+  margin: 0 auto;
+  color: var(--arcade-text);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.current {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  a {
+    color: var(--arcade-accent);
+    font-weight: 600;
+  }
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--arcade-text-faint);
+}
+
+input {
+  width: 100%;
+}
+
+.hint p {
+  margin: 0 0 var(--space-1);
+  font-size: 0.85rem;
+}
+
+.email {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--arcade-bg);
+  border: 1px dashed var(--arcade-border);
+  border-radius: var(--radius-sm);
+  color: var(--arcade-text);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--arcade-accent);
+  }
+}
+
+.copy {
+  flex-shrink: 0;
+  color: var(--arcade-accent);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.muted {
+  color: var(--arcade-text-muted);
+}
+
+.small {
+  font-size: 0.8rem;
+}
+
+.error {
+  color: var(--arcade-negative);
+  font-weight: 600;
+  margin: 0;
+}
+
+.ok {
+  color: var(--arcade-positive);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.preview {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+
+  li {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .pos {
+    color: var(--arcade-text-faint);
+    width: 2.5ch;
+  }
+
+  .name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .score {
+    font-weight: 700;
+    color: var(--arcade-positive);
+  }
+}
+
+.share {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+/* Fundo branco de propósito: QR precisa de contraste alto pra escanear. */
+.qr {
+  background: #fff;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  max-width: 100%;
+  height: auto;
+}
+
+.public-link {
+  color: var(--arcade-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* Aba fixa: aparece como campo, mas apagada pra deixar claro que não muda. */
+.locked {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-2);
+
+  .btn-primary {
+    flex: 1;
+  }
+}
+
+.btn-clear {
+  color: var(--arcade-negative);
+  border-color: var(--arcade-negative);
+}
+
+/* Bloco colapsável "Dados da planilha": o cabeçalho inteiro é o botão. */
+.section-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover .label,
+  &:hover .chevron {
+    color: var(--arcade-accent);
+  }
+}
+
+.chevron {
+  color: var(--arcade-text-faint);
+  font-size: 0.9rem;
+}
+
+.sheet-data.open .section-toggle {
+  margin-bottom: var(--space-3);
+}
+
+/* Status do placar público: ponto verde quando liberado, apagado quando oculto. */
+.live-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--arcade-text-muted);
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--arcade-text-faint);
+  }
+
+  &.on {
+    color: var(--arcade-positive);
+
+    .dot {
+      background: var(--arcade-positive);
+      box-shadow: 0 0 8px var(--arcade-positive);
+    }
+  }
+}
+
+/* Botões com texto e ícone: play verde (libera), pause vermelho (oculta). */
+.live-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 0;
+  font-weight: 700;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: currentColor;
+  }
+
+  &.play {
+    background: var(--arcade-positive);
+    color: #05170d;
+    box-shadow: 0 0 18px -6px var(--arcade-positive);
+  }
+
+  /* Vermelho puro, não o --arcade-negative do tema (#ff4d6a), que lê como
+     rosa num botão cheio. Branco sobre #dc2626 dá contraste 4.8:1. */
+  &.pause {
+    background: #dc2626;
+    color: #fff;
+    box-shadow: 0 0 18px -6px #dc2626;
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+/* Linha do switch "Placar por rodada": texto à esquerda, chave à direita. */
+.switch-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--arcade-border);
+  text-align: left;
+  cursor: pointer;
+}
+
+.switch-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    font-size: 0.9rem;
+  }
+
+  span {
+    font-size: 0.8rem;
+    color: var(--arcade-text-muted);
+  }
+}
+
+/* Checkbox nativo desenhado como chave liga/desliga (acessível de graça:
+   teclado, leitor de tela e role="switch"). */
+.switch {
+  appearance: none;
+  flex-shrink: 0;
+  position: relative;
+  width: 48px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--arcade-border);
+  border-radius: 999px;
+  background: var(--arcade-bg);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--arcade-text-faint);
+    transition:
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
+
+  &:checked {
+    background: rgba(51, 255, 153, 0.18);
+    border-color: var(--arcade-positive);
+
+    &::after {
+      transform: translateX(20px);
+      background: var(--arcade-positive);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}

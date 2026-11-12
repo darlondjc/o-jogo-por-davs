@@ -3,7 +3,7 @@ import { withHandler, requireMethod, HttpError, pathParam } from '../_lib/http/r
 import { parseBody, googleLoginSchema } from '../_lib/http/validation';
 import {
   verifyGoogleIdToken,
-  isSheetEditor,
+  isAdmin,
   isGoogleLoginConfigured,
 } from '../_lib/services/auth.service';
 import { buildSessionCookie, buildLogoutCookie, getSessionUser } from '../_lib/http/session';
@@ -52,12 +52,12 @@ async function handleGoogle(req: VercelRequest, res: VercelResponse): Promise<vo
 
   const user = await verifyGoogleIdToken(idToken);
 
-  const authorized = await isSheetEditor(user.email);
+  const authorized = await isAdmin(user.email);
   if (!authorized) {
     throw new HttpError(
       403,
-      `O e-mail ${user.email} não tem permissão de edição na planilha do jogo. ` +
-        'Peça a um administrador para compartilhar a planilha com o seu e-mail Google, com permissão de Editor.',
+      `O e-mail ${user.email} não está na lista de admins. ` +
+        'Peça a um administrador para incluir o seu e-mail Google.',
     );
   }
 

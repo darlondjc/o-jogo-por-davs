@@ -1,0 +1,275 @@
+/* Contador até a próxima busca automática: só um número apagado ao lado
+   do "atualizado às", largura fixa pra não ficar tremendo a cada segundo. */
+.next-poll {
+  display: inline-block;
+  min-width: 4ch;
+  margin-left: 0.25em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Placar bloqueado pelo admin ---------- */
+
+/* Camada fixa cobrindo a tela inteira, atrás do texto. O cabeçalho e o
+   rodapé (fixed, z-index 60/40) continuam por cima. Fundo no azul d'O Jogo
+   por Davs, puxando pro escuro do resto do placar. */
+.waiting-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 45%, #2e3192 0%, #1b1d66 45%, var(--arcade-bg) 100%);
+}
+
+/* A estrela grande, bem translúcida, girando devagar. O brilho ciano é o
+   mesmo tom do céu de estrelas do site. Centralizada pelo próprio meio
+   (left/top 50% + translate) e não por grid/flex: no celular ela é mais
+   larga que a tela, e o alinhamento do grid com item transbordando cai pro
+   começo, deixando a estrela torta pra direita. */
+.star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(118vw, 82vh);
+  height: min(118vw, 82vh);
+  fill: #fff;
+  opacity: 0.16;
+  filter: drop-shadow(0 0 24px rgba(41, 171, 226, 0.55));
+  animation: star-spin 60s linear infinite;
+  will-change: transform;
+}
+
+@keyframes star-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.waiting {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100dvh - var(--page-header-h) - 9rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.waiting-title {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: clamp(1.1rem, 6vw, 1.8rem);
+  color: var(--arcade-gold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow:
+    0 0 18px rgba(255, 204, 51, 0.45),
+    0 3px 0 var(--arcade-gold-shadow);
+  animation: glow 2.4s ease-in-out infinite;
+}
+
+.waiting-sub {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--arcade-text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Reticências que vão aparecendo, largura fixa pra o texto não pular. */
+.dots {
+  display: inline-block;
+  width: 3ch;
+  text-align: left;
+
+  &::after {
+    content: '';
+    animation: dots 1.6s steps(4, end) infinite;
+  }
+}
+
+@keyframes dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+
+@keyframes glow {
+  50% {
+    text-shadow:
+      0 0 28px rgba(255, 204, 51, 0.75),
+      0 3px 0 var(--arcade-gold-shadow);
+  }
+}
+
+/* Quem pediu menos movimento no sistema vê a foto parada. */
+/* Estrela pequena do rodapé, no lugar do "atualizado às". */
+.last-updated {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mini-star {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #fff;
+  animation: mini-spin 14s linear infinite;
+}
+
+@keyframes mini-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-star,
+  .star,
+  .waiting-title,
+  .dots::after {
+    animation: none;
+  }
+
+  .star {
+    transform: translate(-50%, -50%);
+  }
+
+  .dots::after {
+    content: '...';
+  }
+}
+
+/* Rótulo acima dos links: o espaço maior fica aqui, separando o bloco
+   dos links do "Aguardando início do jogo". */
+.waiting-hint {
+  margin: var(--space-5) 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--arcade-text-muted);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* Links pra quem está esperando: Jogo diário e Instagram. */
+.waiting-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    background: rgba(5, 7, 13, 0.45);
+    color: var(--arcade-text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    backdrop-filter: blur(4px);
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: #29abe2;
+      color: #9be4ff;
+    }
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+}
+
+/* Abas Geral | R1 | R2…: pílulas lado a lado; se não couber, rola na
+   horizontal em vez de quebrar a linha. */
+.view-tabs {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: var(--space-4);
+  padding: 2px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  button {
+    flex-shrink: 0;
+    min-width: 48px;
+    min-height: 40px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--arcade-border);
+    border-radius: 999px;
+    background: var(--arcade-bg-elevated);
+    color: var(--arcade-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition:
+      border-color 0.12s ease,
+      color 0.12s ease,
+      background 0.12s ease;
+
+    &:hover {
+      border-color: var(--arcade-accent);
+      color: var(--arcade-text);
+    }
+
+    /* Rodada ainda sem pontuação: clicável, mas apagada. */
+    &.pending:not(.active) {
+      opacity: 0.5;
+      border-style: dashed;
+    }
+
+    &.active {
+      border-color: var(--arcade-gold);
+      background: rgba(255, 204, 51, 0.12);
+      color: var(--arcade-gold);
+    }
+  }
+}
+
+.round-empty {
+  margin: 0;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  border: 1px dashed var(--arcade-border);
+  border-radius: var(--radius-md);
+  color: var(--arcade-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}

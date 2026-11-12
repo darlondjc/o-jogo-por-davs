@@ -19,7 +19,7 @@ export class Login {
     // Já logado (ex: chegou em /login com sessão válida) → segue direto.
     effect(() => {
       if (this.auth.user()) {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/admin';
         void this.router.navigateByUrl(returnUrl);
       }
     });

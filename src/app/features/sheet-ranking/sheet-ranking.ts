@@ -128,17 +128,19 @@ export class SheetRanking {
   private pollTimer?: ReturnType<typeof setInterval>;
 
   constructor() {
+    // O polling liga depois da primeira resposta, se o placar estiver liberado.
     this.fetch();
-    this.startPolling();
 
     const clock = setInterval(() => this.now.set(Date.now()), 1000);
     const onVisibility = () => {
       if (document.hidden) {
         clearInterval(this.pollTimer);
+        this.pollTimer = undefined;
         this.nextPollAt.set(null);
       } else {
+        // Volta pra aba: busca na hora. O polling só religa se o placar
+        // estiver liberado (decidido no fetch).
         this.fetch();
-        this.startPolling();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -157,7 +159,22 @@ export class SheetRanking {
     if (!this.canRefresh()) return;
     this.cooldownUntil.set(Date.now() + MANUAL_COOLDOWN_MS);
     this.fetch();
-    this.startPolling();
+    // Reinicia a contagem só se a busca automática estiver ligada.
+    if (this.pollTimer !== undefined) this.startPolling();
+  }
+
+  /** Placar oculto: sem busca automática, só quando a pessoa aperta
+   * "Atualizar" ou volta pra aba. Liberado: religa o polling se estava
+   * parado. */
+  private syncPolling(): void {
+    const showing = this.configured() && this.live();
+    if (!showing) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = undefined;
+      this.nextPollAt.set(null);
+    } else if (this.pollTimer === undefined && !document.hidden) {
+      this.startPolling();
+    }
   }
 
   private startPolling(): void {
@@ -176,6 +193,7 @@ export class SheetRanking {
       next: (res) => {
         this.configured.set(res.configured !== false);
         this.live.set(res.live !== false);
+        this.syncPolling();
         this.applyEntries(res.entries, res.rounds ?? []);
         this.lastUpdate.set(new Date());
         this.error.set(null);
@@ -194,6 +212,9 @@ export class SheetRanking {
         this.error.set(reason && err instanceof HttpErrorResponse && err.status !== 500 ? `${base} ${reason}` : base);
         this.loading.set(false);
         this.refreshing.set(false);
+        // Falha de rede: segue tentando no ritmo normal (ou fica parado, se
+        // o último estado conhecido era "oculto").
+        this.syncPolling();
       },
     });
   }

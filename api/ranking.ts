@@ -49,6 +49,30 @@ const patchSchema = z
   .object({ live: z.boolean().optional(), rounds: z.boolean().optional() })
   .refine((b) => b.live !== undefined || b.rounds !== undefined, 'Nada para alterar.');
 
+/**
+ * Leitura compartilhada da planilha no GET público. A Vercel atende várias
+ * requisições na mesma instância: se 100 pessoas apertam "Atualizar" juntas
+ * com o cache da CDN frio (ex: logo depois de liberar o placar), todas
+ * esperam a mesma leitura em vez de cada uma ler a planilha (cota do Google:
+ * 60 leituras/min). Erro não fica guardado.
+ */
+const SHARED_READ_MS = 3000;
+let sharedRead: { sheetId: string; at: number; rows: Promise<unknown[][]> } | null = null;
+
+function readRankingRowsShared(sheetId: string): Promise<unknown[][]> {
+  const now = Date.now();
+  if (sharedRead && sharedRead.sheetId === sheetId && now - sharedRead.at < SHARED_READ_MS) {
+    return sharedRead.rows;
+  }
+  const rows = readRankingRows(sheetId);
+  const entry = { sheetId, at: now, rows };
+  sharedRead = entry;
+  rows.catch(() => {
+    if (sharedRead === entry) sharedRead = null;
+  });
+  return rows;
+}
+
 function sheetsReady(): boolean {
   return Boolean(
     process.env['GOOGLE_SERVICE_ACCOUNT_EMAIL'] && process.env['GOOGLE_PRIVATE_KEY'],
@@ -141,7 +165,7 @@ export default withHandler(async (req: VercelRequest, res: VercelResponse) => {
       });
       return;
     }
-    rows = await readRankingRows(config.sheetId);
+    rows = await readRankingRowsShared(config.sheetId);
     roundsEnabled = config.roundsEnabled;
   }
   const sheet = parseRankingSheet(rows);
